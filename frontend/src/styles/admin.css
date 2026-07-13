@@ -1,0 +1,37 @@
+﻿.admin-shell{min-height:100vh;background:#071225;color:#eaf1ff;display:grid;grid-template-columns:260px 1fr}.admin-sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,#06162d,#0b2448);padding:22px;border-right:1px solid rgba(255,255,255,.08)}.admin-brand{font-size:22px;font-weight:900;margin-bottom:24px}.admin-menu{display:grid;gap:8px}.admin-menu a{padding:12px 14px;border-radius:14px;color:#b8c7e6;font-weight:700}.admin-menu a.active,.admin-menu a:hover{background:rgba(255,122,26,.16);color:white;box-shadow:inset 4px 0 var(--orange)}.admin-main{min-width:0}.admin-topbar{height:76px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(7,18,37,.72);backdrop-filter:blur(18px);position:sticky;top:0;z-index:15}.admin-content{padding:28px}.admin-title{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:24px}.admin-title h1{margin:0;font-size:30px}.admin-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.25)}.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.kpi strong{display:block;font-size:32px;margin:10px 0;color:white}.admin-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:18px}.chart-bars{height:260px;display:flex;gap:12px;align-items:end}.bar{flex:1;border-radius:12px 12px 0 0;background:linear-gradient(180deg,var(--orange),#7c3aed)}.admin-form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}.admin-form-row input,.admin-form-row select{background:rgba(255,255,255,.08);color:white;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px}.admin-shell .table-wrap{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)}.admin-shell th{background:rgba(255,255,255,.08);color:#9fb2d4}.admin-shell td{border-color:rgba(255,255,255,.08);color:#eaf1ff}.chat-admin{display:grid;grid-template-columns:320px 1fr;gap:18px;height:calc(100vh - 150px)}.session{padding:14px;border-radius:16px;background:rgba(255,255,255,.07);margin-bottom:10px}.message{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.09);margin:8px 0;max-width:70%}.message.admin{margin-left:auto;background:linear-gradient(135deg,var(--orange),#f97316)}@media(max-width:1000px){.admin-shell{grid-template-columns:1fr}.admin-sidebar{position:relative;height:auto}.kpi-grid,.admin-grid,.chat-admin{grid-template-columns:1fr}}
+
+/* ===== Metronic-style tables (scoped to admin content) ===== */
+.admin-content .ant-table-wrapper{background:#fff;border-radius:14px;box-shadow:0 6px 24px rgba(9,18,37,.10);padding:6px 12px 4px}
+.admin-content .ant-table{background:transparent;font-size:13.5px;color:#5e6278}
+.admin-content .ant-table-thead>tr>th{
+  background:#f9f9f9 !important;
+  color:#78829d !important;
+  font-weight:600;
+  font-size:11.5px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  border-bottom:1px solid #eff2f5 !important;
+  padding:14px 16px !important;
+}
+/* bỏ đường kẻ dọc mặc định giữa các header cell */
+.admin-content .ant-table-thead>tr>th::before{display:none !important}
+.admin-content .ant-table-tbody>tr>td{
+  color:#5e6278;
+  border-bottom:1px solid #eff2f5 !important;
+  padding:13px 16px !important;
+  transition:background .15s ease;
+}
+.admin-content .ant-table-tbody>tr:last-child>td{border-bottom:0 !important}
+.admin-content .ant-table-tbody>tr:hover>td,
+.admin-content .ant-table-tbody>tr.ant-table-row:hover>td,
+.admin-content .ant-table-tbody>tr>td.ant-table-cell-row-hover{background:#f7f9fc !important}
+.admin-content .ant-table-tbody>tr.ant-table-placeholder:hover>td{background:transparent !important}
+
+/* Highlight text chính trong bảng */
+.admin-content .cell-strong{color:#181c32;font-weight:600}
+.admin-content .cell-strong:hover{color:var(--orange,#0F766E)}
+.admin-content .cell-sub{display:block;color:#a1a5b7;font-size:12px;margin-top:2px}
+
+/* Pagination trên nền card trắng */
+.admin-content .ant-pagination{padding:12px 8px 6px}
+.admin-content .ant-table-column-sorter{color:#b5b9c5}
