@@ -8,7 +8,9 @@ export const usersService = {
   updateUser: (id, payload) => axiosClient.patch(`/admin/users/${id}`, payload).then((res) => res?.data),
 }
 
-// ⚠️ Backend CHƯA có route /admin/roles/permissions — xem API_ADDITIONS.md.
 export const rolesService = {
-  updatePermissions: (matrix) => axiosClient.put('/admin/roles/permissions', { matrix }).then((res) => res?.data),
+  getRoles: () => axiosClient.get('/admin/roles').then((res) => res?.data),
+  createRole: (payload) => axiosClient.post('/admin/roles', payload).then((res) => res?.data),
+  updateRole: (id, payload) => axiosClient.put(`/admin/roles/${id}`, payload).then((res) => res?.data),
+  deleteRole: (id) => axiosClient.delete(`/admin/roles/${id}`).then((res) => res?.data),
 }

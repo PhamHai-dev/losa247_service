@@ -8,6 +8,10 @@ const chatSessionSchema = new mongoose.Schema(
     customerPhone: {
       type: String,
     },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     mode: {
       type: String,
       enum: ['bot', 'human'],

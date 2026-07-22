@@ -15,8 +15,8 @@ const app = express();
 const server = http.createServer(app);
 
 // 3. Gắn các middlewares cơ bản
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
@@ -44,7 +44,8 @@ const adminChatRoutes = require('./routes/admin/chat.routes');
 const adminSettingsRoutes = require('./routes/admin/settings.routes');
 const adminApiConfigsRoutes = require('./routes/admin/apiConfigs.routes');
 const adminUsersRoutes = require('./routes/admin/users.routes');
-
+const adminRoleRoutes = require('./routes/admin/role.routes');
+const adminLogRoutes = require('./routes/admin/log.routes');
 const clientOrdersRoutes = require('./routes/client/orders.routes');
 const clientCartsRoutes = require('./routes/client/cart.routes');
 const clientBlogsRoutes = require('./routes/client/blogs.routes');
@@ -52,6 +53,8 @@ const clientFaqsRoutes = require('./routes/client/faqs.routes');
 const clientServicesRoutes = require('./routes/client/services.routes');
 const clientStoreProductsRoutes = require('./routes/client/storeProducts.routes');
 const clientChatRoutes = require('./routes/client/chat.routes');
+const clientSettingsRoutes = require('./routes/client/settings.routes');
+const clientLeadsRoutes = require('./routes/client/leads.routes');
 
 const webhooksRoutes = require('./routes/webhooks.routes');
 
@@ -68,7 +71,8 @@ app.use('/api/v1/admin/chat', adminChatRoutes);
 app.use('/api/v1/admin/settings', adminSettingsRoutes);
 app.use('/api/v1/admin/api-configs', adminApiConfigsRoutes);
 app.use('/api/v1/admin/users', adminUsersRoutes);
-
+app.use('/api/v1/admin/roles', adminRoleRoutes);
+app.use('/api/v1/admin/logs', adminLogRoutes);
 app.use('/api/v1/auth', clientAuthRoutes);
 app.use('/api/v1/orders', clientOrdersRoutes);
 app.use('/api/v1/cart', clientCartsRoutes);
@@ -77,6 +81,8 @@ app.use('/api/v1/faqs', clientFaqsRoutes);
 app.use('/api/v1/services', clientServicesRoutes);
 app.use('/api/v1/store-products', clientStoreProductsRoutes);
 app.use('/api/v1/chat', clientChatRoutes);
+app.use('/api/v1/settings', clientSettingsRoutes);
+app.use('/api/v1/leads', clientLeadsRoutes);
 
 app.use('/api/v1/webhooks', webhooksRoutes);
 

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert, App, Button, Card, Form, Input, Result, Segmented, Typography } from 'antd'
 import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons'
@@ -10,18 +10,11 @@ const { Title, Paragraph } = Typography
 export function LoginPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [mode, setMode] = useState('admin')
-  const { loginAdmin, loginClient, loading, error } = useAuthStore()
+  const [mode, setMode] = useState('client')
+  const { loginClient, loading, error } = useAuthStore()
 
   const handleSubmit = async (values) => {
     try {
-      if (mode === 'admin') {
-        await loginAdmin(values)
-        message.success('Đăng nhập admin thành công')
-        navigate('/admin/dashboard')
-        return
-      }
-
       await loginClient(values)
       message.success('Đăng nhập khách hàng thành công')
       navigate('/tai-khoan')
@@ -34,6 +27,7 @@ export function LoginPage() {
     <div className="auth-screen premium-auth">
       <div className="auth-art premium-auth-art">
         <div>
+          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
           <p className="eyebrow">LOSA247 Control Center</p>
           <h1>Đăng nhập để quản lý bán hàng bằng AI</h1>
           <p>Dashboard realtime, CRM lead, đơn hàng, chat bot và workflow n8n trong một hệ thống duy nhất.</p>
@@ -43,22 +37,11 @@ export function LoginPage() {
       <div className="auth-form premium-auth-form">
         <Card className="auth-card" variant="borderless">
           <Title level={2}>Chào mừng trở lại</Title>
-          <Paragraph type="secondary">Chọn loại tài khoản và đăng nhập bằng API backend thật.</Paragraph>
-
-          <Segmented
-            block
-            value={mode}
-            onChange={setMode}
-            options={[
-              { label: 'Admin', value: 'admin' },
-              { label: 'Khách hàng', value: 'client' },
-            ]}
-            style={{ marginBottom: 20 }}
-          />
+          <Paragraph type="secondary">Đăng nhập tài khoản khách hàng của bạn.</Paragraph>
 
           {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 
-          <Form layout="vertical" onFinish={handleSubmit} initialValues={{ email: 'admin@gmail.com' }}>
+          <Form layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               label="Email"
               name="email"
@@ -90,6 +73,66 @@ export function LoginPage() {
   )
 }
 
+export function AdminLoginPage() {
+  const { message } = App.useApp()
+  const navigate = useNavigate()
+  const { loginAdmin, loading, error } = useAuthStore()
+
+  const handleSubmit = async (values) => {
+    try {
+      await loginAdmin(values)
+      message.success('Đăng nhập admin thành công')
+      navigate('/admin/dashboard')
+    } catch (loginError) {
+      message.error(loginError?.error?.message || 'Đăng nhập thất bại')
+    }
+  }
+
+  return (
+    <div className="auth-screen premium-auth">
+      <div className="auth-art premium-auth-art">
+        <div>
+          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
+          <p className="eyebrow">LOSA247 Control Center</p>
+          <h1>Đăng nhập Quản trị viên</h1>
+          <p>Dashboard realtime, CRM lead, đơn hàng, chat bot và workflow n8n trong một hệ thống duy nhất.</p>
+        </div>
+      </div>
+
+      <div className="auth-form premium-auth-form">
+        <Card className="auth-card" variant="borderless">
+          <Title level={2}>Admin Login</Title>
+          <Paragraph type="secondary">Truy cập hệ thống quản trị LOSA247.</Paragraph>
+
+          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+
+          <Form layout="vertical" onFinish={handleSubmit} initialValues={{ email: 'admin@gmail.com' }}>
+            <Form.Item
+              label="Email quản trị"
+              name="email"
+              rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
+            >
+              <Input size="large" prefix={<MailOutlined />} placeholder="admin@gmail.com" />
+            </Form.Item>
+
+            <Form.Item
+              label="Mật khẩu"
+              name="password"
+              rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
+            >
+              <Input.Password size="large" prefix={<LockOutlined />} placeholder="password123" />
+            </Form.Item>
+
+            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
+              Đăng nhập Admin
+            </Button>
+          </Form>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
 export function RegisterPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
@@ -109,6 +152,7 @@ export function RegisterPage() {
     <div className="auth-screen premium-auth">
       <div className="auth-art premium-auth-art">
         <div>
+          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
           <p className="eyebrow">Start with LOSA247</p>
           <h1>Tạo tài khoản khách hàng</h1>
           <p>Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent đang sử dụng.</p>
@@ -172,6 +216,7 @@ export function ForgotPasswordPage() {
     <div className="auth-screen premium-auth">
       <div className="auth-art premium-auth-art">
         <div>
+          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
           <p className="eyebrow">LOSA247 Account</p>
           <h1>Khôi phục quyền truy cập</h1>
           <p>Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn.</p>
@@ -245,6 +290,7 @@ export function ResetPasswordPage() {
     <div className="auth-screen premium-auth">
       <div className="auth-art premium-auth-art">
         <div>
+          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
           <p className="eyebrow">LOSA247 Account</p>
           <h1>Đặt lại mật khẩu mới</h1>
           <p>Tạo mật khẩu mới an toàn để tiếp tục sử dụng dịch vụ.</p>

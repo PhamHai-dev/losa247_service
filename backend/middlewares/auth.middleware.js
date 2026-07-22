@@ -35,7 +35,7 @@ const authMiddleware = (type = 'client') => {
       }
 
       // 5. Kiểm tra role đối với admin
-      if (type === 'admin' && !['admin', 'sales', 'editor'].includes(user.role)) {
+      if (type === 'admin' && user.role === 'customer') {
         return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Không có quyền truy cập quản trị' } });
       }
 

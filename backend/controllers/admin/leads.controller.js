@@ -2,7 +2,21 @@ const Lead = require('../../models/Lead.model');
 const Order = require('../../models/Order.model');
 const Service = require('../../models/Service.model');
 const { paginate, buildPaginationResponse } = require('../../helpers/format');
-const { updateLeadSchema, addNoteSchema, convertToOrderSchema } = require('../../validators/admin/leads.validator');
+const { createLeadSchema, updateLeadSchema, addNoteSchema, convertToOrderSchema } = require('../../validators/admin/leads.validator');
+
+exports.createLead = async (req, res, next) => {
+  try {
+    const validatedData = createLeadSchema.parse(req.body);
+    const lead = new Lead(validatedData);
+    await lead.save();
+    res.status(201).json({ success: true, data: lead });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors[0].message } });
+    }
+    next(err);
+  }
+};
 
 exports.getLeads = async (req, res, next) => {
   try {
@@ -76,6 +90,18 @@ exports.updateLead = async (req, res, next) => {
     if (err.name === 'ZodError') {
       return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors[0].message } });
     }
+    next(err);
+  }
+};
+
+exports.deleteLead = async (req, res, next) => {
+  try {
+    const lead = await Lead.findByIdAndDelete(req.params.id);
+    if (!lead) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Không tìm thấy lead' } });
+    }
+    res.json({ success: true, data: lead });
+  } catch (err) {
     next(err);
   }
 };

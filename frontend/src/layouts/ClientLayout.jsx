@@ -1,26 +1,53 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { clientChatService } from '../features/chat/chatService'
 import { useChatSocket } from '../features/chat/useChatSocket'
+import { useApiQuery } from '../hooks/useApiQuery'
+import { settingsService } from '../features/settings/settingsService'
 
 // Widget chat nổi dùng chung toàn site (tạo session client + socket realtime).
-function ChatWidget() {
+function ChatWidget({ user }) {
   const [open, setOpen] = useState(false)
   const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
+  const messagesEndRef = useRef(null)
 
   const { sendMessage } = useChatSocket(sessionId, {
     role: 'customer',
     onMessage: (msg) => setMessages((prev) => [...prev, msg]),
   })
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  // Khi user thay đổi (đăng nhập / đăng xuất), xoá session cũ đi
+  // để lần mở chat tiếp theo sẽ tạo/tải lại session đúng với tài khoản.
+  useEffect(() => {
+    setSessionId(null)
+    setMessages([])
+    setOpen(false)
+  }, [user])
+
   const ensureSession = async () => {
     if (sessionId) return sessionId
     try {
-      const session = await clientChatService.createSession({})
+      const payload = {}
+      if (user) {
+        payload.customerName = user.name
+        payload.customerPhone = user.phone
+      }
+      const session = await clientChatService.createSession(payload)
       setSessionId(session._id)
+      
+      // Lấy lịch sử chat
+      const history = await clientChatService.getMessages(session._id)
+      if (history && history.length > 0) {
+        setMessages(history)
+      }
+      
       return session._id
     } catch {
       return null
@@ -37,8 +64,6 @@ function ChatWidget() {
     if (!text.trim()) return
     const id = await ensureSession()
     if (!id) return
-    // Optimistic: hiển thị ngay tin của khách, bot_reply sẽ tới qua socket.
-    setMessages((prev) => [...prev, { _id: `local-${prev.length}`, sender: 'customer', content: text }])
     sendMessage(text)
     setText('')
   }
@@ -55,6 +80,7 @@ function ChatWidget() {
             {messages.map((m) => (
               <div key={m._id} className={'bubble' + (m.sender === 'customer' ? ' me' : '')}>{m.content}</div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           <input placeholder="Nhập tin nhắn..." value={text} onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send() }} />
@@ -68,17 +94,29 @@ function ChatWidget() {
 export function ClientLayout() {
   const navigate = useNavigate()
   const { authType, user, logout } = useAuthStore()
+  const siteQuery = useApiQuery(() => settingsService.getPublicSiteInfo(), [])
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
   }
 
+  const siteInfo = siteQuery.data || {}
+  // Default values to fallback gracefully
+  const siteName = siteInfo.name || 'LOSA247'
+  const logoUrl = siteInfo.logoUrl || 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png'
+  const slogan = siteInfo.slogan || 'AI Sales Agent giúp shop online tư vấn, chốt đơn và chăm sóc khách hàng 24/7.'
+  const hotline = siteInfo.hotline || '0901 247 247'
+  const email = siteInfo.email || 'hotline@losa247.vn'
+
   return (
-    <>
+    <div className="client-app-wrapper">
       <header className="client-header">
         <nav className="client-nav container">
-          <Link className="logo" to="/">LOSA<span>247</span></Link>
+          <Link className="logo" to="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src={logoUrl} alt="Logo" style={{ height: 32 }} />
+            <span>{siteName}</span>
+          </Link>
           <div className="menu">
             <NavLink to="/">Trang chủ</NavLink>
             <NavLink to="/blog">Blog</NavLink>
@@ -100,18 +138,26 @@ export function ClientLayout() {
         </nav>
       </header>
 
-      <Outlet />
+      <div style={{ flex: 1 }}>
+        <Outlet />
+      </div>
 
       <footer className="client-footer">
         <div className="container grid footer-grid">
-          <div><h2>LOSA247.VN</h2><p>AI Sales Agent giúp shop online tư vấn, chốt đơn và chăm sóc khách hàng 24/7.</p></div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <img src={logoUrl} alt="Logo" style={{ height: 32 }} />
+              <h2>{siteName}</h2>
+            </div>
+            <p>{slogan}</p>
+          </div>
           <div><h3>Sản phẩm</h3><p>Dịch vụ AI</p><p>Gian hàng workflow</p></div>
           <div><h3>Hỗ trợ</h3><p>FAQ</p><p>Blog hướng dẫn</p></div>
-          <div><h3>Liên hệ</h3><p>hotline@losa247.vn</p><p>0901 247 247</p></div>
+          <div><h3>Liên hệ</h3><p>{email}</p><p>{hotline}</p></div>
         </div>
       </footer>
 
-      <ChatWidget />
-    </>
+      <ChatWidget user={user} />
+    </div>
   )
 }

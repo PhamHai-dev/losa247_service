@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Hook fetch dữ liệu chung (thay cho React Query để giữ stack hiện tại).
 // fetcher: async () => data. deps: mảng dependency để refetch khi đổi.
-export function useApiQuery(fetcher, deps = [], { enabled = true, initialData = null } = {}) {
+export function useApiQuery(fetcher, deps = [], { enabled = true, initialData = null, refetchInterval = null } = {}) {
   const [data, setData] = useState(initialData)
   const [loading, setLoading] = useState(enabled)
   const [error, setError] = useState(null)
@@ -31,8 +31,13 @@ export function useApiQuery(fetcher, deps = [], { enabled = true, initialData = 
       return
     }
     run()
+    
+    if (refetchInterval) {
+      const id = setInterval(run, refetchInterval)
+      return () => clearInterval(id)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, ...deps])
+  }, [enabled, refetchInterval, ...deps])
 
   return { data, loading, error, refetch: run, setData }
 }

@@ -14,6 +14,25 @@ const blogSchema = new mongoose.Schema(
     excerpt: {
       type: String,
     },
+    metaDescription: {
+      type: String,
+    },
+    tags: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'BlogTag',
+    }],
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    allowComments: {
+      type: Boolean,
+      default: true,
+    },
+    allowIndexing: {
+      type: Boolean,
+      default: true,
+    },
     content: {
       type: String,
       required: true,
@@ -27,7 +46,7 @@ const blogSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending_review', 'draft', 'published'],
+      enum: ['draft', 'pending', 'published', 'rejected'],
       default: 'draft',
     },
     source: {
@@ -41,6 +60,10 @@ const blogSchema = new mongoose.Schema(
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+    },
+    views: {
+      type: Number,
+      default: 0,
     },
   },
   {

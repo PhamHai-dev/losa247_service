@@ -14,4 +14,5 @@ export const servicesService = {
 export const publicServicesService = {
   getList: (params) => axiosClient.get('/services', { params }).then(toList),
   getBySlug: (slug) => axiosClient.get(`/services/${slug}`).then((res) => res?.data),
+  createLead: (payload) => axiosClient.post('/leads', payload).then((res) => res?.data),
 }

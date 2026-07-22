@@ -445,7 +445,7 @@ async function run() {
     siteInfo: {
       name: 'LOSA247',
       slogan: 'Giải pháp tự động hoá bán hàng đa kênh',
-      logoUrl: 'https://res.cloudinary.com/demo/image/upload/logo.png',
+      logoUrl: 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png',
       faviconUrl: 'https://res.cloudinary.com/demo/image/upload/favicon.png',
       hotline: '1900 1234',
       email: 'contact@losa247.vn',

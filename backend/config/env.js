@@ -9,6 +9,10 @@ const env = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL,
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: process.env.SMTP_PORT || 465,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
 };
 
 // Kiểm tra xem các biến môi trường bắt buộc có tồn tại không

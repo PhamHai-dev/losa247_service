@@ -1,13 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
   Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
-  Tag, Timeline, Typography, Upload,
+  Tag, Timeline, Typography, Upload, Dropdown, DatePicker,
 } from 'antd'
+import { Editor } from '@tinymce/tinymce-react'
 import {
-  DownloadOutlined, PlusOutlined, ReloadOutlined, UploadOutlined, LikeOutlined, DislikeOutlined,
+  DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined
 } from '@ant-design/icons'
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useDebounce } from '../../hooks/useDebounce'
 import { useListParams } from '../../hooks/useListParams'
@@ -18,7 +21,7 @@ import { dashboardService } from '../../features/dashboard/dashboardService'
 import { leadsService } from '../../features/leads/leadsService'
 import { ordersService } from '../../features/orders/ordersService'
 import { cartsAdminService } from '../../features/carts/cartsAdminService'
-import { blogsService } from '../../features/blogs/blogsService'
+import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
 import { faqsService } from '../../features/faqs/faqsService'
 import { servicesService } from '../../features/services/servicesService'
 import { storeProductsService } from '../../features/storeProducts/storeProductsService'
@@ -27,6 +30,7 @@ import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
 import { useChatSocket } from '../../features/chat/useChatSocket'
+import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
 
@@ -85,11 +89,22 @@ export function AdminDashboard() {
         <Col xs={24} lg={16}>
           <Card title="Doanh thu 30 ngày">
             <QueryState loading={revenueQ.loading} error={revenueQ.error} empty={!revenue.length}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 220 }}>
-                {revenue.map((r) => (
-                  <div key={r._id} title={`${r._id}: ${formatCurrency(r.revenue)}`}
-                    style={{ flex: 1, minWidth: 6, height: `${Math.round(((r.revenue || 0) / maxRevenue) * 100)}%`, background: 'linear-gradient(180deg,#0F766E,#14b8a6)', borderRadius: 6 }} />
-                ))}
+              <div style={{ height: 300, marginTop: 10 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenue} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0F766E" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#0F766E" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="_id" tick={{ fontSize: 12 }} tickFormatter={(val) => val.substring(5)} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(0)}tr` : val} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <RechartsTooltip formatter={(value) => [formatCurrency(value), 'Doanh thu']} labelFormatter={(label) => `Ngày: ${label}`} />
+                    <Area type="monotone" dataKey="revenue" stroke="#0F766E" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </QueryState>
           </Card>
@@ -117,14 +132,15 @@ export function AdminDashboard() {
 // ---- Leads ----------------------------------------------------------------
 export function AdminLeads() {
   const { message } = App.useApp()
-  const [search, setSearch] = useState('')
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
   const [status, setStatus] = useState()
-  const [page, setPage] = useState(1)
   const [detailId, setDetailId] = useState(null)
-  const debounced = useDebounce(search, 300)
+  const [openForm, setOpenForm] = useState(false)
+  const [editingLead, setEditingLead] = useState(null)
+  const [form] = Form.useForm()
 
   const query = useApiQuery(
-    () => leadsService.getLeads({ page, limit: 20, search: debounced || undefined, status }),
+    () => leadsService.getLeads({ page, limit: pageSize, search: debounced || undefined, status }),
     [page, debounced, status],
   )
   const rows = query.data?.items || []
@@ -140,12 +156,60 @@ export function AdminLeads() {
     }
   }
 
+  const handleDelete = async (id) => {
+    try {
+      await leadsService.deleteLead(id)
+      message.success('Đã xóa lead')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi xóa')
+    }
+  }
+
+  const openEdit = (row) => {
+    setEditingLead(row)
+    form.setFieldsValue({
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+      source: row.source,
+      status: row.status,
+    })
+    setOpenForm(true)
+  }
+
+  const openCreate = () => {
+    setEditingLead(null)
+    form.resetFields()
+    setOpenForm(true)
+  }
+
+  const saveLead = async () => {
+    try {
+      const values = await form.validateFields()
+      if (editingLead) {
+        await leadsService.updateLead(editingLead._id, values)
+        message.success('Đã cập nhật')
+      } else {
+        await leadsService.createLead(values)
+        message.success('Đã thêm lead')
+      }
+      setOpenForm(false)
+      query.refetch()
+    } catch (e) {
+      if (e?.errorFields) return
+      message.error('Lỗi lưu lead')
+    }
+  }
+
   const columns = [
     { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
     { title: 'SĐT', dataIndex: 'phone', key: 'phone' },
     { title: 'Nguồn', dataIndex: 'source', key: 'source' },
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={LEAD_STATUS} value={v} /> },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    { title: 'Sửa', key: 'edit', render: (_, r) => <Button size="small" onClick={() => openEdit(r)}>Sửa</Button> },
+    { title: 'Xóa', key: 'delete', render: (_, r) => <Popconfirm title="Xóa lead này?" onConfirm={() => handleDelete(r._id)}><Button size="small" type="text" danger>Xóa</Button></Popconfirm> },
     { title: '', key: 'action', render: (_, r) => <Button size="small" onClick={() => setDetailId(r._id)}>Chi tiết</Button> },
   ]
 
@@ -153,14 +217,27 @@ export function AdminLeads() {
     <>
       <PageHeader title="Quản lý Lead" extra={<Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button>} />
       <Space style={{ marginBottom: 16 }} wrap>
-        <Input.Search allowClear placeholder="Tìm tên / SĐT" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} style={{ width: 260 }} />
+        <Input.Search allowClear placeholder="Tìm tên / SĐT" value={search} onChange={(e) => { onSearch(e.target.value); setPage(1) }} style={{ width: 260 }} />
         <Select allowClear placeholder="Trạng thái" style={{ width: 180 }} value={status} onChange={(v) => { setStatus(v); setPage(1) }}
-          options={Object.entries(LEAD_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} />
+          options={[{ value: '', label: 'Tất cả' }, ...Object.entries(LEAD_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))]} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm mới</Button>
       </Space>
       {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
       <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize: 20, total, onChange: setPage, showSizeChanger: false }} />
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
       <LeadDetailDrawer id={detailId} open={!!detailId} onClose={() => setDetailId(null)} onChanged={query.refetch} />
+
+      <Modal title={editingLead ? 'Sửa Lead' : 'Thêm Lead mới'} open={openForm} onOk={saveLead} onCancel={() => setOpenForm(false)} destroyOnHidden>
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Tên khách hàng" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
+          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, message: 'Nhập SĐT' }]}><Input /></Form.Item>
+          <Form.Item name="email" label="Email"><Input /></Form.Item>
+          <Form.Item name="source" label="Nguồn"><Input /></Form.Item>
+          <Form.Item name="status" label="Trạng thái" initialValue="new">
+            <Select options={Object.entries(LEAD_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   )
 }
@@ -311,8 +388,8 @@ function OrderDetailDrawer({ id, open, onClose, onChanged }) {
 // ---- Abandoned carts (đưa vào tab riêng dưới Orders menu nếu cần) ---------
 export function AdminCarts() {
   const { message } = App.useApp()
-  const [page, setPage] = useState(1)
-  const query = useApiQuery(() => cartsAdminService.getAbandoned({ page, limit: 20 }), [page])
+  const { page, setPage, pageSize } = useListParams()
+  const query = useApiQuery(() => cartsAdminService.getAbandoned({ page, limit: pageSize }), [page])
   const rows = query.data?.items || []
 
   const remind = async (recordId) => {
@@ -329,22 +406,26 @@ export function AdminCarts() {
     <>
       <PageHeader title="Giỏ hàng treo" />
       <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize: 20, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+        pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
     </>
   )
 }
 
 // ---- Blogs ----------------------------------------------------------------
-export function AdminBlogs() {
+function BlogsView() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [tab, setTab] = useState('all')
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
   const status = tab === 'all' ? undefined : tab
+
   const query = useApiQuery(
     () => blogsService.getBlogs({ status, search: debounced || undefined, page, limit: pageSize }),
-    [status, debounced, page],
+    [status, debounced, page]
   )
+  const statsQuery = useApiQuery(() => blogsService.getStats(), [])
+  const stats = statsQuery.data || { totalBlogs: 0, publishedBlogs: 0, pendingBlogs: 0, totalViews: 0 }
+
   const rows = query.data?.items || []
   const total = query.data?.pagination?.total || 0
 
@@ -354,10 +435,12 @@ export function AdminBlogs() {
 
   const columns = [
     { title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Danh mục', dataIndex: 'category', key: 'category', render: (c) => c?.name || '-' },
+    { title: 'Lượt xem', dataIndex: 'views', key: 'views', render: (v) => <Space><EyeOutlined style={{ color: '#94a3b8' }} /> {v?.toLocaleString('vi-VN') || 0}</Space> },
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={BLOG_STATUS} value={v} /> },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
     {
-      title: '', key: 'action', render: (_, r) => (
+      title: 'Thao tác', key: 'action', render: (_, r) => (
         <Space>
           {r.status === 'pending' && <Button size="small" type="primary" onClick={() => doAction(() => blogsService.approve(r._id), 'Đã duyệt bài')}>Duyệt</Button>}
           {r.status === 'pending' && <Button size="small" danger onClick={() => doAction(() => blogsService.reject(r._id), 'Đã từ chối')}>Từ chối</Button>}
@@ -370,15 +453,322 @@ export function AdminBlogs() {
 
   return (
     <>
-      <PageHeader title="Quản lý Bài viết" extra={
-        <Space wrap>
-          <Input.Search allowClear placeholder="Tìm tiêu đề" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/admin/blogs/editor')}>Viết bài mới</Button>
-        </Space>} />
-      <Tabs activeKey={tab} onChange={(k) => { setTab(k); setPage(1) }} items={[{ key: 'all', label: 'Tất cả' }, { key: 'pending', label: 'Chờ duyệt (Facebook crawl)' }, { key: 'published', label: 'Đã đăng' }]} />
-      {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
-      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng bài viết</span>
+            <span className="value">{stats.totalBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#dcfce7', color: '#16a34a' }}><CheckCircleOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Đã đăng</span>
+            <span className="value">{stats.publishedBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#fef3c7', color: '#d97706' }}><ClockCircleOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Chờ duyệt</span>
+            <span className="value">{stats.pendingBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#f1f5f9', color: '#475569' }}><EyeOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng lượt xem</span>
+            <span className="value">{stats.totalViews.toLocaleString('vi-VN')}</span>
+            <span className="sub">Lượt xem</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ padding: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Segmented
+            options={[
+              { label: `Tất cả (${stats.totalBlogs})`, value: 'all' },
+              { label: `Chờ duyệt (${stats.pendingBlogs})`, value: 'pending' },
+              { label: `Đã đăng (${stats.publishedBlogs})`, value: 'published' }
+            ]}
+            value={tab}
+            onChange={(v) => { setTab(v); setPage(1) }}
+          />
+          <Input.Search allowClear placeholder="Tìm kiếm bài viết..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 260 }} />
+          <Button style={{ marginLeft: 'auto' }}>Bộ lọc</Button>
+        </div>
+        {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
+        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+          pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      </div>
+    </>
+  )
+}
+
+function BlogTagsTable() {
+  const { message } = App.useApp()
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+
+  const query = useApiQuery(
+    () => blogTagsService.getTags({ search: debounced || undefined, page, limit: pageSize }),
+    [debounced, page]
+  )
+
+  const rows = query.data?.items || []
+  const total = query.data?.total || 0
+
+  const handleEdit = (tag) => {
+    setEditing(tag)
+    form.setFieldsValue(tag)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await blogTagsService.deleteTag(id)
+      message.success('Đã xóa thẻ')
+      query.refetch()
+    } catch (e) {
+      message.error(e?.response?.data?.message || e?.error?.message || 'Không thể xóa thẻ')
+    }
+  }
+
+  const submit = async (values) => {
+    try {
+      if (editing?._id) await blogTagsService.updateTag(editing._id, values)
+      else await blogTagsService.createTag(values)
+      message.success('Đã lưu thẻ')
+      setEditing(null)
+      form.resetFields()
+      query.refetch()
+    } catch (e) {
+      message.error(e?.response?.data?.message || e?.error?.message || 'Lỗi khi lưu thẻ')
+    }
+  }
+
+  const handleCancel = () => {
+    setEditing(null)
+    form.resetFields()
+  }
+
+  const columns = [
+    { title: 'Tên thẻ', dataIndex: 'name', key: 'name', render: (val) => <><Tag icon={<SettingOutlined />} color="cyan">{val}</Tag></> },
+    { title: 'Slug', dataIndex: 'slug', key: 'slug' },
+    { title: 'Bài viết', dataIndex: 'postCount', key: 'postCount', align: 'center', width: 100 },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (val) => formatDate(val) },
+    { title: 'Thao tác', key: 'actions', width: 120, render: (_, r) => (
+      <Space>
+        <Button size="small" type="text" icon={<SettingOutlined style={{color: '#0d9488'}} />} onClick={() => handleEdit(r)} />
+        <Popconfirm title="Xoá thẻ này?" onConfirm={() => handleDelete(r._id)}>
+          <Button size="small" type="text" danger icon={<CloseOutlined />} />
+        </Popconfirm>
+      </Space>
+    )}
+  ]
+
+  return (
+    <Row gutter={24}>
+      <Col xs={24} lg={15}>
+        <Card bodyStyle={{ padding: 0 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16 }}>
+            <Input.Search allowClear placeholder="Tìm kiếm thẻ..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ maxWidth: 300 }} />
+          </div>
+          {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
+          <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+            pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+        </Card>
+      </Col>
+      <Col xs={24} lg={9}>
+        <Card title={editing ? 'Sửa thẻ' : 'Thêm thẻ mới'}>
+          <Form form={form} layout="vertical" onFinish={submit}>
+            <Form.Item name="name" label="Tên thẻ" rules={[{ required: true, message: 'Nhập tên thẻ' }]}>
+              <Input placeholder="Nhập tên thẻ" />
+            </Form.Item>
+            <Form.Item name="slug" label="Slug" extra="Slug sẽ được tạo tự động từ tên thẻ. Bạn có thể chỉnh sửa.">
+              <Input placeholder="slug-the-viet-lien-khong-dau" />
+            </Form.Item>
+            <Form.Item name="description" label="Mô tả">
+              <Input.TextArea rows={4} placeholder="Nhập mô tả thẻ (không bắt buộc)" />
+            </Form.Item>
+
+            <Form.Item label="SEO Preview" style={{ marginBottom: 24 }}>
+              <div style={{ color: '#0d9488', fontSize: 14, marginBottom: 4, wordBreak: 'break-all' }}>
+                https://www.losa247.vn/tag/{Form.useWatch('slug', form) || 'slug-tu-dong'}
+              </div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>
+                Đây là đường dẫn hiển thị trên website.
+              </div>
+            </Form.Item>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <Button onClick={handleCancel}>Hủy</Button>
+              <Button type="primary" htmlType="submit" style={{ background: '#0d9488' }}>Lưu thẻ</Button>
+            </div>
+          </Form>
+        </Card>
+      </Col>
+    </Row>
+  )
+}
+
+function CategoriesView() {
+  const { message } = App.useApp()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingCat, setEditingCat] = useState(null)
+  const [form] = Form.useForm()
+
+  const query = useApiQuery(() => blogCategoriesService.getCategories(), [])
+  const statsQuery = useApiQuery(() => blogsService.getStats(), [])
+  const rows = query.data?.items || []
+  const stats = statsQuery.data || { totalBlogs: 0 }
+
+  useEffect(() => {
+    const handleOpen = () => {
+      setEditingCat(null)
+      form.resetFields()
+      setIsModalOpen(true)
+    }
+    window.addEventListener('openAddCategoryModal', handleOpen)
+    return () => window.removeEventListener('openAddCategoryModal', handleOpen)
+  }, [form])
+
+  const handleEdit = (cat) => {
+    setEditingCat(cat)
+    form.setFieldsValue({ name: cat.name })
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await blogCategoriesService.deleteCategory(id)
+      message.success('Đã xoá danh mục')
+      query.refetch()
+    } catch {
+      message.error('Không xoá được danh mục')
+    }
+  }
+
+  const handleSubmit = async (values) => {
+    try {
+      if (editingCat) {
+        await blogCategoriesService.updateCategory(editingCat._id, values)
+        message.success('Cập nhật thành công')
+      } else {
+        await blogCategoriesService.createCategory(values)
+        message.success('Thêm mới thành công')
+      }
+      setIsModalOpen(false)
+      query.refetch()
+    } catch (e) {
+      message.error(e?.error?.message || 'Có lỗi xảy ra')
+    }
+  }
+
+  const columns = [
+    { title: '#', key: 'index', render: (_, __, i) => i + 1, width: 60 },
+    { title: 'TÊN DANH MỤC', dataIndex: 'name', key: 'name', render: (v) => <b>{v}</b> },
+    { title: 'SLUG', dataIndex: 'slug', key: 'slug', render: (v) => <span style={{ color: '#64748b' }}>{v}</span> },
+    { title: 'SỐ BÀI VIẾT', dataIndex: 'blogCount', key: 'blogCount', render: (v) => <b>{v || 0}</b> },
+    { title: 'NGÀY TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    {
+      title: 'THAO TÁC', key: 'action', render: (_, r) => (
+        <Space>
+          <Button size="small" onClick={() => handleEdit(r)}>Sửa</Button>
+          <Popconfirm title="Xoá danh mục này?" onConfirm={() => handleDelete(r._id)}>
+            <Button size="small" danger>Xoá</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng danh mục</span>
+            <span className="value">{rows.length}</span>
+            <span className="sub">Danh mục</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng bài viết</span>
+            <span className="value">{stats.totalBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ padding: 0 }}>
+        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} pagination={false} />
+      </div>
+
+      <Modal
+        title={editingCat ? "Cập nhật danh mục" : "Thêm danh mục mới"}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item name="name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}>
+            <Input placeholder="VD: Marketing" />
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <Button onClick={() => setIsModalOpen(false)}>Huỷ</Button>
+            <Button type="primary" htmlType="submit">Lưu lại</Button>
+          </div>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+export function AdminBlogs() {
+  const navigate = useNavigate()
+  const [mainTab, setMainTab] = useState('blogs')
+
+  return (
+    <>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Quản lý bài viết</h1>
+          <p style={{ margin: 0, color: '#64748b' }}>Quản lý bài viết, danh mục và thẻ trên website</p>
+        </div>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            if (mainTab === 'blogs') navigate('/admin/blogs/editor');
+            if (mainTab === 'categories') {
+              window.dispatchEvent(new Event('openAddCategoryModal'))
+            }
+          }}
+          style={{ background: '#0d9488', borderRadius: 8 }}
+        >
+          {mainTab === 'categories' ? 'Thêm danh mục mới' : 'Viết bài mới'}
+        </Button>
+      </div>
+
+      <Tabs
+        activeKey={mainTab}
+        onChange={setMainTab}
+        items={[
+          { key: 'blogs', label: 'Tất cả bài viết', children: <BlogsView /> },
+          { key: 'categories', label: 'Danh mục', children: <CategoriesView /> },
+          { key: 'tags', label: 'Thẻ', children: <BlogTagsTable /> }
+        ]}
+      />
     </>
   )
 }
@@ -389,37 +779,267 @@ export function AdminBlogEditor() {
   const { state } = useLocation()
   const editing = state?.blog
   const [form] = Form.useForm()
+  const coverImageUrl = Form.useWatch('coverImageUrl', form)
   const [saving, setSaving] = useState(false)
+  const [titleValue, setTitleValue] = useState(editing?.title || '')
+  const [metaDescValue, setMetaDescValue] = useState(editing?.metaDescription || editing?.excerpt || '')
+  const [slugValue, setSlugValue] = useState(editing?.slug || '')
+  
+  const categoriesQuery = useApiQuery(() => blogCategoriesService.getCategories(), [])
+  const categoryOptions = (categoriesQuery.data?.items || []).map(c => ({ value: c._id, label: c.name }))
+
+  const tagsQuery = useApiQuery(() => blogTagsService.getTags({ limit: 1000 }), [])
+  const tagOptions = (tagsQuery.data?.items || []).map(t => ({ value: t._id, label: t.name }))
+
+  const handleTitleChange = (e) => {
+    setTitleValue(e.target.value)
+  }
+  
+  const handleMetaDescChange = (e) => {
+    setMetaDescValue(e.target.value)
+  }
+
+  const handleSlugChange = (e) => {
+    setSlugValue(e.target.value)
+  }
+
+  const generateAutoSlug = () => {
+    if (!titleValue) return
+    const str = titleValue.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đĐ]/g, "d")
+      .replace(/([^0-9a-z-\s])/g, '')
+      .replace(/(\s+)/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    setSlugValue(str)
+    form.setFieldValue('slug', str)
+  }
 
   const onFinish = async (values) => {
     setSaving(true)
     try {
-      if (editing?._id) await blogsService.updateBlog(editing._id, values)
-      else await blogsService.createBlog(values)
+      const payload = {
+        ...values,
+        excerpt: values.metaDescription, // map metaDescription to excerpt if backend needs it, but backend also has metaDescription now.
+      }
+      if (editing?._id) await blogsService.updateBlog(editing._id, payload)
+      else await blogsService.createBlog(payload)
       message.success('Đã lưu bài viết')
       navigate('/admin/blogs')
     } catch (e) { message.error(e?.error?.message || 'Không lưu được bài viết') }
     finally { setSaving(false) }
   }
 
+  const handleSaveDraft = () => {
+    form.setFieldValue('status', 'draft')
+    form.submit()
+  }
+
+  const handlePublish = () => {
+    form.setFieldValue('status', 'published')
+    form.submit()
+  }
+
   return (
     <>
-      <PageHeader title={editing ? 'Sửa bài viết' : 'Viết bài mới'} />
+      <PageHeader
+        title={editing ? 'Sửa bài viết' : 'Viết bài mới'}
+        extra={<Button icon={<CloseOutlined />} onClick={() => navigate('/admin/blogs')}>Huỷ</Button>}
+      />
       <Form form={form} layout="vertical" onFinish={onFinish}
-        initialValues={editing ? { ...editing, category: editing.category?.name || editing.category } : { status: 'draft' }}>
-        <Row gutter={16}>
+        initialValues={editing ? { 
+          ...editing, 
+          category: editing.category?._id || editing.category,
+          metaDescription: editing.metaDescription || editing.excerpt,
+          allowComments: editing.allowComments ?? true,
+          allowIndexing: editing.allowIndexing ?? true,
+          isFeatured: editing.isFeatured ?? false,
+          publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : undefined,
+        } : { 
+          status: 'draft',
+          allowComments: true,
+          allowIndexing: true,
+          isFeatured: false,
+        }}>
+        <Row gutter={24}>
           <Col xs={24} lg={16}>
             <Card>
-              <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Nhập tiêu đề' }]}><Input size="large" placeholder="Tiêu đề bài viết" /></Form.Item>
-              <Form.Item name="content" label="Nội dung"><Input.TextArea rows={14} placeholder="Nội dung bài viết..." /></Form.Item>
+              <Form.Item name="title" label="Tiêu đề bài viết" rules={[{ required: true, message: 'Nhập tiêu đề' }]}>
+                <Input size="large" placeholder="Nhập tiêu đề bài viết..." showCount maxLength={100} onChange={handleTitleChange} />
+              </Form.Item>
+              
+              <Form.Item label="Slug (URL)" required>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input prefix="https://losa247.vn/blog/" placeholder="nhap-slug-bai-viet" value={slugValue} onChange={(e) => {
+                    handleSlugChange(e)
+                    form.setFieldValue('slug', e.target.value)
+                  }} />
+                  <Button onClick={generateAutoSlug}>Tạo tự động</Button>
+                </Space.Compact>
+                {/* Hidden field for form submission */}
+                <Form.Item name="slug" noStyle><Input type="hidden" /></Form.Item>
+              </Form.Item>
+
+              <Form.Item name="metaDescription" label="Mô tả ngắn (Meta Description)">
+                <Input.TextArea rows={3} placeholder="Nhập mô tả ngắn, tối đa 160 ký tự..." showCount maxLength={160} onChange={handleMetaDescChange} />
+              </Form.Item>
+              
+              <Form.Item name="content" label="Nội dung bài viết" rules={[{ required: true, message: 'Nhập nội dung' }]} trigger="onEditorChange">
+                <Editor
+                  apiKey="y94yfrtyeua7to4tduqvzo5x5fmeyi8rp89wtrhrlfl8ue40"
+                  init={{
+                    height: 500,
+                    menubar: false,
+                    plugins: [
+                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                    ],
+                    toolbar: 'blocks fontfamily fontsize | ' +
+                      'bold italic underline strikethrough forecolor backcolor code | alignleft aligncenter ' +
+                      'alignright alignjustify | bullist numlist outdent indent | ' +
+                      'link image media table | removeformat | help',
+                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                    placeholder: 'Nhập nội dung bài viết...',
+                    statusbar: true,
+                    file_picker_types: 'image',
+                    file_picker_callback: (cb, value, meta) => {
+                      const input = document.createElement('input');
+                      input.setAttribute('type', 'file');
+                      input.setAttribute('accept', 'image/*');
+
+                      input.addEventListener('change', async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          try {
+                            message.loading({ content: 'Đang tải ảnh...', key: 'uploadMCE' });
+                            const res = await settingsService.uploadAsset(file);
+                            if (res?.url) {
+                              cb(res.url, { title: file.name });
+                              message.success({ content: 'Tải ảnh thành công', key: 'uploadMCE' });
+                            } else {
+                              throw new Error('Upload failed');
+                            }
+                          } catch (error) {
+                            message.error({ content: 'Lỗi khi tải ảnh lên', key: 'uploadMCE' });
+                          }
+                        }
+                      });
+                      input.click();
+                    },
+                  }}
+                />
+              </Form.Item>
+            </Card>
+            
+            <Card title="Xem trước trên Google" style={{ marginTop: 24 }}>
+              <div style={{ maxWidth: 600 }}>
+                <div style={{ color: '#1a0dab', fontSize: 20, cursor: 'pointer', marginBottom: 2 }}>
+                  {titleValue || 'Tiêu đề bài viết sẽ hiển thị ở đây'}
+                </div>
+                <div style={{ color: '#006621', fontSize: 14, marginBottom: 2 }}>
+                  https://losa247.vn/blog/{slugValue || 'nhap-slug-bai-viet'}
+                </div>
+                <div style={{ color: '#545454', fontSize: 14, lineHeight: 1.5 }}>
+                  {metaDescValue || 'Đây là mô tả ngắn của bài viết hiển thị trên kết quả tìm kiếm của Google.'}
+                </div>
+              </div>
             </Card>
           </Col>
           <Col xs={24} lg={8}>
-            <Card title="Xuất bản">
-              <Form.Item name="status" label="Trạng thái"><Select options={Object.entries(BLOG_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} /></Form.Item>
-              <Form.Item name="category" label="Danh mục"><Input placeholder="Danh mục" /></Form.Item>
-              <Form.Item name="thumbnail" label="Ảnh đại diện (URL)"><Input placeholder="https://..." /></Form.Item>
-              <Button type="primary" htmlType="submit" loading={saving} block>Lưu bài</Button>
+            <Card title="Xuất bản" style={{ position: 'sticky', top: 24 }}>
+              <Form.Item name="category" label="Danh mục">
+                <Select
+                  allowClear
+                  placeholder="Chọn danh mục"
+                  options={categoryOptions}
+                  loading={categoriesQuery.loading}
+                  dropdownRender={(menu) => (
+                    <>
+                      {menu}
+                      <div style={{ padding: '8px', borderTop: '1px solid #e8e8e8' }}>
+                        <Button type="text" icon={<PlusOutlined />} block onClick={() => navigate('/admin/blogs', { state: { openCategoryForm: true }})}>
+                          Thêm danh mục
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item name="tags" label="Tags">
+                <Select mode="multiple" placeholder="Chọn thẻ..." options={tagOptions} loading={tagsQuery.loading} />
+              </Form.Item>
+
+              <Form.Item name="coverImageUrl" hidden>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Ảnh đại diện">
+                <Upload.Dragger accept="image/png, image/jpeg, image/webp" maxCount={1}
+                  showUploadList={false}
+                  customRequest={async ({ file, onSuccess, onError }) => {
+                    try {
+                      const res = await settingsService.uploadAsset(file)
+                      if (res?.url) {
+                        form.setFieldValue('coverImageUrl', res.url)
+                        onSuccess('ok')
+                      } else {
+                        throw new Error('Upload failed')
+                      }
+                    } catch (error) {
+                      onError(error)
+                      message.error('Lỗi khi tải ảnh lên Cloudinary')
+                    }
+                  }}
+                >
+                  {coverImageUrl ? (
+                    <img src={coverImageUrl} alt="Ảnh đại diện" style={{ width: '100%', maxHeight: 160, objectFit: 'contain', padding: 8 }} />
+                  ) : (
+                    <>
+                      <p className="ant-upload-drag-icon"><UploadOutlined /></p>
+                      <p className="ant-upload-text">Kéo thả ảnh vào đây hoặc</p>
+                      <Button size="small">Chọn ảnh</Button>
+                      <p className="ant-upload-hint">JPEG, PNG, WEBP. Tối đa 2MB</p>
+                    </>
+                  )}
+                </Upload.Dragger>
+              </Form.Item>
+
+              <Form.Item name="status" label="Trạng thái">
+                <Select options={Object.entries(BLOG_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} />
+              </Form.Item>
+
+              <Form.Item name="publishedAt" label="Đăng ngay lập tức">
+                <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm" />
+              </Form.Item>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span>Bài viết nổi bật</span>
+                <Form.Item name="isFeatured" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span>Cho phép bình luận</span>
+                <Form.Item name="allowComments" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <span>Cho phép Google index</span>
+                <Form.Item name="allowIndexing" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+
+              <Dropdown.Button 
+                type="primary" 
+                size="large" 
+                loading={saving}
+                onClick={() => form.submit()}
+                menu={{ items: [
+                  { key: 'draft', label: 'Lưu nháp', onClick: handleSaveDraft },
+                  { key: 'publish', label: 'Xuất bản', onClick: handlePublish }
+                ]}}
+                style={{ width: '100%' }}
+              >
+                Lưu bài
+              </Dropdown.Button>
             </Card>
           </Col>
         </Row>
@@ -427,6 +1047,7 @@ export function AdminBlogEditor() {
     </>
   )
 }
+
 
 // ---- FAQs -----------------------------------------------------------------
 export function AdminFaqs() {
@@ -460,26 +1081,30 @@ export function AdminFaqs() {
     const next = [...rows]
     const target = index + dir
     if (target < 0 || target >= next.length) return
-    ;[next[index], next[target]] = [next[target], next[index]]
+      ;[next[index], next[target]] = [next[target], next[index]]
     try { await faqsService.reorder(next.map((f) => f._id)); message.success('Đã cập nhật thứ tự'); query.refetch() }
     catch { message.error('Không cập nhật được thứ tự') }
   }
 
   const columns = [
-    { title: '#', key: 'order', width: 90, render: (_, __, i) => (
-      <Space>
-        <Button size="small" disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
-        <Button size="small" disabled={i === rows.length - 1} onClick={() => move(i, 1)}>↓</Button>
-      </Space>
-    ) },
+    {
+      title: '#', key: 'order', width: 90, render: (_, __, i) => (
+        <Space>
+          <Button size="small" disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
+          <Button size="small" disabled={i === rows.length - 1} onClick={() => move(i, 1)}>↓</Button>
+        </Space>
+      )
+    },
     { title: 'Câu hỏi', dataIndex: 'question', key: 'question', render: (v) => <span className="cell-strong">{v}</span> },
     { title: 'Danh mục', dataIndex: 'category', key: 'category', render: (v) => v?.name || (typeof v === 'string' && v.length !== 24 ? v : '—') },
-    { title: '', key: 'action', render: (_, r) => (
-      <Space>
-        <Button size="small" onClick={() => openModal(r)}>Sửa</Button>
-        <Popconfirm title="Xoá FAQ?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm>
-      </Space>
-    ) },
+    {
+      title: '', key: 'action', render: (_, r) => (
+        <Space>
+          <Button size="small" onClick={() => openModal(r)}>Sửa</Button>
+          <Popconfirm title="Xoá FAQ?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm>
+        </Space>
+      )
+    },
   ]
 
   return (
@@ -542,9 +1167,11 @@ function ServicesTable() {
   const columns = [
     { title: 'Tên dịch vụ', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
     { title: 'Giá', dataIndex: 'price', key: 'price', render: (v) => formatCurrency(v) },
-    { title: '', key: 'action', render: (_, r) => (
-      <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
-    ) },
+    {
+      title: '', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
   ]
   return (
     <>
@@ -597,9 +1224,11 @@ function StoreProductsTable() {
     { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
     { title: 'Nền tảng', dataIndex: 'platform', key: 'platform' },
     { title: 'Giá', dataIndex: 'price', key: 'price', render: (v) => formatCurrency(v) },
-    { title: '', key: 'action', render: (_, r) => (
-      <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
-    ) },
+    {
+      title: '', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
   ]
   return (
     <>
@@ -627,7 +1256,8 @@ export function AdminChat() {
   const { message } = App.useApp()
   const [activeId, setActiveId] = useState(null)
   const [text, setText] = useState('')
-  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const chatEndRef = useRef(null)
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams(5)
   const sessionsQ = useApiQuery(
     () => chatService.getSessions({ search: debounced || undefined, page, limit: pageSize }),
     [debounced, page],
@@ -636,6 +1266,10 @@ export function AdminChat() {
   const total = sessionsQ.data?.pagination?.total || 0
   const messagesQ = useApiQuery(() => chatService.getMessages(activeId), [activeId], { enabled: !!activeId })
   const messages = messagesQ.data || []
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const { sendMessage } = useChatSocket(activeId, {
     role: 'admin',
@@ -655,7 +1289,7 @@ export function AdminChat() {
       <Row gutter={16}>
         <Col xs={24} md={8}>
           <Input.Search allowClear placeholder="Tìm tên / SĐT khách" value={search} onChange={(e) => onSearch(e.target.value)} style={{ marginBottom: 12 }} />
-          <Card styles={{ body: { padding: 0, maxHeight: 560, overflow: 'auto' } }}>
+          <Card styles={{ body: { padding: 0, maxHeight: 'calc(100vh - 280px)', overflow: 'auto' } }}>
             <List
               loading={sessionsQ.loading}
               dataSource={sessions}
@@ -680,7 +1314,7 @@ export function AdminChat() {
           >
             <QueryState loading={messagesQ.loading} empty={activeId && !messages.length} error={messagesQ.error}>
               {!activeId ? <Empty description="Chọn phiên để xem hội thoại" /> : (
-                <div style={{ maxHeight: 420, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ height: 'calc(100vh - 380px)', minHeight: 300, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
                   {messages.map((m) => (
                     <div key={m._id} style={{ alignSelf: m.sender === 'customer' ? 'flex-start' : 'flex-end', maxWidth: '70%' }}>
                       <div style={{ padding: '8px 12px', borderRadius: 12, background: m.sender === 'customer' ? '#F1F5F9' : '#CCFBF1' }}>{m.content}</div>
@@ -692,6 +1326,7 @@ export function AdminChat() {
                       )}
                     </div>
                   ))}
+                  <div ref={chatEndRef} />
                 </div>
               )}
             </QueryState>
@@ -711,9 +1346,9 @@ export function AdminChat() {
 // ---- Logs -----------------------------------------------------------------
 export function AdminLogs() {
   const { message } = App.useApp()
-  const { search, onSearch, debounced, page, setPage } = useListParams(20)
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
   const query = useApiQuery(
-    () => logsService.getLogs({ page, limit: 20, search: debounced || undefined }),
+    () => logsService.getLogs({ page, limit: pageSize, search: debounced || undefined }),
     [page, debounced],
   )
   const rows = query.data?.items || []
@@ -738,22 +1373,38 @@ export function AdminLogs() {
         </Space>} />
       {query.error && <Alert type="warning" showIcon title="Backend chưa có endpoint /admin/logs (xem API_ADDITIONS.md)" style={{ marginBottom: 12 }} />}
       <Table rowKey={(r) => r._id || r.id || Math.random()} loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize: 20, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+        pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
     </>
   )
 }
 
 // ---- Users & permissions --------------------------------------------------
 export function AdminUsers() {
+  return (
+    <>
+      <PageHeader title="Người dùng & Phân quyền" />
+      <Tabs items={[
+        { key: 'admin', label: 'Admin', children: <UsersTab type="admin" /> },
+        { key: 'client', label: 'User', children: <UsersTab type="client" /> },
+        { key: 'permissions', label: 'Ma trận quyền', children: <PermissionsTab /> },
+      ]} />
+    </>
+  )
+}
+
+function UsersTab({ type = 'admin' }) {
   const { message } = App.useApp()
   const [open, setOpen] = useState(false)
-  const [permOpen, setPermOpen] = useState(false)
   const [form] = Form.useForm()
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+
   const query = useApiQuery(
-    () => usersService.getUsers({ search: debounced || undefined, page, limit: pageSize }),
-    [debounced, page],
+    () => usersService.getUsers({ search: debounced || undefined, page, limit: pageSize, type }),
+    [debounced, page, type],
   )
+  const rolesQuery = useApiQuery(() => rolesService.getRoles(), [])
+  const rolesList = Array.isArray(rolesQuery.data) ? rolesQuery.data : []
+
   const rows = query.data?.items || []
   const total = query.data?.pagination?.total || 0
 
@@ -775,12 +1426,17 @@ export function AdminUsers() {
   ]
   return (
     <>
-      <PageHeader title="Người dùng & Phân quyền" extra={
-        <Space wrap>
-          <Input.Search allowClear placeholder="Tìm tên / email" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
-          <Button onClick={() => setPermOpen(true)}>Ma trận quyền</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm tài khoản</Button>
-        </Space>} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
+        <Input.Search
+          allowClear
+          placeholder="Nhập tên hoặc email để tìm kiếm..."
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          style={{ width: 350 }}
+          size="large"
+        />
+        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm tài khoản</Button>
+      </div>
       {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
       <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
         pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
@@ -790,40 +1446,124 @@ export function AdminUsers() {
           <Form.Item name="name" label="Họ tên" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
           <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Email không hợp lệ' }]}><Input /></Form.Item>
           <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, min: 6, message: 'Tối thiểu 6 ký tự' }]}><Input.Password /></Form.Item>
-          <Form.Item name="role" label="Vai trò" initialValue="sales"><Select options={['admin', 'sales', 'editor'].map((r) => ({ value: r, label: r }))} /></Form.Item>
+          <Form.Item name="role" label="Vai trò" initialValue="customer">
+            <Select options={rolesList.map(r => ({ value: r.name, label: r.name })).concat([{ value: 'customer', label: 'customer' }])} />
+          </Form.Item>
         </Form>
       </Modal>
-
-      <RolePermissionsModal open={permOpen} onClose={() => setPermOpen(false)} />
     </>
   )
 }
 
-const PERM_MODULES = ['leads', 'orders', 'blogs', 'faqs', 'chat', 'logs', 'users']
+const PERM_MODULES = ['leads', 'orders', 'blogs', 'faqs', 'chat', 'logs', 'users', 'roles']
 const PERM_ACTIONS = ['view', 'create', 'update', 'delete']
 
-function RolePermissionsModal({ open, onClose }) {
+function PermissionsTab() {
   const { message } = App.useApp()
-  const [matrix, setMatrix] = useState({})
-  const toggle = (mod, act) => setMatrix((m) => ({ ...m, [`${mod}_${act}`]: !m[`${mod}_${act}`] }))
-  const save = async () => {
+  const [open, setOpen] = useState(false)
+  const [form] = Form.useForm()
+  const query = useApiQuery(() => rolesService.getRoles(), [])
+  const roles = Array.isArray(query.data) ? query.data : []
+
+  const togglePerm = async (role, permStr, checked) => {
+    let newPerms = [...role.permissions]
+    if (checked) newPerms.push(permStr)
+    else newPerms = newPerms.filter(p => p !== permStr)
+
     try {
-      await rolesService.updatePermissions(matrix)
-      message.success('Đã lưu phân quyền')
-      onClose()
-    } catch { message.error('Backend chưa có /admin/roles/permissions (xem API_ADDITIONS.md)') }
+      await rolesService.updateRole(role._id, { permissions: newPerms })
+      message.success('Đã lưu')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi lưu quyền')
+    }
   }
+
+  const deleteRole = async (roleId) => {
+    try {
+      await rolesService.deleteRole(roleId)
+      message.success('Đã xoá vai trò')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi xoá')
+    }
+  }
+
   const columns = [
-    { title: 'Module', dataIndex: 'module', key: 'module', render: (v) => <b>{v}</b> },
-    ...PERM_ACTIONS.map((act) => ({
-      title: act, key: act, align: 'center',
-      render: (_, r) => <Switch size="small" checked={!!matrix[`${r.module}_${act}`]} onChange={() => toggle(r.module, act)} />,
-    })),
+    { title: 'Phân quyền', dataIndex: 'name', key: 'name', width: 250 },
+    ...roles.map(role => ({
+      title: (
+        <Space>
+          {role.name}
+          <Popconfirm title="Xoá vai trò này?" onConfirm={() => deleteRole(role._id)}>
+            <Button size="small" type="text" danger>Xoá</Button>
+          </Popconfirm>
+        </Space>
+      ),
+      key: role.name,
+      align: 'center',
+      render: (_, row) => {
+        if (row.isModule) return null
+        const hasPerm = role.permissions.includes(row.key)
+        return <Switch size="small" checked={hasPerm} onChange={(c) => togglePerm(role, row.key, c)} />
+      }
+    }))
   ]
+
+  const dataSource = [];
+  PERM_MODULES.forEach(m => {
+    dataSource.push({
+      key: `header_${m}`,
+      name: <span style={{ color: '#0050b3', fontWeight: 700, fontSize: '1.05em', textTransform: 'uppercase' }}>{m}</span>,
+      isModule: true,
+    });
+    PERM_ACTIONS.forEach(act => {
+      dataSource.push({
+        key: `${m}_${act}`,
+        name: <span style={{ marginLeft: 24, color: '#595959' }}>{act.charAt(0).toUpperCase() + act.slice(1)}</span>,
+        isModule: false,
+      });
+    });
+  });
+
+  const addRole = async () => {
+    try {
+      const values = await form.validateFields()
+      await rolesService.createRole({ name: values.name })
+      message.success('Đã thêm vai trò')
+      setOpen(false)
+      form.resetFields()
+      query.refetch()
+    } catch (e) {
+      if (e?.errorFields) return; // Validation error
+      message.error(e?.error?.message || 'Lỗi thêm vai trò')
+    }
+  }
+
   return (
-    <Modal title="Ma trận phân quyền" open={open} onOk={save} onCancel={onClose} width={640}>
-      <Table rowKey="module" size="small" pagination={false} columns={columns} dataSource={PERM_MODULES.map((m) => ({ module: m }))} />
-    </Modal>
+    <>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" size="middle" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm vai trò</Button>
+      </div>
+      <Table rowKey="key"
+        pagination={false}
+        columns={columns}
+        dataSource={dataSource}
+        loading={query.loading}
+      />
+
+      <Modal title="Thêm vai trò mới" open={open} onOk={addRole} onCancel={() => setOpen(false)} destroyOnHidden>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Tên vai trò"
+            rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }]}
+          >
+            <Input placeholder="Ví dụ: marketing, ketoan..." autoFocus />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   )
 }
 
@@ -866,6 +1606,13 @@ function SiteInfoTab() {
   const { message } = App.useApp()
   const query = useApiQuery(() => settingsService.getSiteInfo(), [])
   const [form] = Form.useForm()
+
+  useEffect(() => {
+    if (query.data) {
+      form.setFieldsValue(query.data)
+    }
+  }, [query.data, form])
+
   const save = async () => {
     const values = await form.validateFields()
     try { await settingsService.updateSiteInfo(values); message.success('Đã lưu thông tin site') } catch { message.error('Không lưu được') }
@@ -880,8 +1627,8 @@ function SiteInfoTab() {
   return (
     <Card style={{ maxWidth: 520 }}>
       <QueryState loading={query.loading} error={query.error}>
-        <Form form={form} layout="vertical" initialValues={query.data || {}}>
-          <Form.Item name="siteName" label="Tên website"><Input placeholder="LOSA247.VN" /></Form.Item>
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Tên website"><Input placeholder="LOSA247.VN" /></Form.Item>
           <Form.Item name="slogan" label="Slogan"><Input /></Form.Item>
           <Form.Item name="logoUrl" label="Logo (URL)"><Input placeholder="https://..." /></Form.Item>
           <Upload {...uploadProps}><Button icon={<UploadOutlined />}>Tải logo lên</Button></Upload>

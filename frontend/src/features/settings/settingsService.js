@@ -4,6 +4,7 @@ export const settingsService = {
   getAppearance: () => axiosClient.get('/admin/settings/appearance').then((res) => res?.data),
   updateAppearance: (payload) => axiosClient.put('/admin/settings/appearance', payload).then((res) => res?.data),
   getSiteInfo: () => axiosClient.get('/admin/settings/site-info').then((res) => res?.data),
+  getPublicSiteInfo: () => axiosClient.get('/settings/site-info').then((res) => res?.data),
   updateSiteInfo: (payload) => axiosClient.put('/admin/settings/site-info', payload).then((res) => res?.data),
   // Upload asset dạng multipart: nhận File, trả url.
   uploadAsset: (file) => {

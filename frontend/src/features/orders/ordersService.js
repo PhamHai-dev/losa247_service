@@ -10,3 +10,7 @@ export const ordersService = {
   activate: (id) => axiosClient.post(`/admin/orders/${id}/activate`).then((res) => res?.data),
   cancel: (id, reason) => axiosClient.post(`/admin/orders/${id}/cancel`, { reason }).then((res) => res?.data),
 }
+
+export const clientOrdersService = {
+  getMyOrders: () => axiosClient.get('/orders').then((res) => res?.data),
+}

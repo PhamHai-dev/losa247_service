@@ -5,6 +5,7 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 
 router.post('/login', authController.login);
 router.get('/me', authMiddleware('admin'), authController.getMe);
-// Có thể thêm /refresh, /logout sau
+router.post('/refresh', authController.refresh);
+router.post('/logout', authController.logout);
 
 module.exports = router;

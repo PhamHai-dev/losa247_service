@@ -20,14 +20,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'sales', 'editor', 'customer'],
       default: 'customer',
     },
-    permissions: [
-      {
-        type: String,
-      },
-    ],
     status: {
       type: String,
       enum: ['active', 'locked'],
@@ -35,6 +29,17 @@ const userSchema = new mongoose.Schema(
     },
     avatarUrl: {
       type: String,
+    },
+    refreshTokens: [
+      {
+        type: String,
+      },
+    ],
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
     },
   },
   {

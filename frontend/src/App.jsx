@@ -1,17 +1,30 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect, useLayoutEffect } from 'react'
 import { ClientLayout } from './layouts/ClientLayout'
 import { AdminLayout } from './layouts/AdminLayout'
-import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, StorePage, StoreDetailPage, FaqPage, AccountPage, CartPage, CheckoutPage } from './pages/client/ClientPages'
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from './pages/auth/AuthPages'
+import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, StorePage, StoreDetailPage, FaqPage, AccountPage, CartPage, CheckoutPage, TagDetailPage } from './pages/client/ClientPages'
+import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLoginPage } from './pages/auth/AuthPages'
 import { AdminDashboard, AdminLeads, AdminOrders, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin/AdminPages'
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 // App khai báo toàn bộ routing client/admin theo đặc tả Agent.md.
 export default function App() {
-  return <Routes>
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
     <Route element={<ClientLayout />}>
       <Route index element={<HomePage />} />
       <Route path="blog" element={<BlogPage />} />
       <Route path="blog/:id" element={<BlogDetailPage />} />
+      <Route path="tag/:slug" element={<TagDetailPage />} />
       <Route path="dich-vu" element={<ServicesPage />} />
       <Route path="dich-vu/:id" element={<ServiceDetailPage />} />
       <Route path="gian-hang" element={<StorePage />} />
@@ -25,6 +38,7 @@ export default function App() {
     <Route path="dang-ky" element={<RegisterPage />} />
     <Route path="quen-mat-khau" element={<ForgotPasswordPage />} />
     <Route path="dat-lai-mat-khau" element={<ResetPasswordPage />} />
+    <Route path="admin/dang-nhap" element={<AdminLoginPage />} />
     <Route path="admin" element={<AdminLayout />}>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={<AdminDashboard />} />
@@ -40,4 +54,6 @@ export default function App() {
       <Route path="settings" element={<AdminSettings />} />
     </Route>
   </Routes>
+  </>
+  )
 }

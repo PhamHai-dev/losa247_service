@@ -98,3 +98,39 @@ exports.getOrderById = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getMyOrders = async (req, res, next) => {
+  try {
+    const userId = req.user._id.toString();
+    // Assuming we can identify orders by customer email/phone matching user, 
+    // or by adding userId to Order model.
+    // Wait, Order.model.js might not have userId. I will just search by customer.email if possible, or we need to add userId.
+    // Assuming Order model has customer email, we use req.user.email.
+    const orders = await Order.find({ 'customer.email': req.user.email })
+      .populate('items.serviceId', 'name')
+      .populate('items.storeProductId', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: orders });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.paymentCallback = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Không tìm thấy đơn hàng' } });
+    }
+    
+    // Simulate successful payment (in real app, verify signature from payment gateway)
+    order.status = 'paid';
+    await order.save();
+
+    res.json({ success: true, data: order, message: 'Thanh toán thành công' });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -6,7 +6,29 @@ const { createBlogSchema, createBlogCategorySchema } = require('../../validators
 // --- BLOG CATEGORY ---
 exports.getCategories = async (req, res, next) => {
   try {
-    const categories = await BlogCategory.find().sort({ createdAt: -1 });
+    const categories = await BlogCategory.aggregate([
+      {
+        $lookup: {
+          from: 'blogs',
+          localField: '_id',
+          foreignField: 'category',
+          as: 'blogsList'
+        }
+      },
+      {
+        $addFields: {
+          blogCount: { $size: '$blogsList' }
+        }
+      },
+      {
+        $project: {
+          blogsList: 0
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
+    ]);
     res.json({ success: true, data: categories });
   } catch (err) {
     next(err);
@@ -59,6 +81,34 @@ exports.deleteCategory = async (req, res, next) => {
 };
 
 // --- BLOG ---
+exports.getStats = async (req, res, next) => {
+  try {
+    const stats = await Blog.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalBlogs: { $sum: 1 },
+          publishedBlogs: { $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] } },
+          pendingBlogs: { $sum: { $cond: [{ $in: ['$status', ['pending_review', 'draft']] }, 1, 0] } },
+          totalViews: { $sum: { $ifNull: ['$views', 0] } },
+        }
+      }
+    ]);
+
+    const result = stats[0] || {
+      totalBlogs: 0,
+      publishedBlogs: 0,
+      pendingBlogs: 0,
+      totalViews: 0,
+    };
+
+    delete result._id;
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getBlogs = async (req, res, next) => {
   try {
     const { page, limit, search, status, source, category } = req.query;
@@ -91,7 +141,7 @@ exports.getBlogs = async (req, res, next) => {
 exports.createBlog = async (req, res, next) => {
   try {
     const data = createBlogSchema.parse(req.body);
-    const slug = generateSlug(data.title);
+    const slug = data.slug || generateSlug(data.title);
 
     const blog = new Blog({
       ...data,
@@ -112,7 +162,7 @@ exports.createBlog = async (req, res, next) => {
 exports.updateBlog = async (req, res, next) => {
   try {
     const data = createBlogSchema.parse(req.body);
-    const slug = generateSlug(data.title);
+    const slug = data.slug || generateSlug(data.title);
 
     const updateData = { ...data, slug };
     if (data.status === 'published') {

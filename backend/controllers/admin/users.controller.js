@@ -4,12 +4,19 @@ const { paginate, buildPaginationResponse } = require('../../helpers/format');
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const { page, limit, search, role } = req.query;
+    const { page, limit, search, role, type } = req.query;
     const { skip, limit: l, page: p } = paginate(req.query, { page, limit });
 
     const filter = {};
-    if (role) filter.role = role;
-    else filter.role = { $in: ['admin', 'sales', 'editor'] };
+    if (role) {
+      filter.role = role;
+    } else {
+      if (type === 'client') {
+        filter.role = 'customer';
+      } else {
+        filter.role = { $ne: 'customer' };
+      }
+    }
 
     if (search) {
       filter.$or = [
@@ -31,7 +38,7 @@ exports.getUsers = async (req, res, next) => {
 
 exports.createUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, permissions } = req.body;
+    const { name, email, password, role } = req.body;
     
     const exist = await User.findOne({ email });
     if (exist) {
@@ -46,7 +53,6 @@ exports.createUser = async (req, res, next) => {
       email,
       passwordHash,
       role: role || 'editor',
-      permissions: permissions || [],
     });
 
     await user.save();
@@ -62,11 +68,10 @@ exports.createUser = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { role, status, permissions } = req.body;
+    const { role, status } = req.body;
     const updateData = {};
     if (role) updateData.role = role;
     if (status) updateData.status = status;
-    if (permissions) updateData.permissions = permissions;
 
     const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-passwordHash');
     if (!user) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Người dùng không tồn tại' } });
@@ -77,10 +82,3 @@ exports.updateUser = async (req, res, next) => {
   }
 };
 
-exports.updatePermissions = async (req, res, next) => {
-  try {
-    res.json({ success: true, message: 'API cập nhật ma trận phân quyền đang được phát triển.' });
-  } catch (err) {
-    next(err);
-  }
-};
