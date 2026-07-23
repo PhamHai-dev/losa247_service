@@ -17,6 +17,7 @@ exports.createBlogSchema = z.object({
   isFeatured: z.boolean().optional(),
   allowComments: z.boolean().optional(),
   allowIndexing: z.boolean().optional(),
+  showToc: z.boolean().optional(),
 });
 exports.createBlogTagSchema = z.object({
   name: z.string().min(1, 'Tên thẻ không được để trống'),

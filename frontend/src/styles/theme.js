@@ -1,8 +1,8 @@
 // Ant Design theme tokens theo Design System ở Agent.md (Phần 5.2).
 export const antdTheme = {
   token: {
-    colorPrimary: '#0F766E',
-    colorInfo: '#0F766E',
+    colorPrimary: '#16A34A',
+    colorInfo: '#2563EB',
     colorSuccess: '#16A34A',
     colorWarning: '#D97706',
     colorError: '#DC2626',
@@ -12,6 +12,6 @@ export const antdTheme = {
   components: {
     Button: { controlHeight: 40, fontWeight: 500 },
     Table: { headerBg: '#F8FAFC' },
-    Menu: { itemSelectedBg: '#CCFBF1', itemSelectedColor: '#0F766E' },
+    Menu: { itemSelectedBg: '#DBEAFE', itemSelectedColor: '#1D4ED8' },
   },
 }

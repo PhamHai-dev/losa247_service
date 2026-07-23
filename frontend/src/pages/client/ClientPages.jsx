@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { App, Button, Empty, Form, Input, InputNumber, Result, Spin, Steps, Select, Pagination, Tag } from 'antd'
-import { SearchOutlined, FilterOutlined, CalendarOutlined, EyeOutlined, RightOutlined, CheckCircleOutlined, TrophyOutlined, ToolOutlined, TeamOutlined, MenuOutlined } from '@ant-design/icons'
+import { Rocket, BriefcaseBusiness, Building2, ArrowRight } from "lucide-react"
+import PricingSection from '../../components/client/pricing/PricingSection'
+import { App, Button, Empty, Form, Input, InputNumber, Result, Spin, Steps, Select, Pagination, Tag, Skeleton } from 'antd'
+import { SearchOutlined, FilterOutlined, CalendarOutlined, EyeOutlined, RightOutlined, CheckCircleOutlined, CloseOutlined, TrophyOutlined, ToolOutlined, TeamOutlined, MenuOutlined, RocketOutlined, ProjectOutlined, BankOutlined, ThunderboltOutlined, ClockCircleOutlined, DollarOutlined, SafetyOutlined, RobotOutlined, CommentOutlined, ContactsOutlined, PartitionOutlined, LineChartOutlined, CustomerServiceOutlined, DownOutlined, UpOutlined, UserOutlined, CrownOutlined } from '@ant-design/icons'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { formatCurrency, formatDate } from '../../utils/format'
 import { publicServicesService } from '../../features/services/servicesService'
 import { publicStoreProductsService } from '../../features/storeProducts/storeProductsService'
 import { publicBlogsService } from '../../features/blogs/blogsService'
 import { publicFaqsService } from '../../features/faqs/faqsService'
+import { publicPricingService } from '../../features/services/pricingService'
 import { cartService } from '../../features/cart/cartService'
 import { checkoutService } from '../../features/checkout/checkoutService'
 import { useAuthStore } from '../../stores/authStore'
@@ -27,6 +30,32 @@ function useAddToCart() {
     try { await cartService.addItem(payload); message.success('Đã thêm vào giỏ hàng') }
     catch (e) { message.error(e?.error?.message || 'Không thêm được vào giỏ') }
   }
+}
+
+// ---- Components -------------------------------------------------------------
+export function Reveal({ children, className = '' }) {
+  const [active, setActive] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { 
+        if (entry.isIntersecting) { 
+          setActive(true); 
+          observer.disconnect(); 
+        } 
+      },
+      { rootMargin: '0px 0px -100px 0px', threshold: 0 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`reveal-up ${active ? 'active' : ''} ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 // ---- Home -----------------------------------------------------------------
@@ -54,40 +83,53 @@ export function HomePage() {
       </div></section>
 
       <section className="section"><div className="container grid usp-grid">
-        {['Thu lead tự động', 'Chốt đơn nhanh', 'Tích hợp n8n', 'Báo cáo realtime'].map((x) => (
-          <div className="card price-card" key={x}><h3>✨ {x}</h3><p>Tối ưu toàn bộ hành trình khách hàng từ tin nhắn đầu tiên đến thanh toán.</p></div>
+        {['Thu lead tự động', 'Chốt đơn nhanh', 'Tích hợp n8n', 'Báo cáo realtime'].map((x, i) => (
+          <Reveal key={x} style={{ transitionDelay: `${i * 0.15}s` }}>
+            <div className="card price-card"><h3>✨ {x}</h3><p>Tối ưu toàn bộ hành trình khách hàng từ tin nhắn đầu tiên đến thanh toán.</p></div>
+          </Reveal>
         ))}
       </div></section>
 
       <section className="section"><div className="container">
         <h2>Dịch vụ nổi bật</h2>
-        <Spin spinning={servicesQ.loading}>
-          {!services.length && !servicesQ.loading ? <Empty description="Chưa có dịch vụ" /> : (
+        {servicesQ.loading ? (
+          <div className="grid pricing">
+            {[1, 2, 3].map(i => <div className="card price-card" key={i}><Skeleton active paragraph={{ rows: 3 }} /></div>)}
+          </div>
+        ) : (
+          !services.length ? <Empty description="Chưa có dịch vụ" /> : (
             <div className="grid pricing">
-              {services.map((s) => (
-                <div className={'card price-card ' + (s.popular ? 'popular' : '')} key={s._id}>
+              {services.map((s, i) => (
+                <Reveal className={`card price-card ${s.popular ? 'popular' : ''}`} key={s._id} style={{ transitionDelay: `${i * 0.15}s` }}>
                   <h3>{s.name}</h3><h2>{formatCurrency(s.price)}</h2>
                   <p>{s.description}</p>
                   <Link className="btn btn-primary" to={`/dich-vu/${s.slug || s._id}`}>Xem chi tiết</Link>
-                </div>
+                </Reveal>
               ))}
             </div>
-          )}
-        </Spin>
+          )
+        )}
       </div></section>
 
       <section className="section"><div className="container">
         <h2>Blog mới nhất</h2>
-        <Spin spinning={blogsQ.loading}>
+        {blogsQ.loading ? (
           <div className="grid blog-grid">
-            {blogs.map((b) => (
-              <Link className="card price-card" to={`/blog/${b.slug || b._id}`} key={b._id}>
-                <span className="badge processing">{b.category?.name || b.category || 'Blog'}</span>
-                <h3>{b.title}</h3><p>{formatDate(b.publishedAt || b.createdAt)}</p>
-              </Link>
+            {[1, 2, 3].map(i => <div className="card price-card" key={i}><Skeleton active title={false} paragraph={{ rows: 2 }} /></div>)}
+          </div>
+        ) : (
+          <div className="grid blog-grid">
+            {blogs.map((b, i) => (
+              <Reveal key={b._id} style={{ transitionDelay: `${i * 0.15}s` }}>
+                <Link className="card price-card" to={`/blog/${b.slug || b._id}`} style={{ display: 'block' }}>
+                  <span className="badge processing" style={{ marginBottom: 12 }}>{b.category?.name || b.category || 'Blog'}</span>
+                  <h3 style={{ margin: '0 0 8px 0' }}>{b.title}</h3>
+                  <p style={{ margin: 0, color: 'var(--muted)' }}>{formatDate(b.publishedAt || b.createdAt)}</p>
+                </Link>
+              </Reveal>
             ))}
           </div>
-        </Spin>
+        )}
       </div></section>
     </>
   )
@@ -135,20 +177,22 @@ export function BlogPage() {
   return (
     <main className="blog-page-container">
       <section className="blog-hero">
-        <div className="container">
+        <div className="blog-container-fluid">
           <div className="blog-hero-inner">
             <div className="blog-hero-content">
-              <h1>Blog LOSA247</h1>
-              <p>Chia sẻ kiến thức về Marketing, AI, Chatbot và các giải pháp tăng trưởng doanh nghiệp.</p>
+              <span className="blog-hero-badge">BLOG</span>
+              <h1>Kiến thức AI Marketing<br />và AI Sales</h1>
+              <p>Cập nhật xu hướng, hướng dẫn, case study và các giải pháp giúp doanh nghiệp tăng trưởng với AI.</p>
+              <button className="blog-hero-btn">Khám phá bài viết <ArrowRight size={18} /></button>
             </div>
             <div className="blog-hero-illustration">
-              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784628316/besjq0lobn9ldbjwsepw.png" alt="Blog Illustration" style={{ border: 'none' }} />
+              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt="Blog Illustration" />
             </div>
           </div>
         </div>
       </section>
 
-      <div className="container" style={{ marginTop: 40 }}>
+      <div className="blog-container-fluid" style={{ marginTop: 40 }}>
         <div className="category-pills" style={{ justifyContent: 'center', marginBottom: 40 }}>
           <button className={`category-pill ${!activeCategory ? 'active' : ''}`} onClick={() => { setActiveCategory(null); setPage(1); }}>
             Tất cả
@@ -165,7 +209,7 @@ export function BlogPage() {
         <div className="blog-layout" style={{ marginTop: 60 }}>
           <div className="blog-main-content">
             {mainFeatured && !search && page === 1 && (
-              <div className="featured-section" style={{ marginBottom: 40 }}>
+              <div className="featured-section" style={{ marginBottom: 40, ...(sideFeatured.length === 0 ? { gridTemplateColumns: '1fr' } : {}) }}>
                 <Link to={`/blog/${mainFeatured.slug}`} className="featured-card large">
                   <div className="featured-content">
                     <span className="featured-label">BÀI VIẾT NỔI BẬT</span>
@@ -182,14 +226,14 @@ export function BlogPage() {
                     </Button>
                   </div>
                   <div className="featured-image-wrapper">
-                    <img src={mainFeatured.coverImageUrl || '/placeholder.jpg'} alt={mainFeatured.title} />
+                    <img src={mainFeatured.coverImageUrl || 'https://placehold.co/800x500/f8fafc/64748b?text=Losa247+Blog'} alt={mainFeatured.title} />
                   </div>
                 </Link>
 
                 {sideFeatured.length > 0 && (
                   <div className="featured-side-list">
                     {sideFeatured.map((fb, idx) => (
-                      <Link to={`/blog/${fb.slug}`} key={fb._id} className={`featured-card small ${idx === 0 ? 'top-small' : 'bottom-small'}`}>
+                      <Link to={`/blog/${fb.slug}`} key={fb._id} className={`featured-card small ${idx === 0 ? 'top-small' : 'bottom-small'}`} style={sideFeatured.length === 1 ? { height: 'calc(50% - 10px)' } : undefined}>
                         <div className="featured-content">
                           {fb.category && (
                             <span className="featured-cat">{fb.category.name}</span>
@@ -200,7 +244,7 @@ export function BlogPage() {
                           </div>
                         </div>
                         <div className="featured-image-wrapper">
-                          <img src={fb.coverImageUrl || '/placeholder.jpg'} alt={fb.title} />
+                          <img src={fb.coverImageUrl || 'https://placehold.co/600x400/f8fafc/64748b?text=Losa247+Blog'} alt={fb.title} />
                         </div>
                       </Link>
                     ))}
@@ -236,7 +280,7 @@ export function BlogPage() {
                   <div className="main-blog-grid">
                     {blogs.map(b => (
                       <Link to={`/blog/${b.slug}`} key={b._id} className="blog-card">
-                        <img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} className="blog-card-img" />
+                        <img src={b.coverImageUrl || 'https://placehold.co/600x400/f8fafc/64748b?text=Losa247+Blog'} alt={b.title} className="blog-card-img" />
                         <div className="blog-card-body">
                           {b.category && (
                             <span className="card-cat">{b.category.name}</span>
@@ -286,7 +330,7 @@ export function BlogPage() {
               <div>
                 {latestBlogs.map(b => (
                   <Link to={`/blog/${b.slug}`} key={b._id} className="latest-post-item">
-                    <img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} />
+                    <img src={b.coverImageUrl || 'https://placehold.co/600x400/f8fafc/64748b?text=Losa247+Blog'} alt={b.title} />
                     <div className="info">
                       <h4>{b.title}</h4>
                       <span>{formatDate(b.publishedAt)}</span>
@@ -311,7 +355,7 @@ export function BlogPage() {
               <h3>Không bỏ lỡ bài viết mới!</h3>
               <p>Đăng ký nhận bản tin để cập nhật kiến thức và xu hướng mới nhất.</p>
               <Input placeholder="Nhập email của bạn" size="large" style={{ marginBottom: 12, borderRadius: 8 }} />
-              <Button type="primary" size="large" block style={{ background: 'var(--orange)', borderColor: 'var(--orange)', borderRadius: 8, fontWeight: 600 }}>
+              <Button type="primary" size="large" block style={{ borderRadius: 8, fontWeight: 600 }}>
                 Đăng ký ngay
               </Button>
             </div>
@@ -354,25 +398,124 @@ export function BlogPage() {
 }
 // ---- Services -------------------------------------------------------------
 export function ServicesPage() {
-  const query = useApiQuery(() => publicServicesService.getList({ limit: 50 }), [])
-  const services = query.data?.items || []
+  const plansQuery = useApiQuery(() => publicPricingService.getPlans(), [])
+  const compQuery = useApiQuery(() => publicPricingService.getComparisons(), [])
+  const faqsQuery = useApiQuery(() => publicFaqsService.getList(), [])
+
+  const [faqOpen, setFaqOpen] = useState(null)
+
+  const plans = plansQuery.data?.items || []
+  const comparisons = compQuery.data?.items || []
+  const faqs = faqsQuery.data?.items || []
+
+  const getIcon = (order) => {
+    if (order === 1) return <Rocket size={28} className="text-green-600" />
+    if (order === 2) return <BriefcaseBusiness size={28} className="text-green-600" />
+    return <Building2 size={28} className="text-green-600" />
+  }
+
   return (
-    <main className="section"><div className="container">
-      <h1>Dịch vụ AI Sales Agent</h1>
-      <Spin spinning={query.loading}>
-        {!services.length && !query.loading ? <Empty description="Chưa có dịch vụ" /> : (
-          <div className="grid pricing">
-            {services.map((s) => (
-              <div className={'card price-card ' + (s.popular ? 'popular' : '')} key={s._id}>
-                <h3>{s.name}</h3><h2>{formatCurrency(s.price)}</h2>
-                <p>{s.description}</p>
-                <Link className="btn btn-primary" to={`/dich-vu/${s.slug || s._id}`}>Xem chi tiết</Link>
-              </div>
-            ))}
+    <main className="saas-main-wrapper">
+      {/* Hero Section */}
+      <div className="saas-hero-container">
+        <div className="container saas-hero-grid centered-hero">
+          <div className="saas-hero-content">
+            <h1 className="saas-hero-title">Dịch vụ <span>Chatbot</span></h1>
+            <p className="saas-hero-desc">Tự động hóa quy trình bán hàng với AI thông minh giúp bạn chăm sóc khách hàng 24/7, chốt đơn hiệu quả và tăng trưởng doanh số vượt trội.</p>
+
+            <div className="saas-hero-features">
+              <div className="saas-hf-item"><CheckCircleOutlined className="saas-icon-check" /> Tự động 24/7</div>
+              <div className="saas-hf-item"><CheckCircleOutlined className="saas-icon-check" /> Tối ưu chi phí</div>
+              <div className="saas-hf-item"><CheckCircleOutlined className="saas-icon-check" /> Dễ dàng tích hợp</div>
+              <div className="saas-hf-item"><CheckCircleOutlined className="saas-icon-check" /> Báo cáo chi tiết</div>
+            </div>
           </div>
-        )}
-      </Spin>
-    </div></main>
+        </div>
+      </div>
+
+      <div className="saas-content-section saas-fluid-container">
+        <Spin spinning={plansQuery.loading || compQuery.loading || faqsQuery.loading}>
+          {!plans.length && !plansQuery.loading ? <Empty description="Chưa có gói dịch vụ" /> : (
+            <>
+              {/* Pricing Cards */}
+              <PricingSection />
+
+              {/* Comparison Table */}
+              {comparisons.length > 0 && (
+                <div className="saas-comparison-wrapper">
+                  <h2 className="saas-section-title">So sánh chi tiết các gói</h2>
+                  <div className="saas-table-container">
+                    <table className="saas-comparison-table">
+                      <thead>
+                        <tr>
+                          <th>TÍNH NĂNG</th>
+                          {plans.map(p => (
+                            <th key={p._id}>{p.name}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comparisons.map(c => (
+                          <tr key={c._id}>
+                            <td className="saas-td-feature-name">
+                              {c.title.toLowerCase().includes('agent') && <RobotOutlined />}
+                              {c.title.toLowerCase().includes('zalo') && <CommentOutlined />}
+                              {c.title.toLowerCase().includes('crm') && <ContactsOutlined />}
+                              {c.title.toLowerCase().includes('workflow') && <PartitionOutlined />}
+                              {c.title.toLowerCase().includes('báo cáo') && <LineChartOutlined />}
+                              {c.title.toLowerCase().includes('hỗ trợ') && <CustomerServiceOutlined />}
+                              {!c.title.toLowerCase().includes('agent') && !c.title.toLowerCase().includes('zalo') && !c.title.toLowerCase().includes('crm') && !c.title.toLowerCase().includes('workflow') && !c.title.toLowerCase().includes('báo cáo') && !c.title.toLowerCase().includes('hỗ trợ') && <CheckCircleOutlined />}
+                              <span>{c.title}</span>
+                            </td>
+                            {plans.map(p => (
+                              <td key={p._id}>
+                                {c.values?.[p._id] === 'yes' || c.values?.[p._id] === true ? (
+                                  <CheckCircleOutlined className="saas-icon-check" />
+                                ) : c.values?.[p._id] === 'no' || c.values?.[p._id] === false ? (
+                                  <CloseOutlined className="saas-icon-close" />
+                                ) : (
+                                  <span className="saas-text-value">{c.values?.[p._id]}</span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* FAQ Section */}
+              {faqs.length > 0 && (
+                <div className="saas-faq-wrapper">
+                  <h2 className="saas-section-title">Câu hỏi thường gặp</h2>
+                  <div className="saas-faq-list">
+                    {faqs.map((f) => (
+                      <div
+                        key={f._id}
+                        className={`saas-faq-item ${faqOpen === f._id ? 'active' : ''}`}
+                        onClick={() => setFaqOpen(faqOpen === f._id ? null : f._id)}
+                      >
+                        <div className="saas-faq-question" onClick={() => setFaqOpen(faqOpen === f._id ? null : f._id)}>
+                          <span>{f.question}</span>
+                          {faqOpen === f._id ? <UpOutlined /> : <DownOutlined />}
+                        </div>
+                        <div className="saas-faq-answer">
+                          <div className="saas-faq-answer-inner">{f.answer}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </>
+          )}
+        </Spin>
+      </div>
+
+    </main>
   )
 }
 
@@ -596,6 +739,7 @@ export function BlogDetailPage() {
   const contentRef = useRef(null)
   const [toc, setToc] = useState([])
   const [showToc, setShowToc] = useState(true)
+  const [activeId, setActiveId] = useState('')
 
   useEffect(() => {
     if (!id) return;
@@ -625,23 +769,48 @@ export function BlogDetailPage() {
       }, 100);
     }
   }, [blog?.content]);
-  const hasHeadings = blog?.content ? /<h[2-4]/.test(blog.content) : false;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!contentRef.current || toc.length === 0) return;
+      const headings = Array.from(contentRef.current.querySelectorAll('h2, h3, h4'));
+      if (headings.length === 0) return;
+      
+      let currentActiveId = toc[0].id;
+      for (let i = 0; i < headings.length; i++) {
+        const h = headings[i];
+        if (h.getBoundingClientRect().top <= 200) {
+          if (toc[i]) {
+            currentActiveId = toc[i].id;
+          }
+        }
+      }
+      setActiveId(currentActiveId);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    setTimeout(handleScroll, 300);
+
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [toc]);
+
+  const hasHeadings = blog?.content && blog?.showToc !== false ? /<h[2-4]/.test(blog.content) : false;
 
   return (
     <main className="section"><div className="container">
       <Spin spinning={query.loading}>
         {!blog && !query.loading ? <Empty description="Không tìm thấy bài viết" /> : blog && (
-          <div style={{ 
+          <div style={{
             paddingTop: '40px',
             maxWidth: showToc && hasHeadings ? 1200 : 800,
             margin: '0 auto',
             transition: 'max-width 0.5s ease-in-out'
           }}>
             {!showToc && hasHeadings && (
-              <div 
-                style={{ 
-                  position: 'fixed', right: 24, top: 100, zIndex: 100, 
-                  background: '#fff', padding: 12, borderRadius: 12, 
+              <div
+                style={{
+                  position: 'fixed', right: 24, top: 100, zIndex: 100,
+                  background: '#fff', padding: 12, borderRadius: 12,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid var(--line)'
                 }}
                 title="Hiện nội dung chính"
@@ -658,7 +827,7 @@ export function BlogDetailPage() {
                 <span><EyeOutlined /> {blog.views || 0} lượt xem</span>
               </div>
             </div>
-            
+
             <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
               <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
                 {blog.coverImageUrl && (
@@ -701,67 +870,66 @@ export function BlogDetailPage() {
                 )}
               </div>
 
-            <div style={{ 
-              position: 'sticky', top: 100, 
-              width: showToc && hasHeadings ? 300 : 0, 
-              opacity: showToc && hasHeadings ? 1 : 0,
-              overflow: 'hidden',
-              flexShrink: 0,
-              transition: 'all 0.5s ease-in-out'
-            }}>
-              {hasHeadings && (
-                <div className="toc-widget" style={{ 
-                  background: '#f8fafc', 
-                  padding: 24, 
-                  borderRadius: 16, 
-                  border: '1px solid var(--line)',
-                  width: 300
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <h3 style={{ margin: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <MenuOutlined /> Nội dung chính
-                    </h3>
-                    <span
-                      style={{ color: 'var(--primary)', cursor: 'pointer', fontSize: 14 }}
-                      onClick={() => setShowToc(false)}
-                    >
-                      [Ẩn]
-                    </span>
+              <div style={{
+                position: 'sticky', top: 100,
+                width: showToc && hasHeadings ? 300 : 0,
+                opacity: showToc && hasHeadings ? 1 : 0,
+                overflow: 'hidden',
+                flexShrink: 0,
+                transition: 'all 0.5s ease-in-out'
+              }}>
+                {hasHeadings && (
+                  <div className="toc-widget" style={{
+                    background: '#f8fafc',
+                    padding: 24,
+                    borderRadius: 16,
+                    border: '1px solid var(--line)',
+                    width: 300
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                      <h3 style={{ margin: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <MenuOutlined /> Nội dung chính
+                      </h3>
+                      <span
+                        style={{ color: 'var(--primary)', cursor: 'pointer', fontSize: 14 }}
+                        onClick={() => setShowToc(false)}
+                      >
+                        [Ẩn]
+                      </span>
+                    </div>
+                    <div className="toc-list" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+                      {toc.map(item => (
+                        <div key={item.id} style={{ paddingLeft: (item.level - 2) * 16 }}>
+                          <a
+                            href={`#${item.id}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!contentRef.current) return;
+                              const headings = contentRef.current.querySelectorAll('h2, h3, h4');
+                              const el = headings[item.index];
+                              if (el) {
+                                const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                                window.scrollTo({ top: y, behavior: 'smooth' });
+                              }
+                            }}
+                            className={`toc-link level-${item.level} ${activeId === item.id ? 'active' : ''}`}
+                            style={{
+                              color: activeId === item.id ? '#16a34a' : (item.level === 2 ? '#0f172a' : '#475569'),
+                              fontWeight: activeId === item.id ? 700 : (item.level === 2 ? 600 : 400),
+                              textDecoration: 'none',
+                              fontSize: 14,
+                              display: 'block',
+                              lineHeight: 1.4
+                            }}
+                          >
+                            {item.text}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="toc-list" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-                    {toc.map(item => (
-                      <div key={item.id} style={{ paddingLeft: (item.level - 2) * 16 }}>
-                        <a
-                          href={`#${item.id}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (!contentRef.current) return;
-                            const headings = contentRef.current.querySelectorAll('h2, h3, h4');
-                            const el = headings[item.index];
-                            if (el) {
-                              const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                              window.scrollTo({ top: y, behavior: 'smooth' });
-                            }
-                          }}
-                          style={{
-                            color: item.level === 2 ? '#0f172a' : '#475569',
-                            fontWeight: item.level === 2 ? 600 : 400,
-                            textDecoration: 'none',
-                            fontSize: 14,
-                            display: 'block',
-                            lineHeight: 1.4
-                          }}
-                          onMouseOver={(e) => e.target.style.color = 'var(--orange)'}
-                          onMouseOut={(e) => e.target.style.color = item.level === 2 ? '#0f172a' : '#475569'}
-                        >
-                          {item.text}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             </div>
           </div>
         )}

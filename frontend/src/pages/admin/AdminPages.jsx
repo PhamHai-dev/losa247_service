@@ -24,6 +24,7 @@ import { cartsAdminService } from '../../features/carts/cartsAdminService'
 import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
 import { faqsService } from '../../features/faqs/faqsService'
 import { servicesService } from '../../features/services/servicesService'
+import { pricingService } from '../../features/services/pricingService'
 import { storeProductsService } from '../../features/storeProducts/storeProductsService'
 import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
@@ -854,12 +855,14 @@ export function AdminBlogEditor() {
           metaDescription: editing.metaDescription || editing.excerpt,
           allowComments: editing.allowComments ?? true,
           allowIndexing: editing.allowIndexing ?? true,
+          showToc: editing.showToc ?? true,
           isFeatured: editing.isFeatured ?? false,
           publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : undefined,
         } : { 
           status: 'draft',
           allowComments: true,
           allowIndexing: true,
+          showToc: true,
           isFeatured: false,
         }}>
         <Row gutter={24}>
@@ -1014,6 +1017,8 @@ export function AdminBlogEditor() {
                 <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm" />
               </Form.Item>
 
+
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <span>Bài viết nổi bật</span>
                 <Form.Item name="isFeatured" valuePropName="checked" noStyle><Switch /></Form.Item>
@@ -1025,6 +1030,10 @@ export function AdminBlogEditor() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <span>Cho phép Google index</span>
                 <Form.Item name="allowIndexing" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <span>Hiển thị mục lục</span>
+                <Form.Item name="showToc" valuePropName="checked" noStyle><Switch /></Form.Item>
               </div>
 
               <Dropdown.Button 
@@ -1127,67 +1136,247 @@ export function AdminFaqs() {
   )
 }
 
-// ---- Services & Store products -------------------------------------------
+// ---- Services (Pricing Plans & Comparisons) -------------------------------------------
 export function AdminServices() {
   return (
     <>
-      <PageHeader title="Dịch vụ & Gian hàng" />
+      <PageHeader title="Gói dịch vụ (pricingPlans)" />
       <Tabs items={[
-        { key: 'services', label: 'Dịch vụ', children: <ServicesTable /> },
-        { key: 'products', label: 'Sản phẩm workflow', children: <StoreProductsTable /> },
+        { key: 'plans', label: 'Gói dịch vụ', children: <PricingPlansTable /> },
+        { key: 'comparisons', label: 'Bảng so sánh', children: <PricingComparisonsTable /> },
       ]} />
     </>
   )
 }
 
-function ServicesTable() {
+function PricingPlansTable() {
   const { message } = App.useApp()
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form] = Form.useForm()
-  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const { search, onSearch, debounced } = useListParams()
+  const [isActive, setIsActive] = useState('')
   const query = useApiQuery(
-    () => servicesService.getServices({ search: debounced || undefined, page, limit: pageSize }),
-    [debounced, page],
+    () => pricingService.getPlans({ search: debounced || undefined, isActive }),
+    [debounced, isActive],
   )
   const rows = query.data?.items || []
-  const total = query.data?.pagination?.total || 0
 
-  const openModal = (row) => { setEditing(row || null); setOpen(true) }
+  const openModal = (row) => { 
+    setEditing(row || null)
+    form.setFieldsValue(row || { name: '', price: '', badge: '', buttonText: '', order: 0, isActive: true, subtitle: [], feature: [] })
+    setOpen(true) 
+  }
   const submit = async () => {
     const values = await form.validateFields()
     try {
-      if (editing?._id) await servicesService.updateService(editing._id, values)
-      else await servicesService.createService(values)
-      message.success('Đã lưu dịch vụ'); setOpen(false); query.refetch()
-    } catch { message.error('Không lưu được dịch vụ') }
+      if (editing?._id) await pricingService.updatePlan(editing._id, values)
+      else await pricingService.createPlan(values)
+      message.success('Đã lưu gói dịch vụ')
+      setOpen(false)
+      query.refetch()
+    } catch { message.error('Không lưu được gói dịch vụ') }
   }
-  const remove = async (row) => { try { await servicesService.deleteService(row._id); message.success('Đã xoá'); query.refetch() } catch { message.error('Không xoá được') } }
+  const remove = async (row) => { 
+    try { await pricingService.deletePlan(row._id); message.success('Đã xoá'); query.refetch() } 
+    catch { message.error('Không xoá được') } 
+  }
+  const toggleActive = async (row, checked) => {
+    try { await pricingService.updatePlan(row._id, { isActive: checked }); message.success('Đã cập nhật'); query.refetch() }
+    catch { message.error('Lỗi') }
+  }
 
   const columns = [
-    { title: 'Tên dịch vụ', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
-    { title: 'Giá', dataIndex: 'price', key: 'price', render: (v) => formatCurrency(v) },
+    { title: 'STT', key: 'stt', render: (_, __, i) => i + 1, width: 60, align: 'center' },
+    { title: 'Tên gói', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Giá', dataIndex: 'price', key: 'price' },
+    { title: 'Badge', dataIndex: 'badge', key: 'badge', render: (v) => v ? <Tag color="purple">{v}</Tag> : '—' },
+    { title: 'Subtitle (số lượng)', dataIndex: 'subtitle', key: 'subtitle', render: (v) => v?.length ? `${v.length} dòng` : '—' },
+    { title: 'Features (số lượng)', dataIndex: 'feature', key: 'feature', render: (v) => v?.length ? `${v.length} tính năng` : '—' },
+    { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
+    { title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: (v, r) => <Switch checked={v} onChange={(c) => toggleActive(r, c)} /> },
     {
-      title: '', key: 'action', render: (_, r) => (
+      title: 'Hành động', key: 'action', render: (_, r) => (
         <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
       )
     },
   ]
+
   return (
     <>
       <Space style={{ marginBottom: 12 }} wrap>
-        <Input.Search allowClear placeholder="Tìm tên dịch vụ" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm dịch vụ</Button>
+        <Input.Search allowClear placeholder="Tìm kiếm gói dịch vụ..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
+        <Select allowClear placeholder="Tất cả trạng thái" value={isActive} onChange={setIsActive} style={{ width: 160 }} options={[{ label: 'Tất cả', value: '' }, { label: 'Hiển thị', value: 'true' }, { label: 'Đang ẩn', value: 'false' }]} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm gói dịch vụ</Button>
       </Space>
-      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
-      <Modal title={editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ'} open={open} onOk={submit} onCancel={() => setOpen(false)} destroyOnHidden>
-        <Form form={form} layout="vertical" key={editing?._id || 'new'} initialValues={editing || { name: '', price: 0, description: '' }}>
-          <Form.Item name="name" label="Tên" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
-          <Form.Item name="price" label="Giá" rules={[{ required: true, message: 'Nhập giá' }]}><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
-          <Form.Item name="description" label="Mô tả"><Input.TextArea rows={3} /></Form.Item>
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} pagination={false} />
+      
+      <Drawer title={editing ? 'Sửa gói dịch vụ' : 'Thêm gói dịch vụ'} width={500} open={open} onClose={() => setOpen(false)} extra={<Space><Button onClick={() => setOpen(false)}>Hủy</Button><Button type="primary" onClick={submit}>Lưu</Button></Space>}>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'}>
+          <Form.Item name="name" label="Tên gói" rules={[{ required: true, message: 'Nhập tên gói' }]}><Input /></Form.Item>
+          <Form.Item name="price" label="Giá" rules={[{ required: true, message: 'Nhập giá' }]}><Input placeholder="VD: 6.000.000đ / tháng hoặc Liên hệ" /></Form.Item>
+          <Form.Item name="badge" label="Badge"><Input placeholder="VD: PHỔ BIẾN NHẤT" /></Form.Item>
+          <Form.Item name="buttonText" label="Button Text"><Input placeholder="VD: Bắt đầu ngay" /></Form.Item>
+          <Form.Item name="order" label="Thứ tự hiển thị"><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
+          <Form.Item name="isActive" label="Trạng thái" valuePropName="checked"><Switch /></Form.Item>
+          
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 8 }}>Subtitle (Nội dung phụ dưới giá)</div>
+            <Form.List name="subtitle">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item {...restField} name={[name]} style={{ margin: 0, width: 400 }}><Input placeholder="Nhập dòng subtitle" /></Form.Item>
+                      <CloseOutlined onClick={() => remove(name)} style={{ color: '#ef4444', cursor: 'pointer' }} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>Thêm dòng</Button>
+                </>
+              )}
+            </Form.List>
+          </div>
+
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 8 }}>Features (Tính năng)</div>
+            <Form.List name="feature">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item {...restField} name={[name]} style={{ margin: 0, width: 400 }}><Input placeholder="Nhập tính năng" /></Form.Item>
+                      <CloseOutlined onClick={() => remove(name)} style={{ color: '#ef4444', cursor: 'pointer' }} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>Thêm tính năng</Button>
+                </>
+              )}
+            </Form.List>
+          </div>
         </Form>
-      </Modal>
+      </Drawer>
+    </>
+  )
+}
+
+function PricingComparisonsTable() {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  
+  const plansQ = useApiQuery(() => pricingService.getPlans({}), [])
+  const plans = plansQ.data?.items || []
+
+  const query = useApiQuery(() => pricingService.getComparisons(), [])
+  const rows = query.data?.items || []
+
+  const openModal = (row) => { 
+    setEditing(row || null)
+    form.setFieldsValue(row || { title: '', order: 0, values: {} })
+    setOpen(true) 
+  }
+
+  const submit = async () => {
+    const values = await form.validateFields()
+    try {
+      // Chuyển đổi các values nhập vào (nếu là chuỗi 'true'/'false' -> boolean)
+      const formattedValues = { ...values.values }
+      for (const key in formattedValues) {
+        let val = formattedValues[key];
+        if (Array.isArray(val) && val.length > 0) val = val[0]; // Extract string from tag array
+        if (val === 'true') formattedValues[key] = true
+        else if (val === 'false') formattedValues[key] = false
+        else formattedValues[key] = val
+      }
+      values.values = formattedValues
+
+      if (editing?._id) await pricingService.updateComparison(editing._id, values)
+      else await pricingService.createComparison(values)
+      message.success('Đã lưu dòng so sánh')
+      setOpen(false)
+      query.refetch()
+    } catch { message.error('Không lưu được dòng so sánh') }
+  }
+
+  const remove = async (row) => { 
+    try { await pricingService.deleteComparison(row._id); message.success('Đã xoá'); query.refetch() } 
+    catch { message.error('Không xoá được') } 
+  }
+
+  // Generate dynamic columns based on active plans
+  const dynamicCols = plans.map(plan => ({
+    title: plan.name,
+    dataIndex: ['values', plan._id],
+    key: plan._id,
+    render: (val) => {
+      if (typeof val === 'boolean') {
+        return val ? <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span> : <span style={{ color: '#94a3b8' }}>-</span>
+      }
+      return val || '—'
+    }
+  }))
+
+  const columns = [
+    { title: 'STT', key: 'stt', render: (_, __, i) => i + 1, width: 60, align: 'center' },
+    { title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: (v) => <span className="cell-strong">{v}</span> },
+    ...dynamicCols,
+    { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
+    {
+      title: 'Hành động', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
+  ]
+
+  return (
+    <>
+      <Space style={{ marginBottom: 12 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm dòng so sánh</Button>
+      </Space>
+      <Table rowKey="_id" loading={query.loading || plansQ.loading} columns={columns} dataSource={rows} pagination={false} />
+      
+      <Drawer title={editing ? 'Sửa dòng so sánh' : 'Thêm dòng so sánh'} width={500} open={open} onClose={() => setOpen(false)} extra={<Space><Button onClick={() => setOpen(false)}>Hủy</Button><Button type="primary" onClick={submit}>Lưu</Button></Space>}>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'}>
+          <Form.Item name="title" label="Tiêu đề (VD: Thời hạn sử dụng, Số trang...)" rules={[{ required: true, message: 'Nhập tiêu đề' }]}><Input /></Form.Item>
+          
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 16 }}>Giá trị của từng gói dịch vụ</div>
+            {plans.map(plan => (
+              <Row key={plan._id} style={{ marginBottom: 12 }}>
+                <Col span={8} style={{ display: 'flex', alignItems: 'center' }}>
+                  <strong>{plan.name}</strong>
+                </Col>
+                <Col span={16}>
+                  <Form.Item name={['values', plan._id]} style={{ margin: 0 }}>
+                    <Select
+                      mode="tags"
+                      maxCount={1}
+                      placeholder="Nhập giá trị, hoặc chọn ✓ / -"
+                      options={[
+                        { label: '✓ (Có)', value: 'true' },
+                        { label: '- (Không)', value: 'false' }
+                      ]}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            ))}
+          </div>
+          
+          <Form.Item name="order" label="Thứ tự hiển thị"><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
+        </Form>
+      </Drawer>
+    </>
+  )
+}
+
+export function AdminStore() {
+  return (
+    <>
+      <PageHeader title="Gian hàng workflow" />
+      <StoreProductsTable />
     </>
   )
 }

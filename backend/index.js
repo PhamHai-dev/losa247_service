@@ -39,6 +39,7 @@ const adminCartsRoutes = require('./routes/admin/carts.routes');
 const adminBlogsRoutes = require('./routes/admin/blogs.routes');
 const adminFaqsRoutes = require('./routes/admin/faqs.routes');
 const adminServicesRoutes = require('./routes/admin/services.routes');
+const adminPricingRoutes = require('./routes/admin/pricing.routes');
 const adminStoreProductsRoutes = require('./routes/admin/storeProducts.routes');
 const adminChatRoutes = require('./routes/admin/chat.routes');
 const adminSettingsRoutes = require('./routes/admin/settings.routes');
@@ -55,6 +56,7 @@ const clientStoreProductsRoutes = require('./routes/client/storeProducts.routes'
 const clientChatRoutes = require('./routes/client/chat.routes');
 const clientSettingsRoutes = require('./routes/client/settings.routes');
 const clientLeadsRoutes = require('./routes/client/leads.routes');
+const clientPricingRoutes = require('./routes/client/pricing.routes');
 
 const webhooksRoutes = require('./routes/webhooks.routes');
 
@@ -66,6 +68,7 @@ app.use('/api/v1/admin/carts', adminCartsRoutes);
 app.use('/api/v1/admin/blogs', adminBlogsRoutes);
 app.use('/api/v1/admin/faqs', adminFaqsRoutes);
 app.use('/api/v1/admin/services', adminServicesRoutes);
+app.use('/api/v1/admin/pricing', adminPricingRoutes);
 app.use('/api/v1/admin/store-products', adminStoreProductsRoutes);
 app.use('/api/v1/admin/chat', adminChatRoutes);
 app.use('/api/v1/admin/settings', adminSettingsRoutes);
@@ -83,6 +86,7 @@ app.use('/api/v1/store-products', clientStoreProductsRoutes);
 app.use('/api/v1/chat', clientChatRoutes);
 app.use('/api/v1/settings', clientSettingsRoutes);
 app.use('/api/v1/leads', clientLeadsRoutes);
+app.use('/api/v1/client/pricing', clientPricingRoutes);
 
 app.use('/api/v1/webhooks', webhooksRoutes);
 

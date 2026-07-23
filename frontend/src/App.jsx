@@ -4,7 +4,7 @@ import { ClientLayout } from './layouts/ClientLayout'
 import { AdminLayout } from './layouts/AdminLayout'
 import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, StorePage, StoreDetailPage, FaqPage, AccountPage, CartPage, CheckoutPage, TagDetailPage } from './pages/client/ClientPages'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLoginPage } from './pages/auth/AuthPages'
-import { AdminDashboard, AdminLeads, AdminOrders, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin/AdminPages'
+import { AdminDashboard, AdminLeads, AdminOrders, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminStore, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin/AdminPages'
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -48,6 +48,7 @@ export default function App() {
       <Route path="blogs/editor" element={<AdminBlogEditor />} />
       <Route path="faqs" element={<AdminFaqs />} />
       <Route path="services" element={<AdminServices />} />
+      <Route path="store" element={<AdminStore />} />
       <Route path="chat" element={<AdminChat />} />
       <Route path="logs" element={<AdminLogs />} />
       <Route path="users" element={<AdminUsers />} />

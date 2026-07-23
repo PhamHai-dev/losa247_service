@@ -133,7 +133,7 @@ export function ClientLayout() {
             ) : (
               <NavLink to="/dang-nhap">Đăng nhập</NavLink>
             )}
-            <NavLink className="btn btn-primary" to="/gio-hang">Giỏ hàng</NavLink>
+            <NavLink className="btn btn-primary" style={{ boxShadow: 'none' }} to="/gio-hang">Giỏ hàng</NavLink>
           </div>
         </nav>
       </header>

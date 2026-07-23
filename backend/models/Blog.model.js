@@ -33,6 +33,10 @@ const blogSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    showToc: {
+      type: Boolean,
+      default: true,
+    },
     content: {
       type: String,
       required: true,
