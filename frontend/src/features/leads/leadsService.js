@@ -6,6 +6,7 @@ const toList = (res) => ({ items: res?.data || [], pagination: res?.pagination |
 export const leadsService = {
   getLeads: (params) => axiosClient.get('/admin/leads', { params }).then(toList),
   createLead: (payload) => axiosClient.post('/admin/leads', payload).then((res) => res?.data),
+  createPublicLead: (payload) => axiosClient.post('/leads', payload).then((res) => res?.data),
   getLeadById: (id) => axiosClient.get(`/admin/leads/${id}`).then((res) => res?.data),
   updateLead: (id, payload) => axiosClient.patch(`/admin/leads/${id}`, payload).then((res) => res?.data),
   deleteLead: (id) => axiosClient.delete(`/admin/leads/${id}`).then((res) => res?.data),

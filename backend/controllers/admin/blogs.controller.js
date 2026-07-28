@@ -39,7 +39,7 @@ exports.createCategory = async (req, res, next) => {
   try {
     const { name } = createBlogCategorySchema.parse(req.body);
     const slug = generateSlug(name);
-    
+
     let category = await BlogCategory.findOne({ slug });
     if (category) {
       return res.status(400).json({ success: false, error: { code: 'EXISTS', message: 'Danh mục này đã tồn tại' } });
@@ -214,35 +214,6 @@ exports.rejectBlog = async (req, res, next) => {
     await blog.save();
 
     res.json({ success: true, message: 'Đã từ chối và chuyển về nháp' });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Webhook từ n8n
-exports.facebookCrawlWebhook = async (req, res, next) => {
-  try {
-    // n8n gửi payload chứa bài viết crawl
-    const { title, content, coverImageUrl } = req.body;
-    
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: 'Missing title or content' });
-    }
-
-    const slug = generateSlug(title) + '-' + Date.now();
-
-    const blog = new Blog({
-      title,
-      slug,
-      content,
-      coverImageUrl,
-      status: 'pending_review',
-      source: 'facebook_crawl',
-    });
-
-    await blog.save();
-
-    res.json({ success: true, data: blog });
   } catch (err) {
     next(err);
   }

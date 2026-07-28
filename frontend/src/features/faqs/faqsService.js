@@ -14,5 +14,5 @@ export const faqsService = {
 
 // CLIENT (public)
 export const publicFaqsService = {
-  getList: (category) => axiosClient.get('/faqs', { params: category ? { category } : {} }).then(toList),
+  getList: (params) => axiosClient.get('/faqs', { params }).then(toList),
 }

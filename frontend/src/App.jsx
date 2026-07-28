@@ -2,9 +2,11 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useEffect, useLayoutEffect } from 'react'
 import { ClientLayout } from './layouts/ClientLayout'
 import { AdminLayout } from './layouts/AdminLayout'
-import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, StorePage, StoreDetailPage, FaqPage, AccountPage, CartPage, CheckoutPage, TagDetailPage } from './pages/client/ClientPages'
+import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, StorePage, StoreDetailPage, AccountPage, CartPage, CheckoutPage, TagDetailPage } from './pages/client'
+import BotcakeClone from './pages/client/ChatbotSolutionsPage'
+// import BroadcastMarketingPage from './pages/client/BroadcastMarketingPage'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLoginPage } from './pages/auth/AuthPages'
-import { AdminDashboard, AdminLeads, AdminOrders, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminStore, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin/AdminPages'
+import { AdminDashboard, AdminLeads, AdminOrders, AdminCarts, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminStore, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin'
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -22,14 +24,16 @@ export default function App() {
       <Routes>
     <Route element={<ClientLayout />}>
       <Route index element={<HomePage />} />
+      <Route path="giai-phap/chatbot" element={<BotcakeClone />} />
+      {/* <Route path="giai-phap/gui-tin-tiep-thi" element={<BroadcastMarketingPage />} /> */}
       <Route path="blog" element={<BlogPage />} />
       <Route path="blog/:id" element={<BlogDetailPage />} />
       <Route path="tag/:slug" element={<TagDetailPage />} />
-      <Route path="dich-vu" element={<ServicesPage />} />
-      <Route path="dich-vu/:id" element={<ServiceDetailPage />} />
+      <Route path="bang-gia" element={<ServicesPage />} />
+      <Route path="bang-gia/:id" element={<ServiceDetailPage />} />
       <Route path="gian-hang" element={<StorePage />} />
       <Route path="gian-hang/:id" element={<StoreDetailPage />} />
-      <Route path="hoi-dap" element={<FaqPage />} />
+
       <Route path="tai-khoan" element={<AccountPage />} />
       <Route path="gio-hang" element={<CartPage />} />
       <Route path="thanh-toan" element={<CheckoutPage />} />

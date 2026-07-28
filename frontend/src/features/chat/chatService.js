@@ -16,4 +16,5 @@ export const clientChatService = {
   // Backend startSession nhận { customerName, customerPhone }
   createSession: (payload = {}) => axiosClient.post('/chat/session', payload).then((res) => res?.data),
   getMessages: (sessionId) => axiosClient.get(`/chat/${sessionId}/messages`).then((res) => res?.data || []),
+  uploadAttachment: (formData) => axiosClient.post('/chat/upload-attachment', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then((res) => res?.data),
 }

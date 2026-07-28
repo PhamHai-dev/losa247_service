@@ -3,6 +3,7 @@ const ChatMessage = require('../../models/ChatMessage.model');
 
 const jwt = require('jsonwebtoken');
 const env = require('../../config/env');
+const uploadHelper = require('../../helpers/upload');
 
 exports.startSession = async (req, res, next) => {
   try {
@@ -48,6 +49,19 @@ exports.getSessionMessages = async (req, res, next) => {
   try {
     const messages = await ChatMessage.find({ sessionId: req.params.sessionId }).sort({ createdAt: 1 });
     res.json({ success: true, data: messages });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.uploadAttachment = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng chọn file' } });
+    }
+
+    const secureUrl = await uploadHelper.uploadToCloudinary(req.file);
+    res.json({ success: true, data: { url: secureUrl } });
   } catch (err) {
     next(err);
   }

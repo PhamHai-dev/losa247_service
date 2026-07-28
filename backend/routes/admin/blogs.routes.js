@@ -6,8 +6,6 @@ const rbacMiddleware = require('../../middlewares/rbac.middleware');
 
 const blogTagsController = require('../../controllers/admin/blogTags.controller');
 
-// Public webhook
-router.post('/webhook/facebook-crawl', blogsController.facebookCrawlWebhook);
 
 router.use(authMiddleware('admin'));
 // router.use(rbacMiddleware(['manage_blogs']));

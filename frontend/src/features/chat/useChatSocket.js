@@ -13,15 +13,15 @@ export function useChatSocket(sessionId, { role = 'customer', onMessage, onModeC
   onModeRef.current = onModeChange
 
   useEffect(() => {
-    if (!sessionId) return undefined
-
     const socket = getSocket('/chat')
     socketRef.current = socket
     if (!socket.connected) socket.connect()
 
     const handleConnect = () => {
       setConnected(true)
-      socket.emit('join_session', { sessionId })
+      if (sessionId) {
+        socket.emit('join_session', { sessionId })
+      }
     }
     const handleDisconnect = () => setConnected(false)
     const handleNewMessage = (msg) => onMessageRef.current?.(msg)
@@ -45,16 +45,21 @@ export function useChatSocket(sessionId, { role = 'customer', onMessage, onModeC
     }
   }, [sessionId])
 
-  const sendMessage = (content) => {
+  const joinSession = (id) => {
+    socketRef.current?.emit('join_session', { sessionId: id })
+  }
+
+  const sendMessage = (content, attachments = [], overrideSessionId = null) => {
     const socket = socketRef.current
-    if (!socket || !content?.trim()) return
+    const targetSessionId = overrideSessionId || sessionId
+    if (!socket || (!content?.trim() && !attachments.length) || !targetSessionId) return
     const event = role === 'admin' ? 'admin_message' : 'customer_message'
-    socket.emit(event, { sessionId, content })
+    socket.emit(event, { sessionId: targetSessionId, content, attachments })
   }
 
   const requestHuman = () => {
     socketRef.current?.emit('request_human', { sessionId })
   }
 
-  return { connected, sendMessage, requestHuman }
+  return { connected, sendMessage, requestHuman, joinSession }
 }

@@ -51,7 +51,7 @@ axiosClient.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject })
         }).then(token => {
           originalRequest.headers.Authorization = 'Bearer ' + token
@@ -80,20 +80,20 @@ axiosClient.interceptors.response.use(
 
       try {
         const refreshUrl = authType === 'admin' ? '/admin/auth/refresh' : '/auth/refresh'
-        
+
         const { data } = await axios.post(`${API_BASE_URL}${refreshUrl}`, { refreshToken })
-        
+
         if (data && data.success) {
           const newAccessToken = data.data.accessToken
           const newRefreshToken = data.data.refreshToken
-          
+
           localStorage.setItem('losa_access_token', newAccessToken)
           localStorage.setItem('losa_refresh_token', newRefreshToken)
-          
+
           originalRequest.headers.Authorization = 'Bearer ' + newAccessToken
-          
+
           processQueue(null, newAccessToken)
-          
+
           return axiosClient(originalRequest)
         }
       } catch (refreshError) {

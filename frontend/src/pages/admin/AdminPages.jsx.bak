@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import EmojiPicker from 'emoji-picker-react'
 import {
   Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
   Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
@@ -8,7 +9,7 @@ import {
 import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -903,7 +904,7 @@ export function AdminBlogEditor() {
                       'bold italic underline strikethrough forecolor backcolor code | alignleft aligncenter ' +
                       'alignright alignjustify | bullist numlist outdent indent | ' +
                       'link image media table | removeformat | help',
-                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+                    content_style: 'body { font-family:"Google Sans Flex",sans-serif,Helvetica,Arial; font-size:16px; line-height: 1.6; color: #101828; } a { color: #0068FF; text-decoration: none; } a:hover { text-decoration: underline; } img { display: block; max-width: 100%; height: auto; margin: 32px auto; border-radius: 12px; } img[style*="float: left"], img[style*="float:left"], img[align="left"] { float: none !important; display: block !important; margin: 32px auto 32px 0 !important; } img[style*="float: right"], img[style*="float:right"], img[align="right"] { float: none !important; display: block !important; margin: 32px 0 32px auto !important; } figure.image { margin: 32px auto; text-align: center; } figure.image img { margin: 0 auto; } figure.image figcaption { margin-top: 12px; font-size: 14px; color: #667085; font-style: italic; text-align: center; }',
                     placeholder: 'Nhập nội dung bài viết...',
                     statusbar: true,
                     file_picker_types: 'image',
@@ -1445,7 +1446,14 @@ export function AdminChat() {
   const { message } = App.useApp()
   const [activeId, setActiveId] = useState(null)
   const [text, setText] = useState('')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [attachments, setAttachments] = useState([])
+  const [uploading, setUploading] = useState(false)
+  
   const chatEndRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const imageInputRef = useRef(null)
+  const emojiPickerRef = useRef(null)
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams(5)
   const sessionsQ = useApiQuery(
     () => chatService.getSessions({ search: debounced || undefined, page, limit: pageSize }),
@@ -1460,6 +1468,18 @@ export function AdminChat() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [emojiPickerRef]);
+
   const { sendMessage } = useChatSocket(activeId, {
     role: 'admin',
     onMessage: () => messagesQ.refetch(),
@@ -1470,7 +1490,37 @@ export function AdminChat() {
   const takeover = async () => { try { await chatService.takeover(activeId); message.success('Đã tiếp quản hội thoại'); sessionsQ.refetch() } catch { message.error('Lỗi tiếp quản') } }
   const release = async () => { try { await chatService.release(activeId); message.success('Đã trả về Bot'); sessionsQ.refetch() } catch { message.error('Lỗi trả về bot') } }
   const feedback = async (msgId, value) => { try { await chatService.setFeedback(msgId, value); message.success('Đã ghi nhận'); messagesQ.refetch() } catch { message.error('Lỗi') } }
-  const send = () => { if (!text.trim()) return; sendMessage(text); setText(''); setTimeout(() => messagesQ.refetch(), 300) }
+  
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const data = await settingsService.uploadAsset(file)
+      if (data?.url) {
+        setAttachments(prev => [...prev, data.url])
+      }
+    } catch (err) {
+      console.error('Lỗi tải file:', err)
+      message.error('Lỗi tải file')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const send = () => { 
+    if (!text.trim() && !attachments.length) return; 
+    sendMessage(text, attachments); 
+    setText(''); 
+    setAttachments([]);
+    setShowEmojiPicker(false);
+    setTimeout(() => messagesQ.refetch(), 300) 
+  }
+
+  const onEmojiClick = (emojiObject) => {
+    setText(prev => prev + emojiObject.emoji)
+  }
 
   return (
     <>
@@ -1506,7 +1556,12 @@ export function AdminChat() {
                 <div style={{ height: 'calc(100vh - 380px)', minHeight: 300, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
                   {messages.map((m) => (
                     <div key={m._id} style={{ alignSelf: m.sender === 'customer' ? 'flex-start' : 'flex-end', maxWidth: '70%' }}>
-                      <div style={{ padding: '8px 12px', borderRadius: 12, background: m.sender === 'customer' ? '#F1F5F9' : '#CCFBF1' }}>{m.content}</div>
+                      <div style={{ padding: '8px 12px', borderRadius: 12, background: m.sender === 'customer' ? '#F1F5F9' : '#CCFBF1' }}>
+                        {m.content && <div>{m.content}</div>}
+                        {m.attachments?.map((url, i) => (
+                          <img key={i} src={url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
+                        ))}
+                      </div>
                       {m.sender === 'bot' && (
                         <Space size={4} style={{ marginTop: 2 }}>
                           <Button type="text" size="small" icon={<LikeOutlined />} onClick={() => feedback(m._id, 'good')} />
@@ -1520,10 +1575,45 @@ export function AdminChat() {
               )}
             </QueryState>
             {activeId && (
-              <Space.Compact style={{ width: '100%', marginTop: 12 }}>
-                <Input placeholder="Nhập phản hồi..." value={text} onChange={(e) => setText(e.target.value)} onPressEnter={send} />
-                <Button type="primary" onClick={send}>Gửi</Button>
-              </Space.Compact>
+              <div style={{ position: 'relative', marginTop: 12 }}>
+                {showEmojiPicker && (
+                  <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 10 }}>
+                    <EmojiPicker onEmojiClick={onEmojiClick} height={350} width={300} />
+                  </div>
+                )}
+                
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                    {attachments.map((url, i) => (
+                      <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                        <img src={url} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                        <Button 
+                          type="primary" 
+                          danger 
+                          shape="circle" 
+                          icon={<CloseOutlined />} 
+                          size="small"
+                          style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, minWidth: 20 }}
+                          onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {uploading && <div style={{ fontSize: 12, color: '#1677ff', marginBottom: 8 }}>Đang tải file lên...</div>}
+
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input placeholder="Nhập phản hồi..." value={text} onChange={(e) => setText(e.target.value)} onPressEnter={send} />
+                  <Button icon={<SmileOutlined />} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                  <Button icon={<PictureOutlined />} onClick={() => imageInputRef.current?.click()} />
+                  <Button icon={<PaperClipOutlined />} onClick={() => fileInputRef.current?.click()} />
+                  <Button type="primary" onClick={send} disabled={uploading}>Gửi</Button>
+                </Space.Compact>
+
+                <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={handleFileUpload} />
+                <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} />
+              </div>
             )}
           </Card>
         </Col>

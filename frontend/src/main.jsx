@@ -7,6 +7,7 @@ import 'antd/dist/reset.css'
 import './styles/index.css'
 import './styles/client.css'
 import './styles/admin.css'
+import './styles/responsive.css'
 import App from './App.jsx'
 import { antdTheme } from './styles/theme'
 

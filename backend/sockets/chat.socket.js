@@ -10,7 +10,7 @@ module.exports = (io) => {
       socket.join(sessionId);
     });
 
-    socket.on('customer_message', async ({ sessionId, content }) => {
+    socket.on('customer_message', async ({ sessionId, content, attachments = [] }) => {
       try {
         const session = await ChatSession.findById(sessionId);
         if (!session) return;
@@ -19,6 +19,7 @@ module.exports = (io) => {
           sessionId,
           sender: 'customer',
           content,
+          attachments,
         });
         await message.save();
 
@@ -51,7 +52,7 @@ module.exports = (io) => {
       }
     });
 
-    socket.on('admin_message', async ({ sessionId, content }) => {
+    socket.on('admin_message', async ({ sessionId, content, attachments = [] }) => {
       try {
         const session = await ChatSession.findById(sessionId);
         if (!session) return;
@@ -60,6 +61,7 @@ module.exports = (io) => {
           sessionId,
           sender: 'admin',
           content,
+          attachments,
         });
         await message.save();
 
