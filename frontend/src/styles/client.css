@@ -6,7 +6,7 @@ html {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f0f8ff 0%, #e0f2fe 100%);
+  background: #F7F9FC;
 }
 
 .client-header {
@@ -153,7 +153,6 @@ html {
   background: linear-gradient(135deg, #091E3A 0%, #061121 100%);
   padding: 80px 0 60px 0;
   color: #fff;
-  margin-top: 40px;
 }
 
 .cta-grid {

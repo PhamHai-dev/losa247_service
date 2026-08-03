@@ -7,6 +7,7 @@ const env = require('./config/env');
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
 const errorHandler = require('./middlewares/errorHandler.middleware');
+const auditLogMiddleware = require('./middlewares/auditLog.middleware');
 
 // 1. Khởi tạo app Express
 const app = express();
@@ -47,6 +48,7 @@ const adminApiConfigsRoutes = require('./routes/admin/apiConfigs.routes');
 const adminUsersRoutes = require('./routes/admin/users.routes');
 const adminRoleRoutes = require('./routes/admin/role.routes');
 const adminLogRoutes = require('./routes/admin/log.routes');
+const adminNotificationsRoutes = require('./routes/admin/notifications.routes');
 const clientOrdersRoutes = require('./routes/client/orders.routes');
 const clientCartsRoutes = require('./routes/client/cart.routes');
 const clientBlogsRoutes = require('./routes/client/blogs.routes');
@@ -61,20 +63,25 @@ const clientPricingRoutes = require('./routes/client/pricing.routes');
 const webhooksRoutes = require('./routes/webhooks.routes');
 
 app.use('/api/v1/admin/auth', adminAuthRoutes);
-app.use('/api/v1/admin/dashboard', adminDashboardRoutes);
-app.use('/api/v1/admin/leads', adminLeadsRoutes);
-app.use('/api/v1/admin/orders', adminOrdersRoutes);
-app.use('/api/v1/admin/carts', adminCartsRoutes);
-app.use('/api/v1/admin/blogs', adminBlogsRoutes);
-app.use('/api/v1/admin/faqs', adminFaqsRoutes);
-app.use('/api/v1/admin/services', adminServicesRoutes);
-app.use('/api/v1/admin/pricing', adminPricingRoutes);
-app.use('/api/v1/admin/store-products', adminStoreProductsRoutes);
-app.use('/api/v1/admin/chat', adminChatRoutes);
-app.use('/api/v1/admin/settings', adminSettingsRoutes);
-app.use('/api/v1/admin/api-configs', adminApiConfigsRoutes);
-app.use('/api/v1/admin/users', adminUsersRoutes);
-app.use('/api/v1/admin/roles', adminRoleRoutes);
+
+// Apply audit log to these admin routes
+app.use('/api/v1/admin/dashboard', auditLogMiddleware, adminDashboardRoutes);
+app.use('/api/v1/admin/leads', auditLogMiddleware, adminLeadsRoutes);
+app.use('/api/v1/admin/orders', auditLogMiddleware, adminOrdersRoutes);
+app.use('/api/v1/admin/carts', auditLogMiddleware, adminCartsRoutes);
+app.use('/api/v1/admin/blogs', auditLogMiddleware, adminBlogsRoutes);
+app.use('/api/v1/admin/faqs', auditLogMiddleware, adminFaqsRoutes);
+app.use('/api/v1/admin/services', auditLogMiddleware, adminServicesRoutes);
+app.use('/api/v1/admin/pricing', auditLogMiddleware, adminPricingRoutes);
+app.use('/api/v1/admin/store-products', auditLogMiddleware, adminStoreProductsRoutes);
+app.use('/api/v1/admin/chat', auditLogMiddleware, adminChatRoutes);
+app.use('/api/v1/admin/settings', auditLogMiddleware, adminSettingsRoutes);
+app.use('/api/v1/admin/api-configs', auditLogMiddleware, adminApiConfigsRoutes);
+app.use('/api/v1/admin/users', auditLogMiddleware, adminUsersRoutes);
+app.use('/api/v1/admin/roles', auditLogMiddleware, adminRoleRoutes);
+app.use('/api/v1/admin/notifications', auditLogMiddleware, adminNotificationsRoutes);
+
+// Logs route doesn't need audit log itself
 app.use('/api/v1/admin/logs', adminLogRoutes);
 app.use('/api/v1/auth', clientAuthRoutes);
 app.use('/api/v1/orders', clientOrdersRoutes);

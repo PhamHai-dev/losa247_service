@@ -1,38 +1,15 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import EmojiPicker from 'emoji-picker-react'
+import { useState } from 'react'
 import {
-  Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
-  Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
-  Tag, Timeline, Typography, Upload, Dropdown, DatePicker,
+  Alert, Button, Card, Col, Empty, List, Row, Segmented, Space, Spin, Statistic, Table, Tag, Typography
 } from 'antd'
-import { Editor } from '@tinymce/tinymce-react'
 import {
-  DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  ReloadOutlined
 } from '@ant-design/icons'
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useDebounce } from '../../hooks/useDebounce'
-import { useListParams } from '../../hooks/useListParams'
-import { formatCurrency, formatDate } from '../../utils/format'
-import { downloadBlob } from '../../utils/downloadBlob'
-import { ORDER_STATUS, LEAD_STATUS, BLOG_STATUS, CHAT_MODE, ORDER_STEPS } from '../../constants/statusConfig'
+import { formatDate } from '../../utils/format'
 import { dashboardService } from '../../features/dashboard/dashboardService'
-import { leadsService } from '../../features/leads/leadsService'
-import { ordersService } from '../../features/orders/ordersService'
-import { cartsAdminService } from '../../features/carts/cartsAdminService'
-import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
-import { faqsService } from '../../features/faqs/faqsService'
-import { servicesService } from '../../features/services/servicesService'
-import { pricingService } from '../../features/services/pricingService'
-import { storeProductsService } from '../../features/storeProducts/storeProductsService'
-import { chatService } from '../../features/chat/chatService'
-import { logsService } from '../../features/logs/logsService'
-import { usersService, rolesService } from '../../features/users/usersService'
-import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
-import { useChatSocket } from '../../features/chat/useChatSocket'
-import dayjs from 'dayjs'
+import { LEAD_STATUS } from '../../constants/statusConfig'
 
 const { Title, Text } = Typography
 
@@ -50,7 +27,7 @@ function PageHeader({ title, extra }) {
 }
 
 function StatusTag({ map, value }) {
-  const cfg = map[value] || { label: value || '—', color: 'default' }
+  const cfg = map?.[value] || { label: value || '—', color: 'default' }
   return <Tag color={cfg.color}>{cfg.label}</Tag>
 }
 
@@ -63,49 +40,77 @@ function QueryState({ loading, error, empty, children }) {
 }
 
 // ---- Dashboard ------------------------------------------------------------
+const COLORS = ['#0F766E', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#10B981']
 
 export function AdminDashboard() {
+  const [range, setRange] = useState('30d')
+
   const kpisQ = useApiQuery(() => dashboardService.getKpis(), [])
-  const revenueQ = useApiQuery(() => dashboardService.getRevenueChart('30d'), [])
-  const sourcesQ = useApiQuery(() => dashboardService.getLeadSources(), [])
+  const leadsChartQ = useApiQuery(() => dashboardService.getLeadsChart(range), [range])
+  const statusQ = useApiQuery(() => dashboardService.getLeadStatus(), [])
+  const recentLeadsQ = useApiQuery(() => dashboardService.getRecentLeads(), [])
+  const popularContentQ = useApiQuery(() => dashboardService.getPopularContent(), [])
 
   const kpi = kpisQ.data?.data || {}
-  const revenue = revenueQ.data?.data || []
-  const sources = sourcesQ.data?.data || []
-  const maxRevenue = Math.max(1, ...revenue.map((r) => r.revenue || 0))
+  const chartData = leadsChartQ.data?.data || []
+  const statusData = statusQ.data?.data || []
+  const recentLeads = recentLeadsQ.data?.data || []
+  const popularContent = popularContentQ.data?.data || []
+
+  const handleRefresh = () => {
+    kpisQ.refetch()
+    leadsChartQ.refetch()
+    statusQ.refetch()
+    recentLeadsQ.refetch()
+    popularContentQ.refetch()
+  }
 
   return (
     <>
       <PageHeader
         title="Dashboard tổng quan"
-        extra={<Button icon={<ReloadOutlined />} onClick={() => { kpisQ.refetch(); revenueQ.refetch(); sourcesQ.refetch() }}>Làm mới</Button>}
+        extra={<Button icon={<ReloadOutlined />} onClick={handleRefresh}>Làm mới</Button>}
       />
       <Spin spinning={kpisQ.loading}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Lead mới trong tháng" value={kpi.newLeads ?? 0} prefix="⚡" /></Card></Col>
-          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Tổng đơn hàng" value={kpi.totalOrders ?? 0} prefix="🧾" /></Card></Col>
-          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Doanh thu" value={kpi.totalRevenue ?? 0} suffix="đ" groupSeparator="." /></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }}/></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Dịch vụ hiện có" value={kpi.totalServices ?? 0} prefix="🛠️" /></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Bài viết xuất bản" value={kpi.totalBlogs ?? 0} prefix="📝" /></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Chờ xử lý (Lead/Chat)" value={kpi.pendingTasks ?? 0} prefix="💬" valueStyle={{ color: '#EF4444' }} /></Card></Col>
         </Row>
       </Spin>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={16}>
-          <Card title="Doanh thu 30 ngày">
-            <QueryState loading={revenueQ.loading} error={revenueQ.error} empty={!revenue.length}>
+          <Card 
+            title="Tăng trưởng Lead" 
+            extra={
+              <Segmented 
+                options={[
+                  { label: '7 Ngày', value: '7d' },
+                  { label: '30 Ngày', value: '30d' },
+                  { label: 'Năm nay', value: '1y' }
+                ]} 
+                value={range}
+                onChange={setRange}
+              />
+            }
+          >
+            <QueryState loading={leadsChartQ.loading} error={leadsChartQ.error} empty={!chartData.length}>
               <div style={{ height: 300, marginTop: 10 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenue} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#0F766E" stopOpacity={0.8} />
                         <stop offset="95%" stopColor="#0F766E" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="_id" tick={{ fontSize: 12 }} tickFormatter={(val) => val.substring(5)} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(0)}tr` : val} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <RechartsTooltip formatter={(value) => [formatCurrency(value), 'Doanh thu']} labelFormatter={(label) => `Ngày: ${label}`} />
-                    <Area type="monotone" dataKey="revenue" stroke="#0F766E" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                    <XAxis dataKey="_id" tick={{ fontSize: 12 }} tickFormatter={(val) => range === '1y' ? val : val.substring(5)} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 12 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <RechartsTooltip formatter={(value) => [value, 'Lead mới']} labelFormatter={(label) => `Thời gian: ${label}`} />
+                    <Area type="monotone" dataKey="leads" stroke="#0F766E" strokeWidth={3} fillOpacity={1} fill="url(#colorLeads)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -113,23 +118,76 @@ export function AdminDashboard() {
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title="Nguồn Lead">
-            <QueryState loading={sourcesQ.loading} error={sourcesQ.error} empty={!sources.length}>
-              <List
-                dataSource={sources}
-                renderItem={(s) => (
-                  <List.Item>
-                    <span>{s._id || 'Không rõ'}</span>
-                    <Tag color="cyan">{s.count}</Tag>
-                  </List.Item>
-                )}
-              />
+          <Card title="Trạng thái Lead">
+            <QueryState loading={statusQ.loading} error={statusQ.error} empty={!statusData.length}>
+              <div style={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="count"
+                      nameKey="_id"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip formatter={(value, name) => [value, LEAD_STATUS[name]?.label || name]} />
+                    <Legend formatter={(value) => LEAD_STATUS[value]?.label || value} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </QueryState>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} lg={12}>
+          <Card title="Yêu cầu tư vấn mới nhất (Leads)">
+             <QueryState loading={recentLeadsQ.loading} error={recentLeadsQ.error} empty={!recentLeads.length}>
+                <Table
+                  dataSource={recentLeads}
+                  rowKey="_id"
+                  pagination={false}
+                  size="small"
+                  columns={[
+                    { title: 'Khách hàng', dataIndex: 'name', key: 'name', render: (text, record) => <><Text strong>{text}</Text><br/><Text type="secondary" style={{fontSize: 12}}>{record.phone}</Text></> },
+                    { title: 'Dịch vụ', dataIndex: ['serviceInterested', 'name'], key: 'service', render: (val) => val || '—' },
+                    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (val) => <StatusTag map={LEAD_STATUS} value={val} /> },
+                    { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (val) => <Text type="secondary" style={{fontSize: 12}}>{formatDate(val)}</Text> },
+                  ]}
+                />
+             </QueryState>
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title="Bài viết được quan tâm nhất">
+             <QueryState loading={popularContentQ.loading} error={popularContentQ.error} empty={!popularContent.length}>
+                <List
+                  dataSource={popularContent}
+                  renderItem={(item, index) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Tag color={index < 3 ? "volcano" : "default"}>#{index + 1}</Tag>}
+                        title={<a href={`/admin/blogs/edit/${item._id}`} target="_blank" rel="noreferrer">{item.title}</a>}
+                        description={<Text type="secondary" style={{fontSize: 12}}>{formatDate(item.createdAt)}</Text>}
+                      />
+                      <Space>
+                        <Tag icon={<span role="img" aria-label="eye">👁️</span>} color="blue">{item.views || 0} views</Tag>
+                      </Space>
+                    </List.Item>
+                  )}
+                />
+             </QueryState>
           </Card>
         </Col>
       </Row>
     </>
   )
 }
-
-// ---- Leads ----------------------------------------------------------------

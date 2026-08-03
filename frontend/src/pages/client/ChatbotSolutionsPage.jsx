@@ -5,6 +5,8 @@ import "../../styles/chatbot-solutions.css";
 import { Link } from "react-router-dom";
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { publicFaqsService } from '../../features/faqs/faqsService';
+import { Mail, Users, Clock, BarChart2, Filter, HelpCircle } from 'lucide-react';
+
 
 export default function LosaClone() {
   const [faqOpen, setFaqOpen] = useState(null);
@@ -14,100 +16,169 @@ export default function LosaClone() {
   );
   const faqs = faqsQuery.data?.items || [];
   return (
-    <div className="client-app-wrapper" style={{ background: 'white' }}>
+    <div className="client-app-wrapper">
 
-      <section className="saas-container py-40 md-py-60 relative">
+      <section className="saas-hero" style={{ width: "100%" }}>
         <div className="hero-linear-bg"></div>
-        <div
-          className="relative flex-col lg-flex-row items-center lg-items-start gap-24 lg-gap-60 flex justify-center w-full"
-          style={{ maxWidth: "1200px", margin: "0 auto", zIndex: "1" }}
-        >
+        <div className="saas-container relative" style={{ zIndex: 1, padding: "0 4vw" }}>
           <div
-            className="items-center lg-items-start flex flex-col w-full gap-24"
-            style={{ maxWidth: "640px" }}
+            className="relative flex-col lg-flex-row items-center lg-items-center gap-32 lg-gap-24 flex justify-between w-full"
+            style={{ maxWidth: "1536px", margin: "0 auto", zIndex: "1" }}
           >
             <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "6px 0",
-              }}
+              className="items-center lg-items-start flex flex-col w-full gap-16"
+              style={{ padding: "45px 0" }}
             >
-              <span
-                className="text-color-primary"
+              <div
                 style={{
-                  fontSize: "16px",
-                  lineHeight: "24px",
-                  textAlign: "center",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 0",
                 }}
               >
-                Trợ lý Losa AI
-              </span>
-            </div>
-            <h1 className="text-center lg-text-left text-primary text-3xl md-text-6xl mb-0 font-semibold hero-title-gradient">
-              <span>
-                <span style={{ WebkitTextFillColor: "initial" }}>
-                  Phát triển nhanh hơn
-                </span>{" "}
-                nhờ tin nhắn tự động được hỗ trợ AI
-              </span>
-            </h1>
-            <p
-              className="text-center lg-text-left text-secondary text-md md-text-xl mb-0"
-              style={{ width: "100%", maxWidth: "900px" }}
-            >
-              Chuyển đổi các cuộc trò chuyện thành doanh số mọi lúc, mọi nơi
-            </p>
-            <div className="flex gap-16 items-center">
-              <a
-                className="button-secondary flex gap-8 items-center"
-                href="/vi/solutions#cta-form"
-              >
-                Nhận tư vấn
-              </a>
-              <button className="button-primary" type="button">
-                Trải nghiệm ngay
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="currentColor"
-                  viewBox="0 0 256 256"
+                <span style={{ width: "8px", height: "8px", backgroundColor: "#16A34A", borderRadius: "50%" }}></span>
+                <span
+                  style={{
+                    color: "#16A34A",
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}
                 >
-                  <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
-                </svg>
-              </button>
+                  Giải pháp AI Automation
+                </span>
+              </div>
+
+              <h1 style={{
+                textAlign: "left",
+                color: "#102033",
+                fontSize: "clamp(36px, 4vw, 48px)",
+                lineHeight: "1.2",
+                fontWeight: "700",
+                margin: "0",
+              }}>
+                Giải pháp AI Automation{" "}
+                <br />
+                <span style={{
+                  background: "linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #4ADE80 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}>
+                  cho doanh nghiệp
+                </span>
+              </h1>
+
+              <p
+                style={{
+                  textAlign: "left",
+                  color: "#475569",
+                  fontSize: "18px",
+                  lineHeight: "1.6",
+                  margin: "0 0 16px 0",
+                }}
+              >
+                Tự động hóa quy trình bán hàng, chăm sóc khách hàng<br />
+                và Marketing trên Facebook, Zalo, Instagram,...<br />
+                Giúp doanh nghiệp tăng trưởng bền vững và tiết kiệm chi phí.
+              </p>
+
+              <div style={{ display: "flex", gap: "16px", alignItems: "center", width: "100%", justifyContent: "flex-start" }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: "14px 28px", fontSize: "16px", borderRadius: "10px" }}
+                >
+                  Đăng ký tư vấn
+                </button>
+              </div>
             </div>
-          </div>
-          <div
-            style={{ width: "100%", maxWidth: "500px", overflow: "hidden" }}
-            className="flex gap-16 items-center justify-center feature-hero-images"
-          >
-            <img
-              alt="Trợ lý Losa AI"
-              fetchPriority="high"
-              loading="eager"
-              width="500"
-              height="520"
-              decoding="async"
-              data-nimg="1"
-              style={{
-                color: "transparent",
-                maxWidth: "100%",
-                height: "auto",
-              }}
-              src="https://botcake.io/static/images/landing/solutions/hero.svg"
-            />
+
+            <div
+              style={{ width: "100%", maxWidth: "600px", position: "relative" }}
+              className="flex items-center justify-center"
+            >
+              {/* Vòng tròn mờ trang trí phía sau ảnh */}
+              <div style={{ position: "absolute", width: "80%", height: "80%", backgroundColor: "#16A34A", filter: "blur(100px)", opacity: "0.12", borderRadius: "50%", zIndex: -1 }}></div>
+
+              <img
+                alt="Dashboard Losa AI"
+                fetchPriority="high"
+                loading="eager"
+                width="1000"
+                height="auto"
+                decoding="async"
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.15))"
+                }}
+                src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1785291429/solution_hero_hluezh.png"
+              />
+            </div>
           </div>
         </div>
       </section>
-      <section className="saas-container py-40 md-py-60 flex items-center justify-center">
+
+      <section style={{ background: "#f8fafc", width: "100%", borderTop: "1px solid #f1f5f9", borderBottom: "1px solid #f1f5f9" }}>
+        <div className="saas-container py-40 md-py-30">
+          <div style={{ maxWidth: "1536px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "40px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <span style={{ width: "24px", height: "1px", backgroundColor: "#16A34A" }}></span>
+                <span style={{ color: "#16A34A", fontWeight: "700", fontSize: "14px", textTransform: "uppercase" }}>
+                  Doanh nghiệp của bạn đang gặp vấn đề gì?
+                </span>
+                <span style={{ width: "24px", height: "1px", backgroundColor: "#16A34A" }}></span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                gap: "16px"
+              }}
+            >
+              {[
+                { icon: <Mail size={36} strokeWidth={1.5} color="#16A34A" />, title: "Inbox quá nhiều", desc: "Tin nhắn đến liên tục, khó phản hồi kịp thời" },
+                { icon: <Users size={36} strokeWidth={1.5} color="#16A34A" />, title: "Không chăm sóc khách cũ", desc: "Khách hàng tiềm năng bị bỏ sót" },
+                { icon: <Clock size={36} strokeWidth={1.5} color="#16A34A" />, title: "Tốn nhiều nhân sự", desc: "Chi phí nhân sự cao, không hiệu quả" },
+                { icon: <BarChart2 size={36} strokeWidth={1.5} color="#16A34A" />, title: "Không đo lường hiệu quả", desc: "Khó theo dõi và đánh giá kết quả" },
+                { icon: <Filter size={36} strokeWidth={1.5} color="#16A34A" />, title: "Khách hàng bị bỏ sót", desc: "Không phản hồi kịp thời, mất cơ hội" },
+                { icon: <HelpCircle size={36} strokeWidth={1.5} color="#16A34A" />, title: "Không biết Follow-up", desc: "Thiếu quy trình chăm sóc tự động" },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "20px",
+                    padding: "24px 16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                  }}
+                >
+                  <div style={{ marginBottom: "16px", background: "#f0fdf4", padding: "14px", borderRadius: "14px" }}>
+                    {item.icon}
+                  </div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#1e293b", margin: "0 0 8px 0" }}>{item.title}</h3>
+                  <p style={{ fontSize: "13px", color: "#64748b", margin: 0, lineHeight: "1.5" }}>{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="saas-container py-40 md-py-30 flex items-center justify-center">
         <div
           className="flex flex-col items-center justify-center w-full gap-24"
-          style={{ maxWidth: "1200px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div className="flex flex-col gap-24 md-gap-16 items-center justify-center">
             <div
@@ -137,7 +208,7 @@ export default function LosaClone() {
                 <span
                   style={{
                     background:
-                      "linear-gradient(90deg, #8C61C7 0%, #B65A9B 100%)",
+                      "linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #4ADE80 100%)",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
@@ -152,19 +223,20 @@ export default function LosaClone() {
             </p>
           </div>
           <div
-            className="gap-12 flex flex-col md-flex-row"
-            style={{ maxWidth: "1200px" }}
+            className="flex flex-col md-flex-row"
+            style={{ maxWidth: "1536px", gap: "35px" }}
           >
             <div
-              className="flex flex-col gap-8 usecase-item w-full"
+              className="flex flex-col gap-8 usecase-item w-full items-center text-center"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                border: "1px solid #DDE1E7",
-                background: "#F2F4F7",
+                border: "1px solid #BBF7D0",
+                background: "#F0FDF4",
+                color: "#16A34A",
               }}
             >
-              <div className="flex items-center gap-12 text-primary">
+              <div className="flex flex-col items-center justify-center gap-12 text-primary">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -189,15 +261,16 @@ export default function LosaClone() {
               </p>
             </div>
             <div
-              className="flex flex-col gap-8 usecase-item w-full"
+              className="flex flex-col gap-8 usecase-item w-full items-center text-center"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                border: "1px solid #DDE1E7",
-                background: "#F2F4F7",
+                border: "1px solid #BBF7D0",
+                background: "#F0FDF4",
+                color: "#16A34A",
               }}
             >
-              <div className="flex items-center gap-12 text-primary">
+              <div className="flex flex-col items-center justify-center gap-12 text-primary">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -222,15 +295,16 @@ export default function LosaClone() {
               </p>
             </div>
             <div
-              className="flex flex-col gap-8 usecase-item w-full"
+              className="flex flex-col gap-8 usecase-item w-full items-center text-center"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                border: "1px solid #DDE1E7",
-                background: "#F2F4F7",
+                border: "1px solid #BBF7D0",
+                background: "#F0FDF4",
+                color: "#16A34A",
               }}
             >
-              <div className="flex items-center gap-12 text-primary">
+              <div className="flex flex-col items-center justify-center gap-12 text-primary">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -257,14 +331,14 @@ export default function LosaClone() {
           </div>
         </div>
       </section>
-      <section className="saas-container py-40 md-py-60 flex items-center justify-center">
+      <section className="saas-container py-40 md-py-30 flex items-center justify-center">
         <div
           className="flex flex-col gap-24 items-center justify-center w-full"
-          style={{ maxWidth: "1200px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div
             className="flex flex-col gap-24 md-gap-16 items-center justify-center"
-            style={{ maxWidth: "1036px" }}
+            style={{ maxWidth: "1536px" }}
           >
             <div
               style={{
@@ -294,7 +368,7 @@ export default function LosaClone() {
                   className="hero-title-gradient"
                   style={{
                     background:
-                      "linear-gradient(90deg, #8D61C5 0%, #D2557F 100%)",
+                      "linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #4ADE80 100%)",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
@@ -365,10 +439,10 @@ export default function LosaClone() {
           </div>
         </div>
       </section>
-      <section className="saas-container py-40 md-py-60 flex items-center justify-center">
+      <section className="saas-container py-40 md-py-30 flex items-center justify-center">
         <div
           className="flex flex-col items-center justify-center w-full gap-24 md-gap-60"
-          style={{ maxWidth: "1200px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div className="flex flex-col gap-24 md-gap-16 items-center justify-center">
             <div
@@ -398,7 +472,7 @@ export default function LosaClone() {
                 <span
                   style={{
                     background:
-                      "linear-gradient(90deg, #6168F3 0%, #A65DAB 100%)",
+                      "linear-gradient(135deg, #16A34A 0%, #22C55E 50%, #4ADE80 100%)",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
@@ -1091,10 +1165,10 @@ export default function LosaClone() {
           </div>
         </div>
       </section>
-      <section className="saas-container py-40 md-py-60 flex items-center justify-center">
+      <section className="saas-container py-40 md-py-30 flex items-center justify-center">
         <div
           className="flex flex-col items-center justify-center w-full gap-24 md-gap-60"
-          style={{ maxWidth: "1200px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div className="flex flex-col gap-24 md-gap-16 items-center justify-center">
             <div
@@ -1304,10 +1378,10 @@ export default function LosaClone() {
           </div>
         </div>
       </section>
-      <section className="flex flex-col items-center justify-center py-40 md-py-60 saas-container md-gap-48 gap-24">
+      <section className="flex flex-col items-center justify-center py-40 md-py-30 saas-container md-gap-48 gap-24">
         <div
           className="flex flex-col md-gap-16 gap-24 justify-center items-center"
-          style={{ maxWidth: "1036px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div
             style={{
@@ -1339,7 +1413,7 @@ export default function LosaClone() {
         </div>
         <div
           className="customer-feedback-container flex gap-12"
-          style={{ maxWidth: "1200px" }}
+          style={{ maxWidth: "1536px" }}
         >
           <div className="customer-feedback-item flex flex-col gap-12 justify-between">
             <p className="text-md text-secondary mb-0">
@@ -1490,180 +1564,6 @@ export default function LosaClone() {
           </div>
         </div>
       </section>
-      <section className="w-full flex justify-center py-40 saas-container">
-        <div
-          className="flex flex-col md-flex-row gap-48 relative w-full justify-between"
-          style={{
-            background: "#101828",
-            maxWidth: "1200px",
-            borderRadius: "24px",
-            padding: "60px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            className="flex flex-col gap-32 w-full"
-            style={{ maxWidth: "480px" }}
-          >
-            <img
-              alt="losa-logo"
-              loading="lazy"
-              width="55"
-              height="40"
-              decoding="async"
-              data-nimg="1"
-              style={{ color: "transparent" }}
-              src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png"
-            />
-            <div className="flex flex-col gap-16">
-              <h2
-                style={{ zIndex: "1", whiteSpace: "pre-wrap" }}
-                className="text-white text-3xl font-semibold mb-0"
-              >
-                Kích hoạt hàng loạt công cụ Chatbot MIỄN PHÍ tại đây
-              </h2>
-              <p
-                style={{ zIndex: "1", whiteSpace: "pre-wrap" }}
-                className="text-white text-lg font-normal mb-0"
-              >
-                Thúc đẩy doanh nghiệp tăng trưởng khách hàng và doanh số
-              </p>
-            </div>
-            <div className="flex flex-row gap-16">
-              <a
-                className="button-secondary text-sm flex gap-8 items-center"
-                style={{ padding: "8px 14px" }}
-                href="/vi/solutions#cta-form"
-              >
-                Nhận tư vấn
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  viewBox="0 0 256 256"
-                >
-                  <path d="M232,128v80a40,40,0,0,1-40,40H136a8,8,0,0,1,0-16h56a24,24,0,0,0,24-24H192a24,24,0,0,1-24-24V144a24,24,0,0,1,24-24h23.65A88,88,0,0,0,66,65.54,87.29,87.29,0,0,0,40.36,120H64a24,24,0,0,1,24,24v40a24,24,0,0,1-24,24H48a24,24,0,0,1-24-24V128A104.11,104.11,0,0,1,201.89,54.66,103.41,103.41,0,0,1,232,128Z"></path>
-                </svg>
-              </a>
-              <button
-                className="button-primary text-center justify-center text-sm"
-                style={{ padding: "8px 14px" }}
-              >
-                Trải nghiệm ngay
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  viewBox="0 0 256 256"
-                  style={{ color: "#fff" }}
-                >
-                  <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div
-            className="relative w-full"
-            style={{ maxWidth: "480px", minHeight: "200px" }}
-          >
-            <div
-              className="absolute"
-              style={{
-                zIndex: "1",
-                top: "-124px",
-                left: "-60px",
-                width: "821px",
-                height: "821px",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="821"
-                height="821"
-                viewBox="0 0 821 821"
-                fill="none"
-              >
-                <g filter="url(#filter0_f_2505_10019)">
-                  <path
-                    d="M781 410.5C781 615.122 615.122 781 410.5 781C205.878 781 40 615.122 40 410.5C40 205.878 205.878 40 410.5 40C615.122 40 781 205.878 781 410.5Z"
-                    fill="url(#paint0_radial_2505_10019)"
-                  ></path>
-                </g>
-                <defs>
-                  <filter
-                    id="filter0_f_2505_10019"
-                    x="0"
-                    y="0"
-                    width="821"
-                    height="821"
-                    filterUnits="userSpaceOnUse"
-                    colorInterpolationFilters="sRGB"
-                  >
-                    <feFlood
-                      floodOpacity="0"
-                      result="BackgroundImageFix"
-                    ></feFlood>
-                    <feBlend
-                      mode="normal"
-                      in="SourceGraphic"
-                      in2="BackgroundImageFix"
-                      result="shape"
-                    ></feBlend>
-                    <feGaussianBlur
-                      stdDeviation="20"
-                      result="effect1_foregroundBlur_2505_10019"
-                    ></feGaussianBlur>
-                  </filter>
-                  <radialGradient
-                    id="paint0_radial_2505_10019"
-                    cx="0"
-                    cy="0"
-                    r="1"
-                    gradientUnits="userSpaceOnUse"
-                    gradientTransform="translate(90.5 363) rotate(20.0985) scale(615.48 694.497)"
-                  >
-                    <stop stopColor="white" stopOpacity="0"></stop>
-                    <stop
-                      offset="0.338039"
-                      stopColor="white"
-                      stopOpacity="0"
-                    ></stop>
-                    <stop
-                      offset="0.618907"
-                      stopColor="#FF2222"
-                      stopOpacity="0.3"
-                    ></stop>
-                    <stop
-                      offset="0.996194"
-                      stopColor="#7F4DFF"
-                      stopOpacity="0.6"
-                    ></stop>
-                  </radialGradient>
-                </defs>
-              </svg>
-            </div>
-            <img
-              alt="promotion-banner"
-              loading="lazy"
-              width="786"
-              height="523"
-              decoding="async"
-              data-nimg="1"
-              style={{
-                color: "transparent",
-                position: "absolute",
-                top: "0",
-                left: "0",
-                borderRadius: "12px",
-              }}
-              srcSet="https://botcake.io/_next/image?url=%2Fstatic%2Fimages%2Flanding%2Fpromotional.png&amp;w=828&amp;q=75 1x, /_next/image?url=%2Fstatic%2Fimages%2Flanding%2Fpromotional.png&amp;w=1920&amp;q=75 2x"
-              src="https://botcake.io/_next/image?url=%2Fstatic%2Fimages%2Flanding%2Fpromotional.png&amp;w=1920&amp;q=75"
-            />
-          </div>
-        </div>
-      </section>
 
       {faqs.length > 0 && (
         <section className="flex items-center justify-center py-40 md-py-60 saas-container">
@@ -1675,7 +1575,7 @@ export default function LosaClone() {
             <div className="flex flex-col gap-4 w-full">
               {faqs.map((f) => (
                 <div key={f._id} className="faq-item flex flex-col gap-12 w-full ">
-                  <div 
+                  <div
                     className="text-lg md-text-xl font-semibold flex items-center justify-between w-full hover-text-underline text-left gap-16 text-primary fa-question"
                     onClick={() => setFaqOpen(faqOpen === f._id ? null : f._id)}
                     style={{ cursor: 'pointer' }}

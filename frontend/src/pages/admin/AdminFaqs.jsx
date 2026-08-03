@@ -9,7 +9,8 @@ import {
 import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
+  EditOutlined, DeleteOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -132,10 +133,12 @@ export function AdminFaqs() {
     { title: 'Câu hỏi', dataIndex: 'question', key: 'question', render: (v) => <span className="cell-strong">{v}</span> },
     { title: 'Dịch vụ', dataIndex: 'serviceDetail', key: 'serviceDetail', render: (v) => v === 'chatbot' ? 'Chatbot' : v === 'crm' ? 'CRM' : v === 'marketing' ? 'Marketing' : '—' },
     {
-      title: '', key: 'action', render: (_, r) => (
+      title: 'Thao tác', key: 'action', width: 100, render: (_, r) => (
         <Space>
-          <Button size="small" onClick={() => openModal(r)}>Sửa</Button>
-          <Popconfirm title="Xoá FAQ?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm>
+          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => openModal(r)} />
+          <Popconfirm title="Xoá FAQ?" onConfirm={() => remove(r)}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
         </Space>
       )
     },

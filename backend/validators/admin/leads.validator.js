@@ -12,6 +12,7 @@ exports.updateLeadSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
+  source: z.string().optional(),
   status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']).optional(),
   assignedTo: z.string().optional(),
 });

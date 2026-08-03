@@ -11,3 +11,4 @@ export * from './AdminChat';
 export * from './AdminLogs';
 export * from './AdminUsers';
 export * from './AdminSettings';
+export * from './AdminNotifications';

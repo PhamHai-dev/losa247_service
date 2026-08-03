@@ -9,7 +9,8 @@ import {
 import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
+  EditOutlined, DeleteOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -123,8 +124,13 @@ function PricingPlansTable() {
     { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
     { title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: (v, r) => <Switch checked={v} onChange={(c) => toggleActive(r, c)} /> },
     {
-      title: 'Hành động', key: 'action', render: (_, r) => (
-        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      title: 'Thao tác', key: 'action', width: 100, render: (_, r) => (
+        <Space>
+          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => openModal(r)} />
+          <Popconfirm title="Xoá?" onConfirm={() => remove(r)}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       )
     },
   ]
@@ -250,8 +256,13 @@ function PricingComparisonsTable() {
     ...dynamicCols,
     { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
     {
-      title: 'Hành động', key: 'action', render: (_, r) => (
-        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      title: 'Thao tác', key: 'action', width: 100, render: (_, r) => (
+        <Space>
+          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => openModal(r)} />
+          <Popconfirm title="Xoá?" onConfirm={() => remove(r)}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       )
     },
   ]

@@ -1,31 +1,35 @@
 const Lead = require('../../models/Lead.model');
-const Order = require('../../models/Order.model');
+const Service = require('../../models/Service.model');
+const Blog = require('../../models/Blog.model');
+const ChatSession = require('../../models/ChatSession.model');
 
 exports.getKpis = async (req, res, next) => {
   try {
-    // 1. Tính tổng số lead mới trong tháng này
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    
+    // 1. New Leads this month
     const newLeads = await Lead.countDocuments({
       createdAt: { $gte: startOfMonth },
     });
 
-    // 2. Tính tổng số đơn hàng
-    const totalOrders = await Order.countDocuments({});
+    // 2. Total active Services
+    const totalServices = await Service.countDocuments({ status: 'visible' });
 
-    // 3. Tính tổng doanh thu từ các đơn hàng đã thanh toán hoặc hoàn thành
-    const revenueDocs = await Order.aggregate([
-      { $match: { status: { $in: ['paid', 'active', 'completed'] } } },
-      { $group: { _id: null, totalRevenue: { $sum: '$total' } } }
-    ]);
-    const totalRevenue = revenueDocs.length > 0 ? revenueDocs[0].totalRevenue : 0;
+    // 3. Total published Blogs
+    const totalBlogs = await Blog.countDocuments({ status: 'published' });
 
-    // 4. Trả kết quả
+    // 4. Pending Tasks: New leads + Open chat sessions
+    const unhandledLeadsCount = await Lead.countDocuments({ status: 'new' });
+    const openChatsCount = await ChatSession.countDocuments({ status: 'open' });
+    const pendingTasks = unhandledLeadsCount + openChatsCount;
+
     res.json({
       success: true,
       data: {
         newLeads,
-        totalOrders,
-        totalRevenue,
+        totalServices,
+        totalBlogs,
+        pendingTasks,
       },
     });
   } catch (err) {
@@ -33,29 +37,38 @@ exports.getKpis = async (req, res, next) => {
   }
 };
 
-exports.getRevenueChart = async (req, res, next) => {
+exports.getLeadsChart = async (req, res, next) => {
   try {
-    // 1. Nhóm doanh thu theo ngày trong 30 ngày gần nhất
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { range = '30d' } = req.query;
+    let startDate = new Date();
+    let format = "%Y-%m-%d";
 
-    const chartData = await Order.aggregate([
+    if (range === '7d') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (range === '30d') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (range === '1y') {
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      format = "%Y-%m"; // Group by month if 1 year
+    } else {
+      startDate.setDate(startDate.getDate() - 30); // Default to 30d
+    }
+
+    const chartData = await Lead.aggregate([
       { 
         $match: { 
-          status: { $in: ['paid', 'active', 'completed'] },
-          createdAt: { $gte: thirtyDaysAgo }
+          createdAt: { $gte: startDate }
         } 
       },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          revenue: { $sum: "$total" }
+          _id: { $dateToString: { format: format, date: "$createdAt" } },
+          leads: { $sum: 1 }
         }
       },
       { $sort: { _id: 1 } }
     ]);
 
-    // 2. Trả kết quả
     res.json({
       success: true,
       data: chartData,
@@ -65,22 +78,53 @@ exports.getRevenueChart = async (req, res, next) => {
   }
 };
 
-exports.getLeadSources = async (req, res, next) => {
+exports.getLeadStatus = async (req, res, next) => {
   try {
-    // 1. Thống kê số lượng lead theo từng nguồn
-    const sources = await Lead.aggregate([
+    const statuses = await Lead.aggregate([
       {
         $group: {
-          _id: "$source",
+          _id: "$status",
           count: { $sum: 1 }
         }
       }
     ]);
 
-    // 2. Trả kết quả
     res.json({
       success: true,
-      data: sources,
+      data: statuses,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getRecentLeads = async (req, res, next) => {
+  try {
+    const recentLeads = await Lead.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('serviceInterested', 'name')
+      .select('name phone serviceInterested status createdAt');
+      
+    res.json({
+      success: true,
+      data: recentLeads,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getPopularContent = async (req, res, next) => {
+  try {
+    const popularBlogs = await Blog.find({ status: 'published' })
+      .sort({ views: -1 })
+      .limit(5)
+      .select('title views slug createdAt');
+
+    res.json({
+      success: true,
+      data: popularBlogs,
     });
   } catch (err) {
     next(err);

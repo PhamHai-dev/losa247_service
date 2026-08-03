@@ -10,7 +10,9 @@ router.use(authMiddleware('admin'));
 // router.use(rbacMiddleware(['view_dashboard'])); 
 
 router.get('/kpis', dashboardController.getKpis);
-router.get('/revenue-chart', dashboardController.getRevenueChart);
-router.get('/lead-sources', dashboardController.getLeadSources);
+router.get('/leads-chart', dashboardController.getLeadsChart);
+router.get('/lead-status', dashboardController.getLeadStatus);
+router.get('/recent-leads', dashboardController.getRecentLeads);
+router.get('/popular-content', dashboardController.getPopularContent);
 
 module.exports = router;

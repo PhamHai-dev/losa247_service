@@ -503,7 +503,7 @@ export function HomePage() {
       {/* BLOG SECTION */}
       <section className="saas-section">
         <div className="saas-container">
-          <div className="saas-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', textAlign: 'left', marginBottom: 40 }}>
+          <div className="saas-section-header space-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', textAlign: 'left', marginBottom: 40 }}>
             <div style={{ margin: 0 }}>
               <h2 style={{ marginBottom: 8 }}>Bài viết mới nhất</h2>
               <p style={{ margin: 0 }}>Cập nhật kiến thức AI và Automation</p>

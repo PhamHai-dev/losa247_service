@@ -67,11 +67,19 @@ function QueryState({ loading, error, empty, children }) {
 export function AdminLogs() {
   const { message } = App.useApp()
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const [openPayload, setOpenPayload] = useState(false)
+  const [selectedLog, setSelectedLog] = useState(null)
+  
   const query = useApiQuery(
     () => logsService.getLogs({ page, limit: pageSize, search: debounced || undefined }),
     [page, debounced],
   )
   const rows = query.data?.items || []
+
+  const viewPayload = (log) => {
+    setSelectedLog(log)
+    setOpenPayload(true)
+  }
 
   const exportCsv = async () => {
     try { const blob = await logsService.exportLogs({}); downloadBlob(blob, 'logs.csv'); message.success('Đã xuất CSV') }
@@ -80,9 +88,29 @@ export function AdminLogs() {
   const columns = [
     { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v, true) },
     { title: 'Người thực hiện', dataIndex: ['actor', 'name'], key: 'actor', render: (v, r) => v || r.actor || '—' },
-    { title: 'Hành động', dataIndex: 'action', key: 'action' },
+    { 
+      title: 'Hành động', 
+      dataIndex: 'action', 
+      key: 'action',
+      render: (v) => {
+        let color = 'default'
+        if (v === 'CREATE') color = 'green'
+        if (v === 'UPDATE') color = 'blue'
+        if (v === 'DELETE') color = 'red'
+        return <Tag color={color}>{v}</Tag>
+      }
+    },
     { title: 'Module', dataIndex: 'module', key: 'module' },
     { title: 'IP', dataIndex: 'ip', key: 'ip' },
+    {
+      title: 'Chi tiết',
+      key: 'detail',
+      render: (_, r) => (
+        <Button size="small" type="link" onClick={() => viewPayload(r)} disabled={!r.payload}>
+          Xem
+        </Button>
+      )
+    }
   ]
   return (
     <>
@@ -91,9 +119,38 @@ export function AdminLogs() {
           <Input.Search allowClear placeholder="Tìm hành động / người" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
           <Button icon={<DownloadOutlined />} onClick={exportCsv}>Xuất CSV</Button>
         </Space>} />
-      {query.error && <Alert type="warning" showIcon title="Backend chưa có endpoint /admin/logs (xem API_ADDITIONS.md)" style={{ marginBottom: 12 }} />}
       <Table rowKey={(r) => r._id || r.id || Math.random()} loading={query.loading} columns={columns} dataSource={rows}
         pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+        
+      <Drawer
+        title="Chi tiết Log"
+        placement="right"
+        width={500}
+        onClose={() => setOpenPayload(false)}
+        open={openPayload}
+      >
+        {selectedLog && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Descriptions column={1} bordered size="small">
+              <Descriptions.Item label="Thời gian">{formatDate(selectedLog.createdAt, true)}</Descriptions.Item>
+              <Descriptions.Item label="Người thực hiện">{selectedLog.actor?.name || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Hành động"><Tag color="blue">{selectedLog.action}</Tag></Descriptions.Item>
+              <Descriptions.Item label="Module">{selectedLog.module}</Descriptions.Item>
+              <Descriptions.Item label="IP">{selectedLog.ip}</Descriptions.Item>
+            </Descriptions>
+            
+            {selectedLog.payload ? (
+              <Card size="small" title="Payload Data" style={{ marginTop: 16 }}>
+                <pre style={{ background: '#f8fafc', padding: 12, borderRadius: 8, overflowX: 'auto', margin: 0, fontSize: 13 }}>
+                  {JSON.stringify(selectedLog.payload, null, 2)}
+                </pre>
+              </Card>
+            ) : (
+              <Empty description="Không có payload" style={{ marginTop: 24 }} />
+            )}
+          </div>
+        )}
+      </Drawer>
     </>
   )
 }

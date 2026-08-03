@@ -1,16 +1,45 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Alert, App, Button, Card, Form, Input, Result, Segmented, Typography } from 'antd'
-import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons'
+import { Alert, App, Button, Form, Input, Result, Checkbox } from 'antd'
+import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertificateOutlined, LoginOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
+import '../../styles/admin-login.css'
 
-const { Title, Paragraph } = Typography
+function AuthLayout({ title, subtitle, children }) {
+  return (
+    <div className="admin-login-layout">
+      <div className="admin-login-bg-shape-1"></div>
+      <div className="admin-login-bg-shape-2"></div>
+      <div className="admin-login-dots-1"></div>
+      <div className="admin-login-dots-2"></div>
+
+      <div className="admin-login-content">
+        <div className="admin-login-header">
+          <h1 className="admin-login-title">{title}</h1>
+          <p className="admin-login-subtitle">{subtitle}</p>
+        </div>
+
+        <div className="admin-login-card">
+          {children}
+        </div>
+
+        <div className="admin-login-footer">
+          <div className="admin-login-security">
+            <SafetyCertificateOutlined /> Bảo mật bởi LOSA247 Security
+          </div>
+          <div className="admin-login-copyright">
+            © 2024 LOSA247. Tất cả quyền được bảo lưu.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function LoginPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [mode, setMode] = useState('client')
   const { loginClient, loading, error } = useAuthStore()
 
   const handleSubmit = async (values) => {
@@ -24,52 +53,42 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-screen premium-auth">
-      <div className="auth-art premium-auth-art">
-        <div>
-          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
-          <p className="eyebrow">LOSA247 Control Center</p>
-          <h1>Đăng nhập để quản lý bán hàng bằng AI</h1>
-          <p>Dashboard realtime, CRM lead, đơn hàng, chat bot và workflow n8n trong một hệ thống duy nhất.</p>
+    <AuthLayout
+      title="Đăng nhập khách hàng"
+      subtitle="Dashboard realtime, theo dõi đơn hàng và dịch vụ AI"
+    >
+      {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+
+      <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit}>
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
+        >
+          <Input size="large" prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="customer@gmail.com" />
+        </Form.Item>
+
+        <Form.Item
+          label="Mật khẩu"
+          name="password"
+          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
+          style={{ marginBottom: 12 }}
+        >
+          <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ fontSize: 13 }}>
+            Chưa có tài khoản? <Link to="/dang-ky" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng ký</Link>
+          </div>
+          <Link to="/quen-mat-khau" style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>Quên mật khẩu?</Link>
         </div>
-      </div>
 
-      <div className="auth-form premium-auth-form">
-        <Card className="auth-card" variant="borderless">
-          <Title level={2}>Chào mừng trở lại</Title>
-          <Paragraph type="secondary">Đăng nhập tài khoản khách hàng của bạn.</Paragraph>
-
-          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
-
-          <Form layout="vertical" onFinish={handleSubmit}>
-            <Form.Item
-              label="Email"
-              name="email"
-              rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
-            >
-              <Input size="large" prefix={<MailOutlined />} placeholder="admin@gmail.com" />
-            </Form.Item>
-
-            <Form.Item
-              label="Mật khẩu"
-              name="password"
-              rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
-            >
-              <Input.Password size="large" prefix={<LockOutlined />} placeholder="password123" />
-            </Form.Item>
-
-            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
-              Đăng nhập
-            </Button>
-          </Form>
-
-          <p style={{ marginTop: 18, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <span>Chưa có tài khoản khách? <Link to="/dang-ky">Đăng ký ngay</Link></span>
-            <Link to="/quen-mat-khau">Quên mật khẩu?</Link>
-          </p>
-        </Card>
-      </div>
-    </div>
+        <Button type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
+          Đăng nhập
+        </Button>
+      </Form>
+    </AuthLayout>
   )
 }
 
@@ -89,47 +108,53 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="auth-screen premium-auth">
-      <div className="auth-art premium-auth-art">
-        <div>
-          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
-          <p className="eyebrow">LOSA247 Control Center</p>
-          <h1>Đăng nhập Quản trị viên</h1>
-          <p>Dashboard realtime, CRM lead, đơn hàng, chat bot và workflow n8n trong một hệ thống duy nhất.</p>
+    <AuthLayout
+      title="Đăng nhập hệ thống quản trị"
+      subtitle="Quản lý và điều hành hệ thống LOSA247 một cách hiệu quả"
+    >
+      {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+
+      <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit} initialValues={{ email: 'admin@gmail.com', remember: true }}>
+        <Form.Item
+          label="Email quản trị"
+          name="email"
+          rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
+        >
+          <Input size="large" prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="admin@gmail.com" />
+        </Form.Item>
+
+        <Form.Item
+          label="Mật khẩu"
+          name="password"
+          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
+          style={{ marginBottom: 12 }}
+        >
+          <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <Form.Item name="remember" valuePropName="checked" noStyle>
+            <Checkbox style={{ color: '#64748b', fontSize: 13 }}>Ghi nhớ đăng nhập</Checkbox>
+          </Form.Item>
+          <Link to="/quen-mat-khau" style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>Quên mật khẩu?</Link>
         </div>
+
+        <Button type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
+          Đăng nhập Admin
+        </Button>
+      </Form>
+
+      <div className="admin-login-divider">hoặc đăng nhập với</div>
+
+      <div className="admin-login-social-btns">
+        <button className="admin-login-social-btn" type="button">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" /> Google
+        </button>
+        <button className="admin-login-social-btn" type="button">
+          <img src="https://www.svgrepo.com/show/452062/microsoft.svg" alt="Microsoft" /> Microsoft
+        </button>
       </div>
-
-      <div className="auth-form premium-auth-form">
-        <Card className="auth-card" variant="borderless">
-          <Title level={2}>Admin Login</Title>
-          <Paragraph type="secondary">Truy cập hệ thống quản trị LOSA247.</Paragraph>
-
-          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
-
-          <Form layout="vertical" onFinish={handleSubmit} initialValues={{ email: 'admin@gmail.com' }}>
-            <Form.Item
-              label="Email quản trị"
-              name="email"
-              rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
-            >
-              <Input size="large" prefix={<MailOutlined />} placeholder="admin@gmail.com" />
-            </Form.Item>
-
-            <Form.Item
-              label="Mật khẩu"
-              name="password"
-              rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
-            >
-              <Input.Password size="large" prefix={<LockOutlined />} placeholder="password123" />
-            </Form.Item>
-
-            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
-              Đăng nhập Admin
-            </Button>
-          </Form>
-        </Card>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }
 
@@ -149,45 +174,38 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-screen premium-auth">
-      <div className="auth-art premium-auth-art">
-        <div>
-          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
-          <p className="eyebrow">Start with LOSA247</p>
-          <h1>Tạo tài khoản khách hàng</h1>
-          <p>Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent đang sử dụng.</p>
-        </div>
+    <AuthLayout
+      title="Tạo tài khoản khách hàng"
+      subtitle="Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent"
+    >
+      {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+
+      <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit}>
+        <Form.Item label="Họ tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}> 
+          <Input size="large" prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Nguyễn Văn A" />
+        </Form.Item>
+
+        <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email' }]}> 
+          <Input size="large" prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="customer@gmail.com" />
+        </Form.Item>
+
+        <Form.Item label="Số điện thoại" name="phone">
+          <Input size="large" prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="0901234567" />
+        </Form.Item>
+
+        <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]} style={{ marginBottom: 24 }}> 
+          <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <Button type="primary" htmlType="submit" size="large" loading={loading} block>
+          Tạo tài khoản
+        </Button>
+      </Form>
+
+      <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
+        Đã có tài khoản? <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng nhập</Link>
       </div>
-
-      <div className="auth-form premium-auth-form">
-        <Card className="auth-card" variant="borderless">
-          <Title level={2}>Đăng ký</Title>
-          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
-
-          <Form layout="vertical" onFinish={handleSubmit}>
-            <Form.Item label="Họ tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}> 
-              <Input size="large" prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
-            </Form.Item>
-
-            <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email' }]}> 
-              <Input size="large" prefix={<MailOutlined />} placeholder="customer@gmail.com" />
-            </Form.Item>
-
-            <Form.Item label="Số điện thoại" name="phone">
-              <Input size="large" prefix={<PhoneOutlined />} placeholder="0901234567" />
-            </Form.Item>
-
-            <Form.Item label="Mật khẩu" name="password" rules={[{ required: true }, { min: 6 }]}> 
-              <Input.Password size="large" prefix={<LockOutlined />} placeholder="Tối thiểu 6 ký tự" />
-            </Form.Item>
-
-            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
-              Tạo tài khoản
-            </Button>
-          </Form>
-        </Card>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }
 
@@ -205,7 +223,6 @@ export function ForgotPasswordPage() {
       setSent(true)
       message.success('Đã gửi hướng dẫn đặt lại mật khẩu')
     } catch (err) {
-      // Backend có thể chưa hỗ trợ endpoint này (xem API_ADDITIONS.md).
       setError(err?.error?.message || 'Không gửi được yêu cầu. Vui lòng thử lại sau.')
     } finally {
       setLoading(false)
@@ -213,54 +230,42 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="auth-screen premium-auth">
-      <div className="auth-art premium-auth-art">
-        <div>
-          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
-          <p className="eyebrow">LOSA247 Account</p>
-          <h1>Khôi phục quyền truy cập</h1>
-          <p>Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn.</p>
-        </div>
-      </div>
+    <AuthLayout
+      title="Khôi phục quyền truy cập"
+      subtitle="Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn."
+    >
+      {sent ? (
+        <Result
+          status="success"
+          title="Đã gửi yêu cầu"
+          subTitle="Vui lòng kiểm tra email để nhận liên kết đặt lại mật khẩu."
+          extra={<Link className="ant-btn ant-btn-primary" style={{ backgroundColor: '#0d9488', borderColor: '#0d9488', height: 48, borderRadius: 8, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }} to="/dang-nhap">Về đăng nhập</Link>}
+        />
+      ) : (
+        <>
+          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 
-      <div className="auth-form premium-auth-form">
-        <Card className="auth-card" variant="borderless">
-          <Title level={2}>Quên mật khẩu</Title>
+          <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit}>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
+              style={{ marginBottom: 24 }}
+            >
+              <Input size="large" prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="customer@gmail.com" />
+            </Form.Item>
 
-          {sent ? (
-            <Result
-              status="success"
-              title="Đã gửi yêu cầu"
-              subTitle="Vui lòng kiểm tra email để nhận liên kết đặt lại mật khẩu."
-              extra={<Link className="ant-btn ant-btn-primary" to="/dang-nhap">Về đăng nhập</Link>}
-            />
-          ) : (
-            <>
-              <Paragraph type="secondary">Nhập email tài khoản khách hàng của bạn.</Paragraph>
-              {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+            <Button type="primary" htmlType="submit" size="large" loading={loading} block>
+              Gửi liên kết đặt lại
+            </Button>
+          </Form>
 
-              <Form layout="vertical" onFinish={handleSubmit}>
-                <Form.Item
-                  label="Email"
-                  name="email"
-                  rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email', message: 'Email không hợp lệ' }]}
-                >
-                  <Input size="large" prefix={<MailOutlined />} placeholder="customer@gmail.com" />
-                </Form.Item>
-
-                <Button type="primary" htmlType="submit" size="large" loading={loading} block>
-                  Gửi liên kết đặt lại
-                </Button>
-              </Form>
-
-              <p style={{ marginTop: 18 }}>
-                Nhớ mật khẩu rồi? <Link to="/dang-nhap">Đăng nhập</Link>
-              </p>
-            </>
-          )}
-        </Card>
-      </div>
-    </div>
+          <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
+            Nhớ mật khẩu rồi? <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng nhập</Link>
+          </div>
+        </>
+      )}
+    </AuthLayout>
   )
 }
 
@@ -287,59 +292,48 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div className="auth-screen premium-auth">
-      <div className="auth-art premium-auth-art">
-        <div>
-          <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png" alt="Logo" style={{ height: 48, marginBottom: 24, objectFit: 'contain' }} />
-          <p className="eyebrow">LOSA247 Account</p>
-          <h1>Đặt lại mật khẩu mới</h1>
-          <p>Tạo mật khẩu mới an toàn để tiếp tục sử dụng dịch vụ.</p>
-        </div>
+    <AuthLayout
+      title="Đặt lại mật khẩu mới"
+      subtitle="Tạo mật khẩu mới an toàn để tiếp tục sử dụng dịch vụ."
+    >
+      {!token && <Alert type="warning" title="Thiếu mã đặt lại (token). Vui lòng mở liên kết từ email." showIcon style={{ marginBottom: 16 }} />}
+      {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+
+      <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit}>
+        <Form.Item
+          label="Mật khẩu mới"
+          name="newPassword"
+          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
+        >
+          <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <Form.Item
+          label="Xác nhận mật khẩu"
+          name="confirmPassword"
+          dependencies={['newPassword']}
+          rules={[
+            { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+            ({ getFieldValue }) => ({
+              validator: (_, value) =>
+                !value || getFieldValue('newPassword') === value
+                  ? Promise.resolve()
+                  : Promise.reject(new Error('Mật khẩu xác nhận không khớp')),
+            }),
+          ]}
+          style={{ marginBottom: 24 }}
+        >
+          <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <Button type="primary" htmlType="submit" size="large" loading={loading} block disabled={!token}>
+          Đặt lại mật khẩu
+        </Button>
+      </Form>
+
+      <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
+        <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Về đăng nhập</Link>
       </div>
-
-      <div className="auth-form premium-auth-form">
-        <Card className="auth-card" variant="borderless">
-          <Title level={2}>Đặt lại mật khẩu</Title>
-
-          {!token && <Alert type="warning" title="Thiếu mã đặt lại (token). Vui lòng mở liên kết từ email." showIcon style={{ marginBottom: 16 }} />}
-          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
-
-          <Form layout="vertical" onFinish={handleSubmit}>
-            <Form.Item
-              label="Mật khẩu mới"
-              name="newPassword"
-              rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
-            >
-              <Input.Password size="large" prefix={<LockOutlined />} placeholder="Mật khẩu mới" />
-            </Form.Item>
-
-            <Form.Item
-              label="Xác nhận mật khẩu"
-              name="confirmPassword"
-              dependencies={['newPassword']}
-              rules={[
-                { required: true, message: 'Vui lòng xác nhận mật khẩu' },
-                ({ getFieldValue }) => ({
-                  validator: (_, value) =>
-                    !value || getFieldValue('newPassword') === value
-                      ? Promise.resolve()
-                      : Promise.reject(new Error('Mật khẩu xác nhận không khớp')),
-                }),
-              ]}
-            >
-              <Input.Password size="large" prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu" />
-            </Form.Item>
-
-            <Button type="primary" htmlType="submit" size="large" loading={loading} block disabled={!token}>
-              Đặt lại mật khẩu
-            </Button>
-          </Form>
-
-          <p style={{ marginTop: 18 }}>
-            <Link to="/dang-nhap">Về đăng nhập</Link>
-          </p>
-        </Card>
-      </div>
-    </div>
+    </AuthLayout>
   )
 }

@@ -14,6 +14,7 @@ import LeadFormModal from '../components/common/LeadFormModal'
 
 // Widget chat nổi dùng chung toàn site (tạo session client + socket realtime).
 function ChatWidget({ user }) {
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -78,6 +79,11 @@ function ChatWidget({ user }) {
   }
 
   const toggle = async () => {
+    if (!user) {
+      message.info('Vui lòng đăng nhập để bắt đầu trò chuyện!')
+      navigate('/dang-nhap')
+      return
+    }
     const next = !open
     setOpen(next)
   }
@@ -295,8 +301,8 @@ export function ClientLayout() {
   const siteInfo = siteQuery.data || {}
   // Default values to fallback gracefully
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784531182/logo_jtqgkt.png'
-  const slogan = siteInfo.slogan || 'AI Sales Agent giúp shop online tư vấn, chốt đơn và chăm sóc khách hàng 24/7.'
+  const logoUrl = siteInfo.logoUrl || 'https://amqkxxpqkoagqqephtgl.supabase.co/storage/v1/object/sign/web_losa/logo_web.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82M2FmMGExMS0yYjgxLTQ5YzYtODgyYy04ZTY0ZGU5NTE3OGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJfbG9zYS9sb2dvX3dlYi5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzg1MjM5MzkzLCJleHAiOjE4MTY3NzUzOTN9.itlV_P4NE_0_9O-oEA7Us2xIsEqwr8pyIGa92fgIUCs'
+  const slogan = siteInfo.slogan || 'AI Sales'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
 

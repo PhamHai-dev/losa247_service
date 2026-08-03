@@ -9,7 +9,8 @@ import {
 import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
+  EditOutlined, DeleteOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -138,13 +139,30 @@ export function AdminLeads() {
 
   const columns = [
     { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
-    { title: 'SĐT', dataIndex: 'phone', key: 'phone' },
+    { 
+      title: 'SĐT', 
+      dataIndex: 'phone', 
+      key: 'phone',
+      render: (v) => v ? (
+        <a href={`https://zalo.me/${v.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0d9488', fontWeight: 500 }}>
+          {v}
+        </a>
+      ) : '—'
+    },
     { title: 'Nguồn', dataIndex: 'source', key: 'source' },
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={LEAD_STATUS} value={v} /> },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
-    { title: 'Sửa', key: 'edit', render: (_, r) => <Button size="small" onClick={() => openEdit(r)}>Sửa</Button> },
-    { title: 'Xóa', key: 'delete', render: (_, r) => <Popconfirm title="Xóa lead này?" onConfirm={() => handleDelete(r._id)}><Button size="small" type="text" danger>Xóa</Button></Popconfirm> },
-    { title: '', key: 'action', render: (_, r) => <Button size="small" onClick={() => setDetailId(r._id)}>Chi tiết</Button> },
+    {
+      title: 'Thao tác', key: 'action', width: 140, render: (_, r) => (
+        <Space>
+          <Button size="small" type="text" icon={<EyeOutlined style={{ color: '#0ea5e9' }} />} onClick={() => setDetailId(r._id)} />
+          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => openEdit(r)} />
+          <Popconfirm title="Xóa lead này?" onConfirm={() => handleDelete(r._id)}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      )
+    },
   ]
 
   return (
@@ -209,7 +227,15 @@ function LeadDetailDrawer({ id, open, onClose, onChanged }) {
             <Descriptions column={1} bordered size="small"
               items={[
                 { key: 'name', label: 'Tên', children: lead.name },
-                { key: 'phone', label: 'SĐT', children: lead.phone },
+                { 
+                  key: 'phone', 
+                  label: 'SĐT', 
+                  children: lead.phone ? (
+                    <a href={`https://zalo.me/${lead.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0d9488', fontWeight: 500 }}>
+                      {lead.phone}
+                    </a>
+                  ) : '—' 
+                },
                 { key: 'source', label: 'Nguồn', children: lead.source },
                 { key: 'status', label: 'Trạng thái', children: <StatusTag map={LEAD_STATUS} value={lead.status} /> },
                 { key: 'createdAt', label: 'Ngày tạo', children: formatDate(lead.createdAt, true) },

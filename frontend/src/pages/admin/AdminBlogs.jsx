@@ -9,7 +9,8 @@ import {
 import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
+  EditOutlined, DeleteOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -133,12 +134,15 @@ function BlogsView() {
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={BLOG_STATUS} value={v} /> },
     { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
     {
-      title: 'Thao tác', key: 'action', render: (_, r) => (
+      title: 'Thao tác', key: 'action', width: 180, render: (_, r) => (
         <Space>
-          {r.status === 'pending' && <Button size="small" type="primary" onClick={() => doAction(() => blogsService.approve(r._id), 'Đã duyệt bài')}>Duyệt</Button>}
-          {r.status === 'pending' && <Button size="small" danger onClick={() => doAction(() => blogsService.reject(r._id), 'Đã từ chối')}>Từ chối</Button>}
-          <Button size="small" onClick={() => navigate('/admin/blogs/editor', { state: { blog: r } })}>Sửa</Button>
-          <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(r._id), 'Đã xoá')}><Button size="small" danger>Xoá</Button></Popconfirm>
+          <Button size="small" type="text" icon={<EyeOutlined style={{ color: '#0ea5e9' }} />} onClick={() => window.open(`/blog/${r.slug}`, '_blank')} />
+          {r.status === 'pending' && <Button size="small" type="text" icon={<CheckCircleOutlined style={{ color: '#10b981' }} />} onClick={() => doAction(() => blogsService.approve(r._id), 'Đã duyệt bài')} />}
+          {r.status === 'pending' && <Button size="small" type="text" danger icon={<CloseOutlined />} onClick={() => doAction(() => blogsService.reject(r._id), 'Đã từ chối')} />}
+          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => navigate('/admin/blogs/editor', { state: { blog: r } })} />
+          <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(r._id), 'Đã xoá')}>
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
         </Space>
       ),
     },

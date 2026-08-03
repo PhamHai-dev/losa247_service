@@ -6,7 +6,7 @@ import { HomePage, BlogPage, BlogDetailPage, ServicesPage, ServiceDetailPage, St
 import BotcakeClone from './pages/client/ChatbotSolutionsPage'
 // import BroadcastMarketingPage from './pages/client/BroadcastMarketingPage'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLoginPage } from './pages/auth/AuthPages'
-import { AdminDashboard, AdminLeads, AdminOrders, AdminCarts, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminStore, AdminChat, AdminLogs, AdminUsers, AdminSettings } from './pages/admin'
+import { AdminDashboard, AdminLeads, AdminOrders, AdminCarts, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminStore, AdminChat, AdminLogs, AdminUsers, AdminSettings, AdminNotifications } from './pages/admin'
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -57,6 +57,7 @@ export default function App() {
       <Route path="logs" element={<AdminLogs />} />
       <Route path="users" element={<AdminUsers />} />
       <Route path="settings" element={<AdminSettings />} />
+      <Route path="notifications" element={<AdminNotifications />} />
     </Route>
   </Routes>
   </>
