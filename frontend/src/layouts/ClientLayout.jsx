@@ -238,7 +238,7 @@ const BrandText = ({ siteName }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
       <div style={{ fontSize: '26px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.5px', fontFamily: '"Inter", "Montserrat", sans-serif' }}>
-        <span style={{ color: '#0B192C' }}>Losa</span><span style={{ color: '#22c55e' }}>247</span>
+        <span style={{ color: '#0B192C' }}>Losa</span><span style={{ color: 'var(--blue-500)' }}>247</span>
       </div>
       <div style={{ fontSize: '9px', fontWeight: 700, color: '#475569', letterSpacing: '0.8px', marginTop: '4px', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
         Tự động hóa chăm sóc 24/7
@@ -414,11 +414,11 @@ export function ClientLayout() {
                 <img src={logoUrl} alt="Logo" style={{ height: 48, objectFit: 'contain' }} />
                 <BrandText siteName={siteName} theme="dark" />
               </div>
-              <h2 className="cta-title">Khám phá cách doanh nghiệp của bạn kết nối với khách hàng <span style={{ color: '#22c55e' }}>24/7</span> cùng Losa</h2>
+              <h2 className="cta-title">Khám phá cách doanh nghiệp của bạn kết nối với khách hàng <span style={{ color: 'var(--blue-400)' }}>24/7</span> cùng Losa</h2>
               <ul className="cta-benefits">
-                <li><CheckCircle size={20} color="#22c55e" /> Tự động hóa quy trình nhắn tin với khách hàng</li>
-                <li><CheckCircle size={20} color="#22c55e" /> Tiếp cận hàng nghìn khách qua chiến dịch gửi tin nhắn hàng loạt</li>
-                <li><CheckCircle size={20} color="#22c55e" /> Kết hợp sức mạnh AI vào dịch vụ khách hàng một cách liền mạch</li>
+                <li><CheckCircle size={20} color="var(--blue-400)" /> Tự động hóa quy trình nhắn tin với khách hàng</li>
+                <li><CheckCircle size={20} color="var(--blue-400)" /> Tiếp cận hàng nghìn khách qua chiến dịch gửi tin nhắn hàng loạt</li>
+                <li><CheckCircle size={20} color="var(--blue-400)" /> Kết hợp sức mạnh AI vào dịch vụ khách hàng một cách liền mạch</li>
               </ul>
             </div>
             <div className="cta-form-card">
@@ -456,7 +456,7 @@ export function ClientLayout() {
                 {ctaSubmitting ? 'Đang gửi...' : <><span style={{ marginRight: 8 }}>Đặt lịch demo</span> <ArrowRight size={16} /></>}
               </button>
               <div className="cta-secure-note">
-                <Shield size={14} color="#22c55e" /> Thông tin của bạn được bảo mật tuyệt đối
+                <Shield size={14} color="var(--blue-400)" /> Thông tin của bạn được bảo mật tuyệt đối
               </div>
             </div>
           </div>
@@ -536,8 +536,8 @@ export function ClientLayout() {
 
           <div className="footer-bottom">
             <div className="footer-copyright" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ background: '#0f172a', padding: '6px', borderRadius: '8px', display: 'flex' }}>
-                <Shield size={16} color="#3b82f6" />
+              <div style={{ background: 'rgba(14, 165, 233, .12)', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                <Shield size={16} color="var(--blue-400)" />
               </div>
               © 2024 Losa247. Tất cả quyền được bảo lưu.
             </div>

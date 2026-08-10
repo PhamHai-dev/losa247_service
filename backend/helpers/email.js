@@ -11,6 +11,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+exports.sendEmail = async ({ to, subject, html }) => {
+  const info = await transporter.sendMail({
+    from: `"Losa247" <${env.SMTP_USER}>`,
+    to,
+    subject,
+    html,
+  });
+  return info;
+};
+
 exports.sendResetPasswordEmail = async (toEmail, token) => {
   const resetUrl = `http://localhost:5173/dat-lai-mat-khau?token=${token}`; // Adjust depending on frontend URL
 

@@ -1,8 +1,46 @@
 const Lead = require('../../models/Lead.model');
 const Order = require('../../models/Order.model');
 const Service = require('../../models/Service.model');
+const XLSX = require('xlsx');
 const { paginate, buildPaginationResponse } = require('../../helpers/format');
-const { createLeadSchema, updateLeadSchema, addNoteSchema, convertToOrderSchema } = require('../../validators/admin/leads.validator');
+const { sendEmail } = require('../../helpers/email');
+const {
+  createLeadSchema, updateLeadSchema, addNoteSchema, convertToOrderSchema,
+  bulkUpdateLeadSchema, bulkDeleteLeadSchema, bulkEmailLeadSchema,
+} = require('../../validators/admin/leads.validator');
+
+const parseDateRange = (filter, fromDate, toDate) => {
+  if (!fromDate && !toDate) return;
+  filter.createdAt = {};
+  if (fromDate) filter.createdAt.$gte = new Date(fromDate);
+  if (toDate) {
+    const end = new Date(toDate);
+    end.setHours(23, 59, 59, 999);
+    filter.createdAt.$lte = end;
+  }
+};
+
+const buildLeadFilter = ({ search, status, source, assignedTo, fromDate, toDate, ids }) => {
+  const filter = {};
+  if (status) filter.status = status;
+  if (source) filter.source = source;
+  if (assignedTo) filter.assignedTo = assignedTo;
+  if (ids) filter._id = { $in: String(ids).split(',').filter(Boolean) };
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { phone: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+    ];
+  }
+  parseDateRange(filter, fromDate, toDate);
+  return filter;
+};
+
+const validationError = (res, err) => res.status(400).json({
+  success: false,
+  error: { code: 'VALIDATION_ERROR', message: err.errors?.[0]?.message || err.message },
+});
 
 exports.createLead = async (req, res, next) => {
   try {
@@ -20,28 +58,17 @@ exports.createLead = async (req, res, next) => {
 
 exports.getLeads = async (req, res, next) => {
   try {
-    // 1. Lấy tham số phân trang và tìm kiếm
-    const { page, limit, search, status, source } = req.query;
+    // 1. Lấy tham số phân trang và xây bộ lọc
+    const { page, limit } = req.query;
     const { skip, limit: l, page: p } = paginate(req.query, { page, limit });
+    const filter = buildLeadFilter(req.query);
 
-    // 2. Build filter
-    const filter = {};
-    if (status) filter.status = status;
-    if (source) filter.source = source;
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    // 3. Query DB
+    // 2. Query DB
     const [data, total] = await Promise.all([
       Lead.find(filter)
-        .populate('assignedTo', 'name email')
+        .populate('assignedTo', 'name email avatarUrl')
         .populate('serviceInterested', 'name')
-        .sort({ createdAt: -1 })
+        .sort({ updatedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(l),
       Lead.countDocuments(filter),
@@ -58,7 +85,7 @@ exports.getLeadById = async (req, res, next) => {
   try {
     // 1. Tìm lead
     const lead = await Lead.findById(req.params.id)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'name email avatarUrl')
       .populate('serviceInterested', 'name')
       .populate('notes.createdBy', 'name');
 
@@ -196,15 +223,90 @@ exports.convertToOrder = async (req, res, next) => {
   }
 };
 
-exports.exportLeads = async (req, res, next) => {
+exports.getLeadStats = async (req, res, next) => {
   try {
-    // 1. Lấy toàn bộ lead (có thể thêm filter như GET /leads)
-    const leads = await Lead.find({}).sort({ createdAt: -1 });
+    const [grouped, total, todayCount, yesterdayCount] = await Promise.all([
+      Lead.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+      Lead.countDocuments(),
+      Lead.countDocuments({ createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } }),
+      (() => {
+        const start = new Date();
+        start.setDate(start.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(23, 59, 59, 999);
+        return Lead.countDocuments({ createdAt: { $gte: start, $lte: end } });
+      })(),
+    ]);
+    const byStatus = grouped.reduce((acc, item) => ({ ...acc, [item._id]: item.count }), {});
+    const percentChange = yesterdayCount === 0
+      ? (todayCount > 0 ? 100 : 0)
+      : ((todayCount - yesterdayCount) / yesterdayCount) * 100;
+    res.json({ success: true, data: { total, byStatus, todayCount, yesterdayCount, percentChange } });
+  } catch (err) { next(err); }
+};
 
-    // 2. Trong thực tế, dùng exceljs hoặc json2csv để convert sang file
-    // Tạm thời trả về JSON data thẳng hoặc mock link export
-    res.json({ success: true, data: leads, message: 'Tính năng export Excel đang được phát triển, đây là data thô.' });
+exports.bulkUpdateLeads = async (req, res, next) => {
+  try {
+    const { ids, data } = bulkUpdateLeadSchema.parse(req.body);
+    const result = await Lead.updateMany({ _id: { $in: ids } }, { $set: data });
+    res.json({ success: true, data: { matched: result.matchedCount, updated: result.modifiedCount } });
   } catch (err) {
+    if (err.name === 'ZodError') return validationError(res, err);
     next(err);
   }
+};
+
+exports.bulkDeleteLeads = async (req, res, next) => {
+  try {
+    const { ids } = bulkDeleteLeadSchema.parse(req.body);
+    const result = await Lead.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, data: { deleted: result.deletedCount } });
+  } catch (err) {
+    if (err.name === 'ZodError') return validationError(res, err);
+    next(err);
+  }
+};
+
+exports.sendBulkEmail = async (req, res, next) => {
+  try {
+    const { ids, subject, content } = bulkEmailLeadSchema.parse(req.body);
+    const leads = await Lead.find({ _id: { $in: ids }, email: { $exists: true, $nin: ['', null] } }).select('email');
+    const results = await Promise.allSettled(leads.map((lead) => sendEmail({ to: lead.email, subject, html: content })));
+    const sent = results.filter((item) => item.status === 'fulfilled').length;
+    const failed = results.length - sent;
+    res.json({ success: true, data: { selected: ids.length, eligible: leads.length, sent, failed } });
+  } catch (err) {
+    if (err.name === 'ZodError') return validationError(res, err);
+    next(err);
+  }
+};
+
+exports.exportLeads = async (req, res, next) => {
+  try {
+    const leads = await Lead.find(buildLeadFilter(req.query))
+      .populate('assignedTo', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+    const statusLabels = { new: 'Mới', contacted: 'Đã liên hệ', qualified: 'Tiềm năng', converted: 'Đã chuyển đơn', lost: 'Thất bại' };
+    const rows = leads.map((lead, index) => ({
+      STT: index + 1,
+      'Khách hàng': lead.name,
+      'Số điện thoại': lead.phone,
+      Email: lead.email || '',
+      'Nguồn': lead.source || '',
+      'Nhân viên': lead.assignedTo?.name || '',
+      'Trạng thái': statusLabels[lead.status] || lead.status,
+      'Ngày tạo': lead.createdAt ? new Date(lead.createdAt).toLocaleString('vi-VN') : '',
+      'Cập nhật cuối': lead.updatedAt ? new Date(lead.updatedAt).toLocaleString('vi-VN') : '',
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    sheet['!cols'] = [{ wch: 6 }, { wch: 24 }, { wch: 16 }, { wch: 28 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 20 }, { wch: 20 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Leads');
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="leads-${Date.now()}.xlsx"`);
+    res.send(buffer);
+  } catch (err) { next(err); }
 };

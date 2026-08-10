@@ -1,0 +1,33 @@
+const express = require('express');
+const router = express.Router();
+const blogsController = require('../../controllers/admin/blogs.controller');
+const authMiddleware = require('../../middlewares/auth.middleware');
+const { requirePermission } = require('../../middlewares/rbac.middleware');
+
+const blogTagsController = require('../../controllers/admin/blogTags.controller');
+
+
+router.use(authMiddleware('admin'));
+// router.use(rbacMiddleware(['manage_blogs']));
+
+// Tag routes
+router.get('/tags', requirePermission('blogs.view'), blogTagsController.getTags);
+router.post('/tags', requirePermission('blogs.create'), blogTagsController.createTag);
+router.put('/tags/:id', requirePermission('blogs.update'), blogTagsController.updateTag);
+router.delete('/tags/:id', requirePermission('blogs.delete'), blogTagsController.deleteTag);
+
+// Category routes (đặt trước để không bị bắt bởi /:id)
+router.get('/categories', requirePermission('blogs.view'), blogsController.getCategories);
+router.post('/categories', requirePermission('blogs.create'), blogsController.createCategory);
+router.put('/categories/:id', requirePermission('blogs.update'), blogsController.updateCategory);
+router.delete('/categories/:id', requirePermission('blogs.delete'), blogsController.deleteCategory);
+
+router.get('/stats', requirePermission('blogs.view'), blogsController.getStats);
+router.get('/', requirePermission('blogs.view'), blogsController.getBlogs);
+router.post('/', requirePermission('blogs.create'), blogsController.createBlog);
+router.put('/:id', requirePermission('blogs.update'), blogsController.updateBlog);
+router.delete('/:id', requirePermission('blogs.delete'), blogsController.deleteBlog);
+router.patch('/:id/approve', requirePermission('blogs.publish'), blogsController.approveBlog);
+router.patch('/:id/reject', requirePermission('blogs.publish'), blogsController.rejectBlog);
+
+module.exports = router;

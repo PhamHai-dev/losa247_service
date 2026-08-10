@@ -1,34 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 
 :root {
-  /* === Green Scale — Primary (Action, CTA, Success) === */
+  /* === Green Scale — Semantic Success / Online === */
   --green-900: #14532D;
-  --green-700: #15803D;   /* active / pressed */
-  --green-600: #16A34A;   /* default */
-  --green-500: #22C55E;   /* hover */
-  --green-400: #4ADE80;   /* nhạt */
-  --green-100: #DCFCE7;   /* nền nhạt (outline hover bg) */
+  --green-700: #15803D;
+  --green-600: #16A34A;
+  --green-500: #22C55E;
+  --green-400: #4ADE80;
+  --green-100: #DCFCE7;
 
-  /* === Blue Scale — Secondary (Info, Link, Tag) === */
-  --blue-800: #1D4ED8;    /* active / pressed */
-  --blue-600: #2563EB;    /* default */
-  --blue-500: #3B82F6;    /* hover */
-  --blue-400: #60A5FA;    /* nhạt */
-  --blue-100: #DBEAFE;    /* nền nhạt (outline hover bg) */
+  /* === Sky Blue Scale — Brand / Action / Typography === */
+  --blue-950: #082F49;
+  --blue-900: #0C4A6E;
+  --blue-800: #075985;
+  --blue-700: #0369A1;
+  --blue-600: #0284C7;
+  --blue-500: #0EA5E9;
+  --blue-400: #38BDF8;
+  --blue-200: #BAE6FD;
+  --blue-100: #E0F2FE;
+  --blue-50:  #F0F9FF;
 
-  /* === Semantic (giữ alias ngắn cho backward compat) === */
-  --primary:  var(--green-600);
-  --primary2: var(--green-500);
-  --green:    var(--green-600);
+  /* === Brand aliases === */
+  --primary:  var(--blue-600);
+  --primary2: var(--blue-500);
+  --green:    var(--blue-600); /* backward-compatible brand alias */
 
-  /* === Neutrals === */
-  --navy:   #071a35;
-  --navy2:  #10294f;
-  --text:   #102033;
-  --muted:  #6b7890;
-  --bg:     #f6f8fc;
+  /* === Blue-tinted Neutrals === */
+  --navy:   var(--blue-950);
+  --navy2:  var(--blue-900);
+  --text:   #123B57;
+  --muted:  #55758B;
+  --bg:     #F4FAFE;
   --card:   #ffffff;
-  --line:   #e6ebf2;
+  --line:   #DCECF6;
 
   /* === Semantic Status === */
   --red:    #EF4444;
@@ -87,20 +92,20 @@ textarea {
   transform: translateY(-2px)
 }
 
-/* --- Primary button: Xanh lá, hover nhạt hơn --- */
+/* --- Primary button: xanh da trời, có cấp độ đậm/nhạt --- */
 .btn-primary {
   color: white;
-  background: var(--green-600);
-  box-shadow: 0 8px 24px rgba(22, 163, 74, .28)
+  background: var(--blue-600);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, .28)
 }
 
 .btn-primary:hover {
-  background: var(--green-500);        /* nhạt hơn 1 tông */
-  box-shadow: 0 12px 30px rgba(22, 163, 74, .22)
+  background: var(--blue-500);
+  box-shadow: 0 12px 30px rgba(14, 165, 233, .24)
 }
 
 .btn-primary:active {
-  background: var(--green-700);        /* đậm hơn khi nhấn */
+  background: var(--blue-800);
   transform: translateY(0)
 }
 
@@ -121,23 +126,23 @@ textarea {
   transform: translateY(0)
 }
 
-/* --- Outline button: hover nền nhạt, giữ màu viền/chữ --- */
+/* --- Outline button: xanh da trời nhạt trên hover --- */
 .btn-outline {
   background: transparent;
-  border: 1.5px solid var(--green-600);
-  color: var(--green-600)
+  border: 1.5px solid var(--blue-600);
+  color: var(--blue-700)
 }
 
 .btn-outline:hover {
-  background: var(--green-100);        /* nền nhạt xanh lá */
-  border-color: var(--green-600);
-  color: var(--green-600)
+  background: var(--blue-100);
+  border-color: var(--blue-500);
+  color: var(--blue-800)
 }
 
 .btn-outline:active {
-  background: var(--green-100);
-  border-color: var(--green-700);
-  color: var(--green-700)
+  background: var(--blue-200);
+  border-color: var(--blue-800);
+  color: var(--blue-900)
 }
 
 /* --- Outline Blue --- */

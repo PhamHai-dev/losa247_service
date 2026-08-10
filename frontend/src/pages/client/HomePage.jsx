@@ -1,549 +1,189 @@
-import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
-import { Reveal } from '../../components/ui/Reveal';
-import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  CircleCheck, Crown, Gem, Check, X, TrendingUp, Star, ChevronDown, ChevronUp,
-  Calendar, Tag as LucideTag, Phone, Mail, MessageSquare, MapPin, BellDot, Camera, Mic, Send, ChevronLeft, MoreVertical, Signal, Wifi, BatteryFull,
-  Globe, MessagesSquare, Hourglass, UserRoundCheck, Database, RefreshCcw,
-  Headset, Brain, Share2, Users, Bot, BarChart3,
-  MessageCircleMore, FileText, ShoppingCart, ClipboardList, UserRoundCog, HeartHandshake, ArrowRight, MessageCircle,
-  MessageSquareMore, SearchCheck, PencilRuler, Rocket, ShieldCheck, Handshake
-} from "lucide-react";
-import { FaFacebookMessenger, FaTelegramPlane, FaInstagram, FaWhatsapp, FaYoutube, FaLinkedin, FaFacebook } from "react-icons/fa";
-import { SiZalo } from "react-icons/si";
-import PricingSection from '../../components/client/pricing/PricingSection'
-import { App, Button, Empty, Form, Input, InputNumber, Result, Spin, Steps, Select, Pagination, Tag, Skeleton, Collapse, Modal } from 'antd'
-import { SearchOutlined, FilterOutlined, CalendarOutlined, EyeOutlined, RightOutlined, CheckCircleOutlined, CloseOutlined, TrophyOutlined, ToolOutlined, TeamOutlined, MenuOutlined, RocketOutlined, ProjectOutlined, BankOutlined, ThunderboltOutlined, ClockCircleOutlined, DollarOutlined, SafetyOutlined, RobotOutlined, CommentOutlined, ContactsOutlined, PartitionOutlined, LineChartOutlined, CustomerServiceOutlined, DownOutlined, UpOutlined, UserOutlined, CrownOutlined, MessageOutlined, GlobalOutlined, InstagramOutlined, DatabaseOutlined, ShoppingCartOutlined, HeartOutlined } from '@ant-design/icons'
-import { motion, AnimatePresence } from 'framer-motion'
+  ArrowRight, BarChart3, Bot, Calendar, CheckCircle2, ChevronDown, ChevronUp,
+  CircleCheck, Clock3, Headset, MessageCircleMore, ShieldCheck,
+  Sparkles, Star, TrendingDown, Workflow
+} from 'lucide-react'
+import { FaFacebookMessenger, FaInstagram, FaTelegramPlane, FaWhatsapp } from 'react-icons/fa'
+import { SiZalo } from 'react-icons/si'
+import { Collapse, Empty, Skeleton } from 'antd'
+import { motion } from 'framer-motion'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { formatCurrency, formatDate } from '../../utils/format'
-import { publicServicesService } from '../../features/services/servicesService'
-import { publicStoreProductsService } from '../../features/storeProducts/storeProductsService'
+import { formatDate } from '../../utils/format'
 import { publicBlogsService } from '../../features/blogs/blogsService'
 import { publicFaqsService } from '../../features/faqs/faqsService'
-import { publicPricingService } from '../../features/services/pricingService'
-import { cartService } from '../../features/cart/cartService'
-import { checkoutService } from '../../features/checkout/checkoutService'
-import { leadsService } from '../../features/leads/leadsService'
 import { useUIStore } from '../../stores/uiStore'
-import { useAuthStore } from '../../stores/authStore'
-import { useDebounce } from '../../hooks/useDebounce'
 
-// Hook thêm sản phẩm/dịch vụ vào giỏ (yêu cầu đăng nhập client).
-function useAddToCart() {
-  const { message } = App.useApp()
-  const navigate = useNavigate()
-  const { authType } = useAuthStore()
-  return async (payload) => {
-    if (authType !== 'client') {
-      message.info('Vui lòng đăng nhập để thêm vào giỏ hàng')
-      navigate('/dang-nhap')
-      return
-    }
-    try { await cartService.addItem(payload); message.success('Đã thêm vào giỏ hàng') }
-    catch (e) { message.error(e?.error?.message || 'Không thêm được vào giỏ') }
-  }
+const BLOG_FALLBACK = 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png'
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 26 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55 } }
 }
 
-// ---- Components -------------------------------------------------------------
+const stagger = { visible: { transition: { staggerChildren: 0.12 } } }
 
 export function HomePage() {
-  const blogsQ = useApiQuery(() => publicBlogsService.getList({ limit: 3 }), [])
+  const [activeBlogCategory, setActiveBlogCategory] = useState(null)
+  const openLeadModal = useUIStore((state) => state.openLeadModal)
+
+  const blogCategoriesQ = useApiQuery(() => publicBlogsService.getCategories(), [])
+  const blogsQ = useApiQuery(
+    () => publicBlogsService.getList({ limit: 5, category: activeBlogCategory || undefined }),
+    [activeBlogCategory]
+  )
+  const faqsQ = useApiQuery(() => publicFaqsService.getList({ pageType: 'home' }), [])
+
+  const blogCategories = blogCategoriesQ.data || []
   const blogs = blogsQ.data?.items || []
-
-  const faqsQuery = useApiQuery(() => publicFaqsService.getList({ pageType: 'home' }), [])
-  const homeFaqs = faqsQuery.data?.items || []
-
-  const chatScrollRef = useRef(null);
-  const mockupRef = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(0);
-  const openLeadModal = useUIStore((state) => state.openLeadModal);
-
-  const scrollToBottom = () => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTo({
-        top: chatScrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      setInView(entry.isIntersecting);
-    }, { threshold: 0.5 });
-    if (mockupRef.current) observer.observe(mockupRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (inView) {
-      if (visibleCount < 17) {
-        const timer = setTimeout(() => {
-          setVisibleCount(prev => prev + 1);
-          setTimeout(scrollToBottom, 100);
-        }, visibleCount === 0 ? 500 : 1000);
-        return () => clearTimeout(timer);
-      } else {
-        const resetTimer = setTimeout(() => {
-          setVisibleCount(0);
-        }, 3000);
-        return () => clearTimeout(resetTimer);
-      }
-    }
-  }, [inView, visibleCount]);
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-  };
-
-  const stagger = {
-    visible: { transition: { staggerChildren: 0.15 } }
-  };
-
-  const chatContainer = {
-    hidden: { opacity: 1 },
-    visible: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.5,
-        staggerChildren: 0.8
-      }
-    }
-  };
-
-  const chatBubble = {
-    hidden: { opacity: 0, scale: 0.8, y: 20 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 20 } }
-  };
+  const featuredBlog = blogs.find((blog) => blog.isFeatured) || blogs[0]
+  const sideBlogs = featuredBlog ? blogs.filter((blog) => blog._id !== featuredBlog._id).slice(0, 4) : []
+  const homeFaqs = faqsQ.data?.items || []
 
   return (
-    <div className="client-app-wrapper" style={{ background: 'white' }}>
-      {/* HERO SECTION */}
-      <section className="saas-hero">
-        <div className="saas-container saas-hero-grid">
-          <motion.div className="saas-hero-content" initial="hidden" animate="visible" variants={stagger}>
-            <motion.h1 variants={fadeUp}>Tự động hóa chăm sóc <br /> khách hàng 24/7 với <br /> <span style={{ color: 'var(--saas-primary)' }}>Chatbot AI</span></motion.h1>
-            <motion.p variants={fadeUp}>Giải pháp chatbot thông minh giúp doanh nghiệp tiết kiệm chi phí, tăng tỷ lệ chuyển đổi và nâng cao trải nghiệm khách hàng.</motion.p>
-            <motion.ul className="saas-hero-benefits" variants={fadeUp}>
-              <li><CircleCheck size={20} color="#10B981" /> Trả lời tự động 24/7</li>
-              <li><CircleCheck size={20} color="#10B981" /> Giảm 80% thời gian tư vấn</li>
-              <li><CircleCheck size={20} color="#10B981" /> Tăng 35% tỷ lệ chốt đơn</li>
-            </motion.ul>
-            <motion.div className="saas-hero-actions" variants={fadeUp}>
-              <button className="saas-btn saas-btn-primary" onClick={openLeadModal} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Nhận tư vấn miễn phí</button>
+    <main className="client-app-wrapper home-page">
+      <section className="home-hero" aria-labelledby="home-hero-title">
+        <div className="saas-container home-hero-grid">
+          <motion.div className="home-hero-content" initial="hidden" animate="visible" variants={stagger}>
+            <motion.span className="home-hero-badge" variants={fadeUp}><Star size={14} fill="currentColor" /> Được tin dùng bởi hơn 200 doanh nghiệp</motion.span>
+            <motion.h1 id="home-hero-title" variants={fadeUp}>Vận hành thông minh hơn với <span>hệ sinh thái Losa</span></motion.h1>
+            <motion.p className="home-hero-lead" variants={fadeUp}>Giải pháp chuyển đổi số giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và quản trị dữ liệu trên một nền tảng thống nhất.</motion.p>
+            <motion.div className="home-hero-proof" variants={fadeUp}>
+              <span><CircleCheck size={17} /> Tư vấn 24/7</span>
+              <span><CircleCheck size={17} /> Kết nối đa kênh</span>
+              <span><CircleCheck size={17} /> Tùy chỉnh theo nghiệp vụ</span>
+            </motion.div>
+            <motion.div className="home-hero-actions" variants={fadeUp}>
+              <button id="home-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })}>Khám phá giải pháp <ArrowRight size={18} /></button>
+              <button id="home-hero-consultation-btn" type="button" className="saas-btn home-hero-secondary" onClick={openLeadModal}>Đăng ký tư vấn miễn phí</button>
             </motion.div>
           </motion.div>
 
-          <div className="saas-hero-visual">
-            <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784878046/logo_bot_home_gmhrdk.png" alt="Robot AI" className="saas-robot" />
-
-            <div className="saas-platform-icon" style={{position: 'absolute', top: '10%', right: '10%', zIndex: 5}}><FaFacebookMessenger size={28} color="#0084FF" /></div>
-            <div className="saas-platform-icon" style={{position: 'absolute', bottom: '15%', right: '5%', zIndex: 5}}><Globe size={28} color="#0EA5E9" /></div>
-            <div className="saas-platform-icon" style={{position: 'absolute', top: '30%', left: '10%', zIndex: 5}}><SiZalo size={28} color="#0068FF" /></div>
-            <div className="saas-platform-icon" style={{position: 'absolute', bottom: '25%', left: '5%', zIndex: 5}}><FaTelegramPlane size={28} color="#229ED9" /></div>
-            <div className="saas-platform-icon" style={{position: 'absolute', top: '-5%', left: '40%', zIndex: 5}}><FaInstagram size={28} color="#E1306C" /></div>
-            <div className="saas-platform-icon" style={{position: 'absolute', bottom: '-5%', right: '40%', zIndex: 5}}><FaWhatsapp size={28} color="#25D366" /></div>
-            <div className="saas-platform-icon icon-insta"><FaInstagram size={28} color="#E1306C" /></div>
-
-            <motion.div ref={mockupRef} className="iphone-mockup" initial={{ x: 100, opacity: 0, scale: 0.9 }} animate={{ x: 0, opacity: 1, scale: 1 }} transition={{ duration: 0.8, type: "spring" }}>
-              <div className="iphone-notch"></div>
-
-              <div style={{ position: 'absolute', top: 16, left: 26, right: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, fontWeight: 600, zIndex: 20 }}>
-                <span style={{ letterSpacing: -0.5 }}>9:41</span>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <Signal size={14} strokeWidth={2.5} />
-                  <Wifi size={14} strokeWidth={2.5} />
-                  <BatteryFull size={16} strokeWidth={2} />
-                </div>
-              </div>
-
-              <div className="iphone-screen" style={{ paddingTop: 0 }} ref={chatScrollRef}>
-                <div className="iphone-chat-header" style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  borderBottom: '1px solid #E5E7EB', paddingBottom: 10, marginBottom: 12,
-                  position: 'sticky', top: 0, zIndex: 15, background: '#FFFFFF',
-                  paddingTop: 38, margin: '0 -16px', paddingLeft: 16, paddingRight: 16
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ChevronLeft size={24} color="#0070F3" style={{ marginLeft: -4 }} />
-                    <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" style={{ width: 28, height: 28, borderRadius: 8 }} alt="Avatar" />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, lineHeight: 1 }}>
-                        Trợ lý ảo Losa <Check size={12} color="#0070F3" />
-                      </div>
-                      <span style={{ fontSize: 10, color: '#6B7280', lineHeight: 1 }}>Đang hoạt động</span>
-                    </div>
-                  </div>
-                  <MoreVertical size={20} color="#0070F3" />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingBottom: 60 }}>
-
-                  {visibleCount >= 1 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Shop ơi</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 2 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Tư vấn cho mình giải pháp Chatbot với</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 3 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <div style={{ width: 28, flexShrink: 0 }}></div>
-                      <div className="iphone-bubble">Dạ, Losa AI chào anh/chị! 👋</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 4 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" className="iphone-avatar" alt="Bot" />
-                      <div className="iphone-bubble">Fanpage mình đang gặp vấn đề quá tải tin nhắn phải không ạ?</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 5 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Đúng rồi shop</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 6 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Khách nhắn lúc nửa đêm toàn bị miss đơn 🥲</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 7 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <div style={{ width: 28, flexShrink: 0 }}></div>
-                      <div className="iphone-bubble">Losa AI giải quyết được triệt để vấn đề này ạ!</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 8 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" className="iphone-avatar" alt="Bot" />
-                      <div className="iphone-bubble">Trợ lý AI có thể trực page và chốt đơn 24/7.</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 9 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Trả lời có bị máy móc quá không bạn?</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 10 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Mình sợ khách đọc biết là bot.</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 11 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <div style={{ width: 28, flexShrink: 0 }}></div>
-                      <div className="iphone-bubble">Hoàn toàn yên tâm ạ!</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 12 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" className="iphone-avatar" alt="Bot" />
-                      <div className="iphone-bubble">AI bên em sử dụng ngôn ngữ tự nhiên như người thật.</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 13 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Bot có biết tư vấn sản phẩm không?</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 14 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper user" style={{ originX: 1, originY: 1 }}>
-                      <div className="iphone-bubble">Hay chỉ biết xin số điện thoại?</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 15 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <div style={{ width: 28, flexShrink: 0 }}></div>
-                      <div className="iphone-bubble">Dạ AI sẽ được đào tạo bằng dữ liệu riêng của shop.</div>
-                    </motion.div>
-                  )}
-
-                  {visibleCount >= 16 && (
-                    <motion.div variants={chatBubble} initial="hidden" animate="visible" className="iphone-bubble-wrapper bot" style={{ originX: 0, originY: 1 }}>
-                      <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" className="iphone-avatar" alt="Bot" />
-                      <div className="iphone-bubble">Nên có thể hiểu sâu về sản phẩm để tư vấn chốt sale luôn ạ!</div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#fff', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid #E5E7EB' }}>
-                <div style={{ background: '#F3F4F6', padding: '10px 16px', borderRadius: 99, flex: 1, color: '#9CA3AF', fontSize: 13 }}>Nhập tin nhắn...</div>
-                <Camera size={20} color="#0070F3" />
-                <Mic size={20} color="#0070F3" />
-                <Send size={20} color="#0070F3" />
-              </div>
-            </motion.div>
-          </div>
+          <motion.div className="home-hero-visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+            <div className="home-hero-glow" />
+            <img className="home-hero-main-image" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1786006189/Main_image_nttqte.png" alt="Hệ sinh thái giải pháp chuyển đổi số Losa" />
+            <img className="home-hero-robot" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784878046/logo_bot_home_gmhrdk.png" alt="Trợ lý AI Losa" />
+            <span className="home-hero-channel channel-messenger"><FaFacebookMessenger /></span>
+            <span className="home-hero-channel channel-zalo"><SiZalo /></span>
+            <span className="home-hero-channel channel-telegram"><FaTelegramPlane /></span>
+            <span className="home-hero-channel channel-instagram"><FaInstagram /></span>
+            <span className="home-hero-channel channel-whatsapp"><FaWhatsapp /></span>
+          </motion.div>
         </div>
       </section>
 
-      {/* PROBLEMS SECTION */}
-      <section className="saas-section gray">
+      <section className="saas-section home-why" aria-labelledby="home-why-title">
         <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Doanh nghiệp của bạn đang gặp phải những vấn đề này?</h2>
-          </div>
-          <motion.div className="saas-grid-5" initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={stagger}>
+          <header className="home-section-heading">
+            <span>Giá trị khác biệt</span>
+            <h2 id="home-why-title">Vì sao doanh nghiệp chọn Losa?</h2>
+            <p>Công nghệ được thiết kế để tạo ra hiệu quả vận hành đo lường được, không chỉ dừng ở một công cụ trò chuyện.</p>
+          </header>
+          <motion.div className="home-why-grid" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             {[
-              { icon: <MessagesSquare size={32} color="#6366F1" />, title: 'Khách nhắn tin quá nhiều', desc: 'Không thể trả lời hết tất cả khách hàng.' },
-              { icon: <Hourglass size={32} color="#3B82F6" />, title: 'Nhân viên trả lời chậm', desc: 'Khách phải chờ lâu và dễ bị mất khách.' },
-              { icon: <UserRoundCheck size={32} color="#8B5CF6" />, title: 'Bỏ sót khách hàng', desc: 'Không quản lý được tin nhắn trên nhiều kênh.' },
-              { icon: <Database size={32} color="#A855F7" />, title: 'Khó quản lý dữ liệu', desc: 'Thông tin khách hàng bị thất lạc, phân tán.' },
-              { icon: <RefreshCcw size={32} color="#22C55E" />, title: 'Không chăm sóc lại khách cũ', desc: 'Khách có thể mua ở nơi chăm sóc, bỏ lỡ cơ hội bán hàng.' }
-            ].map((p, i) => (
-              <motion.div key={i} className="saas-card" style={{ textAlign: 'center', padding: '32px 20px', borderRadius: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} variants={fadeUp}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-                  <div style={{ background: '#EFF6FF', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{p.icon}</div>
-                </div>
-                <h3 style={{ fontSize: 16, marginBottom: 12, lineHeight: 1.4 }}>{p.title}</h3>
-                <p style={{ fontSize: 14, color: '#6B7280', margin: 0, lineHeight: 1.5 }}>{p.desc}</p>
-              </motion.div>
+              { icon: <Clock3 />, value: '24/7', title: 'Vận hành liên tục', text: 'Tiếp nhận và xử lý yêu cầu khách hàng bất kể thời gian.' },
+              { icon: <TrendingDown />, value: '80%', title: 'Giảm công việc thủ công', text: 'Tự động hóa tác vụ lặp lại để đội ngũ tập trung vào tăng trưởng.' },
+              { icon: <Workflow />, value: 'Đa kênh', title: 'Kết nối đồng bộ', text: 'Hợp nhất tương tác và dữ liệu khách hàng trên nhiều nền tảng.' },
+              { icon: <ShieldCheck />, value: 'Linh hoạt', title: 'Theo đúng nghiệp vụ', text: 'Tùy chỉnh quy trình theo mô hình và mục tiêu của từng doanh nghiệp.' }
+            ].map((item) => (
+              <motion.article className="home-why-item" variants={fadeUp} key={item.title}>
+                <span className="home-why-icon">{item.icon}</span>
+                <strong>{item.value}</strong>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </motion.article>
             ))}
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURES SECTION */}
-      <section className="saas-section">
+      <section className="saas-section home-ecosystem" id="ecosystem" aria-labelledby="ecosystem-title">
         <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Chatbot AI có thể giúp gì cho doanh nghiệp?</h2>
-          </div>
-          <motion.div className="saas-grid-3" initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={stagger}>
+          <header className="home-section-heading">
+            <span>Giải pháp toàn diện</span>
+            <h2 id="ecosystem-title">Hệ sinh thái Losa – Giải pháp chuyển đổi số cho doanh nghiệp</h2>
+            <p>Kết nối giao tiếp thông minh với quản trị dữ liệu tập trung để tạo nên một quy trình vận hành liền mạch.</p>
+          </header>
+          <div className="home-solution-grid">
             {[
-              { icon: <Headset size={32} color="#2563EB" />, title: 'Hỗ trợ 24/7', desc: 'Trả lời tức thì mọi lúc, mọi nơi, không bỏ sót khách.' },
-              { icon: <Brain size={32} color="#4F46E5" />, title: 'AI Thông minh', desc: 'Hiểu ngữ cảnh, đưa ra câu trả lời chính xác.' },
-              { icon: <Share2 size={32} color="#3B82F6" />, title: 'Tích hợp đa kênh', desc: 'Đồng bộ tin nhắn Facebook, Zalo, Website.' },
-              { icon: <Users size={32} color="#2563EB" />, title: 'Quản lý khách hàng', desc: 'Lưu trữ thông tin, phân loại khách hàng tự động.' },
-              { icon: <Bot size={32} color="#3B82F6" />, title: 'Tự động hóa', desc: 'Tự động lên đơn, nhắc lịch, gửi tin khuyến mãi.' },
-              { icon: <BarChart3 size={32} color="#2563EB" />, title: 'Báo cáo thống kê', desc: 'Theo dõi hiệu suất kinh doanh qua biểu đồ trực quan.' },
-            ].map((f, i) => (
-              <motion.div key={i} className="saas-card" variants={fadeUp}>
-                <div className="saas-card-icon">{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* WORKFLOW SECTION */}
-      <section className="saas-section gray">
-        <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Chatbot có thể làm được gì?</h2>
-          </div>
-          <motion.div className="saas-grid-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            {[
-              { icon: <MessageCircleMore size={32} color="#3B82F6" />, title: 'Tư vấn sản phẩm' },
-              { icon: <FileText size={32} color="#22C55E" />, title: 'Báo giá tự động' },
-              { icon: <ShoppingCart size={32} color="#22C55E" />, title: 'Chốt đơn hàng' },
-              { icon: <ClipboardList size={32} color="#2563EB" />, title: 'Thu thập thông tin khách hàng' },
-              { icon: <UserRoundCog size={32} color="#2563EB" />, title: 'Chuyển nhân viên hỗ trợ' },
-              { icon: <HeartHandshake size={32} color="#EF4444" />, title: 'Chăm sóc sau bán' },
-            ].map((step, i) => (
-              <motion.div key={i} className="saas-step" variants={fadeUp}>
-                <div className="saas-step-icon">{step.icon}</div>
-                <h4 style={{fontSize: 14}}>{step.title}</h4>
-                {i < 5 && <div className="saas-workflow-arrow"><ArrowRight size={18} color="#38BDF8" /></div>}
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* MULTI-PLATFORM SUPPORT SECTION */}
-      <section className="saas-section">
-        <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Hỗ trợ trên nhiều nền tảng</h2>
-          </div>
-          <div className="logo-slider" style={{ marginTop: '32px' }}>
-            <div className="logo-track">
-              {[
-                { icon: <FaFacebookMessenger size={32} color="#0084FF" />, title: 'Facebook Messenger' },
-                { icon: <Globe size={32} color="#0EA5E9" />, title: 'Website' },
-                { icon: <SiZalo size={32} color="#0068FF" />, title: 'Zalo OA' },
-                { icon: <FaTelegramPlane size={32} color="#229ED9" />, title: 'Telegram' },
-                { icon: <FaInstagram size={32} color="#E1306C" />, title: 'Instagram' },
-                { icon: <FaWhatsapp size={32} color="#25D366" />, title: 'WhatsApp' },
-                { icon: <FaFacebookMessenger size={32} color="#0084FF" />, title: 'Facebook Messenger' },
-                { icon: <Globe size={32} color="#0EA5E9" />, title: 'Website' },
-                { icon: <SiZalo size={32} color="#0068FF" />, title: 'Zalo OA' },
-                { icon: <FaTelegramPlane size={32} color="#229ED9" />, title: 'Telegram' },
-                { icon: <FaInstagram size={32} color="#E1306C" />, title: 'Instagram' },
-                { icon: <FaWhatsapp size={32} color="#25D366" />, title: 'WhatsApp' },
-              ].map((plat, i) => (
-                <div key={i} className="saas-card" style={{ display: 'inline-flex', padding: '20px 16px', alignItems: 'center', justifyContent: 'center', gap: '12px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid #F1F5F9', minHeight: '80px', margin: '0 12px', width: '200px', whiteSpace: 'normal', verticalAlign: 'middle', cursor: 'pointer' }}>
-                  <div style={{display: 'flex', alignItems: 'center'}} className="saas-platform-icon-inline">{plat.icon}</div>
-                  <h4 style={{fontSize: 14, fontWeight: 700, margin: 0, color: 'var(--saas-blue)', lineHeight: 1.3, textAlign: 'left', flex: 1}}>
-                    {plat.title.split(' ').map((word, idx) => <span key={idx} style={{display: 'block'}}>{word}</span>)}
-                  </h4>
+              { title: 'Giải pháp Chatbot AI', text: 'Tư vấn, chăm sóc và hỗ trợ bán hàng 24/7 trên nhiều kênh. Chatbot hiểu ngữ cảnh và được đào tạo theo dữ liệu riêng.', to: '/giai-phap/chatbot', icon: <Bot />, accent: 'blue', tags: ['Tư vấn 24/7', 'Đa kênh', 'Hiểu ngữ cảnh'] },
+              { title: 'Giải pháp CRM', text: 'Quản lý khách hàng tập trung, theo dõi cơ hội bán hàng và tự động hóa quy trình chăm sóc trên một hệ thống duy nhất.', to: '/giai-phap/crm', icon: <BarChart3 />, accent: 'violet', tags: ['Dữ liệu tập trung', 'Quản lý cơ hội', 'Tự động chăm sóc'] }
+            ].map((solution) => (
+              <article className={`home-solution-card ${solution.accent}`} key={solution.title}>
+                <div className="home-solution-icon">{solution.icon}</div>
+                <div className="home-solution-copy">
+                  <span className="home-solution-kicker"><Sparkles size={14} /> Giải pháp Losa</span>
+                  <h3>{solution.title}</h3>
+                  <p>{solution.text}</p>
+                  <div className="home-solution-tags">{solution.tags.map((tag) => <span key={tag}><CheckCircle2 size={14} />{tag}</span>)}</div>
+                  <Link id={`home-${solution.accent}-solution-link`} to={solution.to}>Xem thêm <ArrowRight size={17} /></Link>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* IMPLEMENTATION PROCESS */}
-      <section className="saas-section gray">
-        <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Quy trình triển khai</h2>
-          </div>
-          <motion.div className="saas-grid-6" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            {[
-              { icon: <MessageSquareMore size={32} color="#2563EB" />, title: 'Tiếp nhận yêu cầu' },
-              { icon: <SearchCheck size={32} color="#2563EB" />, title: 'Phân tích nghiệp vụ' },
-              { icon: <PencilRuler size={32} color="#2563EB" />, title: 'Thiết kế chatbot' },
-              { icon: <Rocket size={32} color="#2563EB" />, title: 'Triển khai' },
-              { icon: <ShieldCheck size={32} color="#2563EB" />, title: 'Kiểm thử' },
-              { icon: <Handshake size={32} color="#2563EB" />, title: 'Bàn giao & hỗ trợ' },
-            ].map((step, i) => (
-              <motion.div key={i} className="saas-step" variants={fadeUp}>
-                <div className="saas-step-icon">{step.icon}</div>
-                <h4 style={{fontSize: 14}}>{step.title}</h4>
-                {i < 5 && <div className="saas-workflow-arrow"><ArrowRight size={18} color="#2563EB" /></div>}
-              </motion.div>
+              </article>
             ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CALL TO ACTION (Replaces Pricing) */}
-      <section className="saas-section">
-        <div className="saas-container">
-          <motion.div className="saas-contact-box" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
-              <h2 style={{ fontSize: 36, marginBottom: 16, color: 'white' }}>Sẵn sàng tự động hóa doanh nghiệp?</h2>
-              <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.8)', marginBottom: 32 }}>
-                Chúng tôi cung cấp các gói dịch vụ Chatbot AI linh hoạt, phù hợp với mọi quy mô từ cửa hàng nhỏ đến doanh nghiệp lớn.
-              </p>
-              <Link to="/dich-vu" className="saas-btn" style={{ background: 'white', color: 'var(--saas-primary)', fontSize: 18 }}>
-                Xem chi tiết các gói dịch vụ
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CASE STUDY SECTION */}
-      <section className="saas-section gray">
-        <div className="saas-container">
-          <div className="saas-section-header">
-            <h2>Hiệu quả thực tế</h2>
           </div>
-          <motion.div className="saas-grid-3" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-            <motion.div className="saas-card" style={{ textAlign: 'center' }} variants={fadeUp}>
-              <div className="saas-stat-num" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Users size={32} style={{ marginRight: 8, color: 'var(--saas-primary)' }} /> <CountUpAnimation initialValue={200} targetValue={300} textAfter="+" /></div>
-              <h3>Khách hàng sử dụng</h3>
-              <p>Đã triển khai thành công</p>
-            </motion.div>
-            <motion.div className="saas-card" style={{ textAlign: 'center' }} variants={fadeUp}>
-              <div className="saas-stat-num" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}><TrendingUp size={32} style={{ marginRight: 8, color: '#10B981' }} /> -70%</div>
-              <h3>Nhân sự tư vấn</h3>
-              <p>Tiết kiệm chi phí vận hành</p>
-            </motion.div>
-            <motion.div className="saas-card" style={{ textAlign: 'center' }} variants={fadeUp}>
-              <div className="saas-stat-num" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}><BarChart3 size={32} style={{ marginRight: 8, color: '#F59E0B' }} /> +35%</div>
-              <h3>Doanh thu</h3>
-              <p>Tăng tỷ lệ chốt đơn tự động</p>
-            </motion.div>
-          </motion.div>
         </div>
       </section>
 
-
-
-      {/* FAQ SECTION */}
-      <section className="saas-section gray">
-        <div className="saas-container" style={{ maxWidth: 800 }}>
-          <div className="saas-section-header">
-            <h2>Câu hỏi thường gặp</h2>
-          </div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <Collapse
-              size="large"
-              accordion
-              expandIcon={({ isActive }) => isActive ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              style={{ background: 'white', borderRadius: 16 }}
-              items={homeFaqs.length > 0 ? homeFaqs.map(f => ({ key: f._id, label: <b>{f.question}</b>, children: <p style={{ whiteSpace: 'pre-wrap' }}>{f.answer}</p> })) : [
-                { key: 'empty', label: <b>Chưa có câu hỏi</b>, children: <p>Nội dung đang được cập nhật.</p> }
-              ]}
-            />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* BLOG SECTION */}
-      <section className="saas-section">
+      <section className="saas-section home-insights-section" id="home-insights" aria-labelledby="home-insights-title">
         <div className="saas-container">
-          <div className="saas-section-header space-between" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', textAlign: 'left', marginBottom: 40 }}>
-            <div style={{ margin: 0 }}>
-              <h2 style={{ marginBottom: 8 }}>Bài viết mới nhất</h2>
-              <p style={{ margin: 0 }}>Cập nhật kiến thức AI và Automation</p>
-            </div>
-            <Link to="/blog" style={{ color: 'var(--saas-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}>Xem tất cả <ArrowRight size={16} /></Link>
+          <header className="home-insights-heading">
+            <div><span className="home-insights-eyebrow">Kiến thức & xu hướng</span><h2 id="home-insights-title">Góc kiến thức dành cho doanh nghiệp</h2><p>Khám phá kinh nghiệm chuyển đổi số, ứng dụng AI và những góc nhìn thực tiễn giúp doanh nghiệp vận hành hiệu quả hơn.</p></div>
+            <Link id="home-insights-view-all-link" to="/blog" className="home-insights-view-all">Xem tất cả bài viết <ArrowRight size={17} /></Link>
+          </header>
+          <div className="home-insights-categories" role="tablist" aria-label="Danh mục bài viết">
+            <button id="home-blog-category-all" type="button" role="tab" aria-selected={!activeBlogCategory} className={`home-insights-category ${!activeBlogCategory ? 'active' : ''}`} onClick={() => setActiveBlogCategory(null)}>Tất cả</button>
+            {blogCategoriesQ.loading && !blogCategories.length ? [1, 2, 3, 4].map((item) => <span key={item} className="home-insights-category-skeleton" />) : blogCategories.map((category) => (
+              <button id={`home-blog-category-${category._id}`} key={category._id} type="button" role="tab" aria-selected={activeBlogCategory === category._id} className={`home-insights-category ${activeBlogCategory === category._id ? 'active' : ''}`} onClick={() => setActiveBlogCategory(category._id)}>{category.name}</button>
+            ))}
           </div>
-
           {blogsQ.loading ? (
-            <div className="saas-grid-3">
-              {[1, 2, 3].map(i => <div className="saas-card" key={i}><Skeleton active paragraph={{ rows: 3 }} /></div>)}
-            </div>
-          ) : (
-            <motion.div className="saas-grid-3" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
-              {blogs.map((b, i) => (
-                <motion.div key={b._id} variants={fadeUp} style={{ height: '100%' }}>
-                  <Link className="saas-blog-card" to={`/blog/${b.slug || b._id}`}>
-                    <div className="saas-blog-img-wrapper">
-                      <img src={b.coverImageUrl || 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png'} alt={b.title} className="saas-blog-img" />
-                    </div>
-                    <div className="saas-blog-content">
-                      <Tag color="blue" style={{ alignSelf: 'flex-start', marginBottom: 12, borderRadius: 12, border: 0, display: 'flex', alignItems: 'center' }}>
-                        <LucideTag size={12} style={{ marginRight: 4 }} /> {b.category?.name || b.category || 'Blog'}
-                      </Tag>
-                      <h3>{b.title}</h3>
-                      <div className="saas-blog-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Calendar size={14} /> {formatDate(b.publishedAt || b.createdAt)}
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+            <div className="home-insights-layout home-insights-loading"><Skeleton active paragraph={{ rows: 6 }} /><div className="home-insights-side-grid">{[1, 2, 3, 4].map((item) => <div className="home-insights-skeleton-card" key={item}><Skeleton active paragraph={{ rows: 2 }} /></div>)}</div></div>
+          ) : blogsQ.error ? (
+            <div className="home-insights-empty"><p>Không thể tải bài viết lúc này.</p><button id="home-blog-retry-btn" type="button" onClick={blogsQ.refetch}>Thử lại</button></div>
+          ) : !featuredBlog ? <Empty className="home-insights-empty" description="Danh mục này chưa có bài viết" /> : (
+            <motion.div key={activeBlogCategory || 'all'} className={`home-insights-layout ${sideBlogs.length ? '' : 'single'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <Link id="home-featured-blog-link" to={`/blog/${featuredBlog.slug || featuredBlog._id}`} className="home-featured-article">
+                <div className="home-featured-copy">
+                  <span className="home-featured-label">Bài viết nổi bật</span>
+                  <span className="home-blog-category-badge">{featuredBlog.category?.name || featuredBlog.category || 'Kiến thức'}</span>
+                  <h3>{featuredBlog.title}</h3>
+                  <p>{featuredBlog.excerpt || featuredBlog.metaDescription || 'Khám phá kiến thức và kinh nghiệm thực tiễn dành cho doanh nghiệp.'}</p>
+                  <span className="home-blog-date"><Calendar size={15} />{formatDate(featuredBlog.publishedAt || featuredBlog.createdAt)}</span>
+                  <span className="home-featured-read">Đọc bài viết <ArrowRight size={17} /></span>
+                </div>
+                <div className="home-featured-image"><img src={featuredBlog.coverImageUrl || BLOG_FALLBACK} alt={featuredBlog.title} /></div>
+              </Link>
+              {sideBlogs.length > 0 && <div className="home-insights-side-grid">{sideBlogs.map((blog) => (
+                <Link id={`home-blog-${blog._id}-link`} to={`/blog/${blog.slug || blog._id}`} key={blog._id} className="home-insights-side-card">
+                  <div className="home-side-card-copy"><span className="home-blog-category-badge">{blog.category?.name || blog.category || 'Kiến thức'}</span><h3>{blog.title}</h3><span className="home-blog-date"><Calendar size={14} />{formatDate(blog.publishedAt || blog.createdAt)}</span></div>
+                  <div className="home-side-card-image"><img src={blog.coverImageUrl || BLOG_FALLBACK} alt={blog.title} /></div>
+                </Link>
+              ))}</div>}
             </motion.div>
           )}
         </div>
       </section>
 
+      <section className="saas-section home-testimonials" aria-labelledby="testimonials-title">
+        <div className="saas-container">
+          <header className="home-section-heading"><span>Khách hàng chia sẻ</span><h2 id="testimonials-title">Doanh nghiệp nói gì về Losa</h2><p>Câu chuyện thành công thực tế từ những doanh nghiệp đang vận hành cùng Losa.</p></header>
+          <div className="home-testimonial-grid">{[
+            { stat: 'Giảm 60% thời gian phản hồi', quote: 'Từ khi dùng Losa, khách hàng được tư vấn ngay cả lúc nửa đêm và đội ngũ không còn bỏ lỡ cơ hội bán hàng.', author: 'Nguyễn Văn A', role: 'CEO – Thời trang X' },
+            { stat: 'Tăng 40% năng suất Sale', quote: 'Quy trình báo giá và quản lý khách hàng tập trung giúp đội ngũ bán hàng xử lý cơ hội nhanh, chính xác hơn.', author: 'Trần Thị B', role: 'Giám đốc Kinh doanh – BĐS Y' },
+            { stat: 'Tăng 25% khách quay lại', quote: 'Hệ thống tự động nhắc lịch và chăm sóc khách cũ giúp chúng tôi duy trì trải nghiệm nhất quán mà không tăng nhân sự.', author: 'Lê Văn C', role: 'Founder – Spa Z' }
+          ].map((item) => <article className="home-testimonial-card" key={item.author}><span>{item.stat}</span><p>“{item.quote}”</p><div><strong>{item.author}</strong><small>{item.role}</small></div></article>)}</div>
+        </div>
+      </section>
 
-    </div>
+      <section className="saas-section home-final-cta"><div className="saas-container"><div className="home-cta-box"><div><span>Chuyển đổi hôm nay</span><h2>Sẵn sàng để Losa đồng hành cùng doanh nghiệp bạn?</h2><p>Chia sẻ bài toán vận hành, đội ngũ Losa sẽ tư vấn giải pháp phù hợp với mục tiêu và quy mô của bạn.</p></div><button id="home-final-consultation-btn" type="button" onClick={openLeadModal}>Đăng ký tư vấn miễn phí <ArrowRight size={18} /></button></div></div></section>
+
+      <section className="saas-section home-faq-section" id="home-faq" aria-labelledby="home-faq-title">
+        <div className="saas-container home-faq-layout">
+          <div className="home-faq-intro"><span className="home-faq-eyebrow"><MessageCircleMore size={15} /> Giải đáp cùng Losa</span><h2 id="home-faq-title">Câu hỏi thường gặp</h2><p>Tìm hiểu nhanh về giải pháp, quy trình triển khai và cách Losa đồng hành cùng doanh nghiệp trong hành trình chuyển đổi số.</p><div className="home-faq-assurance"><span className="home-faq-assurance-icon"><Headset size={24} /></span><div><strong>Bạn cần tư vấn thêm?</strong><span>Đội ngũ Losa luôn sẵn sàng lắng nghe bài toán của doanh nghiệp.</span></div></div><button id="home-faq-consultation-btn" type="button" onClick={openLeadModal} className="home-faq-cta">Nhận tư vấn miễn phí <ArrowRight size={17} /></button></div>
+          <div className="home-faq-accordion-wrap"><Collapse className="home-faq-collapse" accordion ghost expandIconPosition="end" expandIcon={({ isActive }) => <span className={`home-faq-toggle ${isActive ? 'active' : ''}`}>{isActive ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>} items={homeFaqs.length ? homeFaqs.map((faq, index) => ({ key: faq._id, label: <span className="home-faq-question"><span>{String(index + 1).padStart(2, '0')}</span>{faq.question}</span>, children: <p className="home-faq-answer">{faq.answer}</p> })) : [{ key: 'empty', label: <span className="home-faq-question"><span>01</span>Thông tin đang được cập nhật</span>, children: <p className="home-faq-answer">Bạn có thể liên hệ Losa để được giải đáp trực tiếp.</p> }]} /></div>
+        </div>
+      </section>
+    </main>
   )
 }
-
-
-// ---- Blog -----------------------------------------------------------------

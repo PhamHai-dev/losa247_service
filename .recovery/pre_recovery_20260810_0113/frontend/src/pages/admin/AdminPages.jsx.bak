@@ -1,0 +1,1961 @@
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import EmojiPicker from 'emoji-picker-react'
+import {
+  Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
+  Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
+  Tag, Timeline, Typography, Upload, Dropdown, DatePicker,
+} from 'antd'
+import { Editor } from '@tinymce/tinymce-react'
+import {
+  DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
+  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+} from '@ant-design/icons'
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
+import { useApiQuery } from '../../hooks/useApiQuery'
+import { useDebounce } from '../../hooks/useDebounce'
+import { useListParams } from '../../hooks/useListParams'
+import { formatCurrency, formatDate } from '../../utils/format'
+import { downloadBlob } from '../../utils/downloadBlob'
+import { ORDER_STATUS, LEAD_STATUS, BLOG_STATUS, CHAT_MODE, ORDER_STEPS } from '../../constants/statusConfig'
+import { dashboardService } from '../../features/dashboard/dashboardService'
+import { leadsService } from '../../features/leads/leadsService'
+import { ordersService } from '../../features/orders/ordersService'
+import { cartsAdminService } from '../../features/carts/cartsAdminService'
+import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
+import { faqsService } from '../../features/faqs/faqsService'
+import { servicesService } from '../../features/services/servicesService'
+import { pricingService } from '../../features/services/pricingService'
+import { storeProductsService } from '../../features/storeProducts/storeProductsService'
+import { chatService } from '../../features/chat/chatService'
+import { logsService } from '../../features/logs/logsService'
+import { usersService, rolesService } from '../../features/users/usersService'
+import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
+import { useChatSocket } from '../../features/chat/useChatSocket'
+import dayjs from 'dayjs'
+
+const { Title, Text } = Typography
+
+// ---- Reusable bits --------------------------------------------------------
+function PageHeader({ title, extra }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
+      <div>
+        <Text type="secondary" style={{ fontSize: 12, letterSpacing: 1 }}>LOSA247 ADMIN</Text>
+        <Title level={3} style={{ margin: 0 }}>{title}</Title>
+      </div>
+      <Space wrap>{extra}</Space>
+    </div>
+  )
+}
+
+function StatusTag({ map, value }) {
+  const cfg = map[value] || { label: value || '—', color: 'default' }
+  return <Tag color={cfg.color}>{cfg.label}</Tag>
+}
+
+// Bọc trạng thái loading/error/empty cho các khối dữ liệu.
+function QueryState({ loading, error, empty, children }) {
+  if (loading) return <div style={{ padding: 48, textAlign: 'center' }}><Spin /></div>
+  if (error) return <Alert type="error" showIcon title={error} style={{ margin: '12px 0' }} />
+  if (empty) return <Empty description="Chưa có dữ liệu" style={{ padding: 32 }} />
+  return children
+}
+
+// ---- Dashboard ------------------------------------------------------------
+export function AdminDashboard() {
+  const kpisQ = useApiQuery(() => dashboardService.getKpis(), [])
+  const revenueQ = useApiQuery(() => dashboardService.getRevenueChart('30d'), [])
+  const sourcesQ = useApiQuery(() => dashboardService.getLeadSources(), [])
+
+  const kpi = kpisQ.data?.data || {}
+  const revenue = revenueQ.data?.data || []
+  const sources = sourcesQ.data?.data || []
+  const maxRevenue = Math.max(1, ...revenue.map((r) => r.revenue || 0))
+
+  return (
+    <>
+      <PageHeader
+        title="Dashboard tổng quan"
+        extra={<Button icon={<ReloadOutlined />} onClick={() => { kpisQ.refetch(); revenueQ.refetch(); sourcesQ.refetch() }}>Làm mới</Button>}
+      />
+      <Spin spinning={kpisQ.loading}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Lead mới trong tháng" value={kpi.newLeads ?? 0} prefix="⚡" /></Card></Col>
+          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Tổng đơn hàng" value={kpi.totalOrders ?? 0} prefix="🧾" /></Card></Col>
+          <Col xs={24} sm={12} lg={8}><Card><Statistic title="Doanh thu" value={kpi.totalRevenue ?? 0} suffix="đ" groupSeparator="." /></Card></Col>
+        </Row>
+      </Spin>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col xs={24} lg={16}>
+          <Card title="Doanh thu 30 ngày">
+            <QueryState loading={revenueQ.loading} error={revenueQ.error} empty={!revenue.length}>
+              <div style={{ height: 300, marginTop: 10 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenue} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0F766E" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#0F766E" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="_id" tick={{ fontSize: 12 }} tickFormatter={(val) => val.substring(5)} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(val) => val >= 1000000 ? `${(val / 1000000).toFixed(0)}tr` : val} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <RechartsTooltip formatter={(value) => [formatCurrency(value), 'Doanh thu']} labelFormatter={(label) => `Ngày: ${label}`} />
+                    <Area type="monotone" dataKey="revenue" stroke="#0F766E" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </QueryState>
+          </Card>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card title="Nguồn Lead">
+            <QueryState loading={sourcesQ.loading} error={sourcesQ.error} empty={!sources.length}>
+              <List
+                dataSource={sources}
+                renderItem={(s) => (
+                  <List.Item>
+                    <span>{s._id || 'Không rõ'}</span>
+                    <Tag color="cyan">{s.count}</Tag>
+                  </List.Item>
+                )}
+              />
+            </QueryState>
+          </Card>
+        </Col>
+      </Row>
+    </>
+  )
+}
+
+// ---- Leads ----------------------------------------------------------------
+export function AdminLeads() {
+  const { message } = App.useApp()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const [status, setStatus] = useState()
+  const [detailId, setDetailId] = useState(null)
+  const [openForm, setOpenForm] = useState(false)
+  const [editingLead, setEditingLead] = useState(null)
+  const [form] = Form.useForm()
+
+  const query = useApiQuery(
+    () => leadsService.getLeads({ page, limit: pageSize, search: debounced || undefined, status }),
+    [page, debounced, status],
+  )
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const handleExport = async () => {
+    try {
+      const blob = await leadsService.exportLeads({ search: debounced || undefined, status })
+      downloadBlob(blob, 'leads.xlsx')
+      message.success('Đã xuất danh sách lead')
+    } catch {
+      message.error('Không xuất được (backend chưa hỗ trợ export?)')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await leadsService.deleteLead(id)
+      message.success('Đã xóa lead')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi xóa')
+    }
+  }
+
+  const openEdit = (row) => {
+    setEditingLead(row)
+    form.setFieldsValue({
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+      source: row.source,
+      status: row.status,
+    })
+    setOpenForm(true)
+  }
+
+  const openCreate = () => {
+    setEditingLead(null)
+    form.resetFields()
+    setOpenForm(true)
+  }
+
+  const saveLead = async () => {
+    try {
+      const values = await form.validateFields()
+      if (editingLead) {
+        await leadsService.updateLead(editingLead._id, values)
+        message.success('Đã cập nhật')
+      } else {
+        await leadsService.createLead(values)
+        message.success('Đã thêm lead')
+      }
+      setOpenForm(false)
+      query.refetch()
+    } catch (e) {
+      if (e?.errorFields) return
+      message.error('Lỗi lưu lead')
+    }
+  }
+
+  const columns = [
+    { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'SĐT', dataIndex: 'phone', key: 'phone' },
+    { title: 'Nguồn', dataIndex: 'source', key: 'source' },
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={LEAD_STATUS} value={v} /> },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    { title: 'Sửa', key: 'edit', render: (_, r) => <Button size="small" onClick={() => openEdit(r)}>Sửa</Button> },
+    { title: 'Xóa', key: 'delete', render: (_, r) => <Popconfirm title="Xóa lead này?" onConfirm={() => handleDelete(r._id)}><Button size="small" type="text" danger>Xóa</Button></Popconfirm> },
+    { title: '', key: 'action', render: (_, r) => <Button size="small" onClick={() => setDetailId(r._id)}>Chi tiết</Button> },
+  ]
+
+  return (
+    <>
+      <PageHeader title="Quản lý Lead" extra={<Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button>} />
+      <Space style={{ marginBottom: 16 }} wrap>
+        <Input.Search allowClear placeholder="Tìm tên / SĐT" value={search} onChange={(e) => { onSearch(e.target.value); setPage(1) }} style={{ width: 260 }} />
+        <Select allowClear placeholder="Trạng thái" style={{ width: 180 }} value={status} onChange={(v) => { setStatus(v); setPage(1) }}
+          options={[{ value: '', label: 'Tất cả' }, ...Object.entries(LEAD_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))]} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm mới</Button>
+      </Space>
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      <LeadDetailDrawer id={detailId} open={!!detailId} onClose={() => setDetailId(null)} onChanged={query.refetch} />
+
+      <Modal title={editingLead ? 'Sửa Lead' : 'Thêm Lead mới'} open={openForm} onOk={saveLead} onCancel={() => setOpenForm(false)} destroyOnHidden>
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Tên khách hàng" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
+          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, message: 'Nhập SĐT' }]}><Input /></Form.Item>
+          <Form.Item name="email" label="Email"><Input /></Form.Item>
+          <Form.Item name="source" label="Nguồn"><Input /></Form.Item>
+          <Form.Item name="status" label="Trạng thái" initialValue="new">
+            <Select options={Object.entries(LEAD_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+function LeadDetailDrawer({ id, open, onClose, onChanged }) {
+  const { message } = App.useApp()
+  const [note, setNote] = useState('')
+  const query = useApiQuery(() => leadsService.getLeadById(id), [id], { enabled: !!id })
+  const lead = query.data
+
+  const addNote = async () => {
+    if (!note.trim()) return
+    try {
+      await leadsService.addNote(id, note)
+      setNote('')
+      message.success('Đã thêm ghi chú')
+      query.refetch()
+    } catch { message.error('Không thêm được ghi chú') }
+  }
+  const convert = async () => {
+    try {
+      await leadsService.convertToOrder(id)
+      message.success('Đã chuyển lead thành đơn hàng')
+      onChanged?.()
+      onClose()
+    } catch { message.error('Không chuyển được đơn hàng') }
+  }
+
+  return (
+    <Drawer title="Chi tiết Lead" size={480} open={open} onClose={onClose}
+      extra={<Popconfirm title="Chuyển lead này thành đơn hàng?" onConfirm={convert}><Button type="primary">Chuyển thành đơn</Button></Popconfirm>}>
+      <QueryState loading={query.loading} error={query.error} empty={!lead}>
+        {lead && (
+          <>
+            <Descriptions column={1} bordered size="small"
+              items={[
+                { key: 'name', label: 'Tên', children: lead.name },
+                { key: 'phone', label: 'SĐT', children: lead.phone },
+                { key: 'source', label: 'Nguồn', children: lead.source },
+                { key: 'status', label: 'Trạng thái', children: <StatusTag map={LEAD_STATUS} value={lead.status} /> },
+                { key: 'createdAt', label: 'Ngày tạo', children: formatDate(lead.createdAt, true) },
+              ]} />
+            <Title level={5} style={{ marginTop: 20 }}>Ghi chú</Title>
+            <Timeline items={(lead.notes || []).map((n, i) => ({ key: i, children: <><div>{n.content || n.text || String(n)}</div>{n.createdAt && <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(n.createdAt, true)}</Text>}</> }))} />
+            <Space.Compact style={{ width: '100%', marginTop: 8 }}>
+              <Input placeholder="Thêm ghi chú chăm sóc..." value={note} onChange={(e) => setNote(e.target.value)} onPressEnter={addNote} />
+              <Button type="primary" onClick={addNote}>Lưu</Button>
+            </Space.Compact>
+          </>
+        )}
+      </QueryState>
+    </Drawer>
+  )
+}
+
+// ---- Orders ---------------------------------------------------------------
+export function AdminOrders() {
+  const [statusTab, setStatusTab] = useState('all')
+  const [detailId, setDetailId] = useState(null)
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+
+  const status = statusTab === 'all' ? undefined : statusTab
+  const query = useApiQuery(
+    () => ordersService.getOrders({ page, limit: pageSize, status, search: debounced || undefined }),
+    [page, status, debounced],
+  )
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const columns = [
+    { title: 'Mã đơn', dataIndex: 'code', key: 'code', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Khách hàng', dataIndex: ['customer', 'name'], key: 'customer' },
+    { title: 'SĐT', dataIndex: ['customer', 'phone'], key: 'phone' },
+    { title: 'Tổng tiền', dataIndex: 'total', key: 'total', render: (v) => formatCurrency(v) },
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={ORDER_STATUS} value={v} /> },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    { title: '', key: 'action', render: (_, r) => <Button size="small" onClick={() => setDetailId(r._id)}>Chi tiết</Button> },
+  ]
+
+  const tabItems = [{ key: 'all', label: 'Tất cả' }, ...Object.entries(ORDER_STATUS).map(([k, v]) => ({ key: k, label: v.label }))]
+
+  return (
+    <>
+      <PageHeader title="Quản lý Đơn hàng"
+        extra={<Input.Search allowClear placeholder="Tìm mã đơn / tên / SĐT" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 280 }} />} />
+      <Tabs activeKey={statusTab} onChange={(k) => { setStatusTab(k); setPage(1) }} items={tabItems} />
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      <OrderDetailDrawer id={detailId} open={!!detailId} onClose={() => setDetailId(null)} onChanged={query.refetch} />
+    </>
+  )
+}
+
+function OrderDetailDrawer({ id, open, onClose, onChanged }) {
+  const { message, modal } = App.useApp()
+  const query = useApiQuery(() => ordersService.getOrderById(id), [id], { enabled: !!id })
+  const order = query.data
+
+  const act = async (fn, okMsg) => {
+    try { await fn(); message.success(okMsg); query.refetch(); onChanged?.() }
+    catch (e) { message.error(e?.error?.message || 'Thao tác thất bại') }
+  }
+  const cancel = () => {
+    let reason = ''
+    modal.confirm({
+      title: 'Huỷ đơn hàng',
+      content: <Input placeholder="Lý do huỷ" onChange={(e) => { reason = e.target.value }} />,
+      onOk: () => act(() => ordersService.cancel(id, reason), 'Đã huỷ đơn'),
+    })
+  }
+
+  const stepIndex = order ? ORDER_STEPS.indexOf(order.status) : -1
+
+  return (
+    <Drawer title={order ? `Đơn ${order.code}` : 'Chi tiết đơn'} size={520} open={open} onClose={onClose}>
+      <QueryState loading={query.loading} error={query.error} empty={!order}>
+        {order && (
+          <>
+            {order.status !== 'cancelled' && stepIndex >= 0 && (
+              <Steps size="small" current={stepIndex} style={{ marginBottom: 20 }}
+                items={ORDER_STEPS.map((s) => ({ title: ORDER_STATUS[s].label }))} />
+            )}
+            <Descriptions column={1} bordered size="small"
+              items={[
+                { key: 'name', label: 'Khách hàng', children: order.customer?.name },
+                { key: 'phone', label: 'SĐT', children: order.customer?.phone },
+                { key: 'email', label: 'Email', children: order.customer?.email || '—' },
+                { key: 'method', label: 'Thanh toán', children: order.paymentMethod },
+                { key: 'status', label: 'Trạng thái', children: <StatusTag map={ORDER_STATUS} value={order.status} /> },
+                { key: 'total', label: 'Tổng tiền', children: formatCurrency(order.total) },
+              ]} />
+            <Title level={5} style={{ marginTop: 20 }}>Sản phẩm</Title>
+            <List size="small" dataSource={order.items || []}
+              renderItem={(it) => <List.Item>{it.name} × {it.qty} <Text type="secondary">{formatCurrency(it.price)}</Text></List.Item>} />
+            <Space wrap style={{ marginTop: 20 }}>
+              {order.status === 'pending' && <Button type="primary" onClick={() => act(() => ordersService.confirmPayment(id), 'Đã xác nhận thanh toán')}>Xác nhận thanh toán</Button>}
+              {order.status === 'paid' && <Button type="primary" onClick={() => act(() => ordersService.activate(id), 'Đã kích hoạt dịch vụ')}>Kích hoạt dịch vụ</Button>}
+              {!['completed', 'cancelled'].includes(order.status) && <Button danger onClick={cancel}>Huỷ đơn</Button>}
+            </Space>
+          </>
+        )}
+      </QueryState>
+    </Drawer>
+  )
+}
+
+// ---- Abandoned carts (đưa vào tab riêng dưới Orders menu nếu cần) ---------
+export function AdminCarts() {
+  const { message } = App.useApp()
+  const { page, setPage, pageSize } = useListParams()
+  const query = useApiQuery(() => cartsAdminService.getAbandoned({ page, limit: pageSize }), [page])
+  const rows = query.data?.items || []
+
+  const remind = async (recordId) => {
+    try { await cartsAdminService.remind(recordId); message.success('Đã gửi nhắc nhở') }
+    catch { message.error('Không gửi được nhắc nhở') }
+  }
+  const columns = [
+    { title: 'Khách', dataIndex: ['userId', 'name'], key: 'user', render: (v, r) => v || r.userId || '—' },
+    { title: 'Số lượng', dataIndex: 'qty', key: 'qty' },
+    { title: 'Thêm lúc', dataIndex: 'addedAt', key: 'addedAt', render: (v) => formatDate(v, true) },
+    { title: '', key: 'action', render: (_, r) => <Button size="small" onClick={() => remind(r._id)}>Nhắc nhở</Button> },
+  ]
+  return (
+    <>
+      <PageHeader title="Giỏ hàng treo" />
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+    </>
+  )
+}
+
+// ---- Blogs ----------------------------------------------------------------
+function BlogsView() {
+  const { message } = App.useApp()
+  const navigate = useNavigate()
+  const [tab, setTab] = useState('all')
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const status = tab === 'all' ? undefined : tab
+
+  const query = useApiQuery(
+    () => blogsService.getBlogs({ status, search: debounced || undefined, page, limit: pageSize }),
+    [status, debounced, page]
+  )
+  const statsQuery = useApiQuery(() => blogsService.getStats(), [])
+  const stats = statsQuery.data || { totalBlogs: 0, publishedBlogs: 0, pendingBlogs: 0, totalViews: 0 }
+
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const doAction = async (fn, msg) => {
+    try { await fn(); message.success(msg); query.refetch() } catch { message.error('Thao tác thất bại') }
+  }
+
+  const columns = [
+    { title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Danh mục', dataIndex: 'category', key: 'category', render: (c) => c?.name || '-' },
+    { title: 'Lượt xem', dataIndex: 'views', key: 'views', render: (v) => <Space><EyeOutlined style={{ color: '#94a3b8' }} /> {v?.toLocaleString('vi-VN') || 0}</Space> },
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={BLOG_STATUS} value={v} /> },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    {
+      title: 'Thao tác', key: 'action', render: (_, r) => (
+        <Space>
+          {r.status === 'pending' && <Button size="small" type="primary" onClick={() => doAction(() => blogsService.approve(r._id), 'Đã duyệt bài')}>Duyệt</Button>}
+          {r.status === 'pending' && <Button size="small" danger onClick={() => doAction(() => blogsService.reject(r._id), 'Đã từ chối')}>Từ chối</Button>}
+          <Button size="small" onClick={() => navigate('/admin/blogs/editor', { state: { blog: r } })}>Sửa</Button>
+          <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(r._id), 'Đã xoá')}><Button size="small" danger>Xoá</Button></Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng bài viết</span>
+            <span className="value">{stats.totalBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#dcfce7', color: '#16a34a' }}><CheckCircleOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Đã đăng</span>
+            <span className="value">{stats.publishedBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#fef3c7', color: '#d97706' }}><ClockCircleOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Chờ duyệt</span>
+            <span className="value">{stats.pendingBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#f1f5f9', color: '#475569' }}><EyeOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng lượt xem</span>
+            <span className="value">{stats.totalViews.toLocaleString('vi-VN')}</span>
+            <span className="sub">Lượt xem</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ padding: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Segmented
+            options={[
+              { label: `Tất cả (${stats.totalBlogs})`, value: 'all' },
+              { label: `Chờ duyệt (${stats.pendingBlogs})`, value: 'pending' },
+              { label: `Đã đăng (${stats.publishedBlogs})`, value: 'published' }
+            ]}
+            value={tab}
+            onChange={(v) => { setTab(v); setPage(1) }}
+          />
+          <Input.Search allowClear placeholder="Tìm kiếm bài viết..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 260 }} />
+          <Button style={{ marginLeft: 'auto' }}>Bộ lọc</Button>
+        </div>
+        {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
+        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+          pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      </div>
+    </>
+  )
+}
+
+function BlogTagsTable() {
+  const { message } = App.useApp()
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+
+  const query = useApiQuery(
+    () => blogTagsService.getTags({ search: debounced || undefined, page, limit: pageSize }),
+    [debounced, page]
+  )
+
+  const rows = query.data?.items || []
+  const total = query.data?.total || 0
+
+  const handleEdit = (tag) => {
+    setEditing(tag)
+    form.setFieldsValue(tag)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await blogTagsService.deleteTag(id)
+      message.success('Đã xóa thẻ')
+      query.refetch()
+    } catch (e) {
+      message.error(e?.response?.data?.message || e?.error?.message || 'Không thể xóa thẻ')
+    }
+  }
+
+  const submit = async (values) => {
+    try {
+      if (editing?._id) await blogTagsService.updateTag(editing._id, values)
+      else await blogTagsService.createTag(values)
+      message.success('Đã lưu thẻ')
+      setEditing(null)
+      form.resetFields()
+      query.refetch()
+    } catch (e) {
+      message.error(e?.response?.data?.message || e?.error?.message || 'Lỗi khi lưu thẻ')
+    }
+  }
+
+  const handleCancel = () => {
+    setEditing(null)
+    form.resetFields()
+  }
+
+  const columns = [
+    { title: 'Tên thẻ', dataIndex: 'name', key: 'name', render: (val) => <><Tag icon={<SettingOutlined />} color="cyan">{val}</Tag></> },
+    { title: 'Slug', dataIndex: 'slug', key: 'slug' },
+    { title: 'Bài viết', dataIndex: 'postCount', key: 'postCount', align: 'center', width: 100 },
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (val) => formatDate(val) },
+    { title: 'Thao tác', key: 'actions', width: 120, render: (_, r) => (
+      <Space>
+        <Button size="small" type="text" icon={<SettingOutlined style={{color: '#0d9488'}} />} onClick={() => handleEdit(r)} />
+        <Popconfirm title="Xoá thẻ này?" onConfirm={() => handleDelete(r._id)}>
+          <Button size="small" type="text" danger icon={<CloseOutlined />} />
+        </Popconfirm>
+      </Space>
+    )}
+  ]
+
+  return (
+    <Row gutter={24}>
+      <Col xs={24} lg={15}>
+        <Card bodyStyle={{ padding: 0 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16 }}>
+            <Input.Search allowClear placeholder="Tìm kiếm thẻ..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ maxWidth: 300 }} />
+          </div>
+          {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
+          <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+            pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+        </Card>
+      </Col>
+      <Col xs={24} lg={9}>
+        <Card title={editing ? 'Sửa thẻ' : 'Thêm thẻ mới'}>
+          <Form form={form} layout="vertical" onFinish={submit}>
+            <Form.Item name="name" label="Tên thẻ" rules={[{ required: true, message: 'Nhập tên thẻ' }]}>
+              <Input placeholder="Nhập tên thẻ" />
+            </Form.Item>
+            <Form.Item name="slug" label="Slug" extra="Slug sẽ được tạo tự động từ tên thẻ. Bạn có thể chỉnh sửa.">
+              <Input placeholder="slug-the-viet-lien-khong-dau" />
+            </Form.Item>
+            <Form.Item name="description" label="Mô tả">
+              <Input.TextArea rows={4} placeholder="Nhập mô tả thẻ (không bắt buộc)" />
+            </Form.Item>
+
+            <Form.Item label="SEO Preview" style={{ marginBottom: 24 }}>
+              <div style={{ color: '#0d9488', fontSize: 14, marginBottom: 4, wordBreak: 'break-all' }}>
+                https://www.losa247.vn/tag/{Form.useWatch('slug', form) || 'slug-tu-dong'}
+              </div>
+              <div style={{ color: '#64748b', fontSize: 12 }}>
+                Đây là đường dẫn hiển thị trên website.
+              </div>
+            </Form.Item>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <Button onClick={handleCancel}>Hủy</Button>
+              <Button type="primary" htmlType="submit" style={{ background: '#0d9488' }}>Lưu thẻ</Button>
+            </div>
+          </Form>
+        </Card>
+      </Col>
+    </Row>
+  )
+}
+
+function CategoriesView() {
+  const { message } = App.useApp()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingCat, setEditingCat] = useState(null)
+  const [form] = Form.useForm()
+
+  const query = useApiQuery(() => blogCategoriesService.getCategories(), [])
+  const statsQuery = useApiQuery(() => blogsService.getStats(), [])
+  const rows = query.data?.items || []
+  const stats = statsQuery.data || { totalBlogs: 0 }
+
+  useEffect(() => {
+    const handleOpen = () => {
+      setEditingCat(null)
+      form.resetFields()
+      setIsModalOpen(true)
+    }
+    window.addEventListener('openAddCategoryModal', handleOpen)
+    return () => window.removeEventListener('openAddCategoryModal', handleOpen)
+  }, [form])
+
+  const handleEdit = (cat) => {
+    setEditingCat(cat)
+    form.setFieldsValue({ name: cat.name })
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await blogCategoriesService.deleteCategory(id)
+      message.success('Đã xoá danh mục')
+      query.refetch()
+    } catch {
+      message.error('Không xoá được danh mục')
+    }
+  }
+
+  const handleSubmit = async (values) => {
+    try {
+      if (editingCat) {
+        await blogCategoriesService.updateCategory(editingCat._id, values)
+        message.success('Cập nhật thành công')
+      } else {
+        await blogCategoriesService.createCategory(values)
+        message.success('Thêm mới thành công')
+      }
+      setIsModalOpen(false)
+      query.refetch()
+    } catch (e) {
+      message.error(e?.error?.message || 'Có lỗi xảy ra')
+    }
+  }
+
+  const columns = [
+    { title: '#', key: 'index', render: (_, __, i) => i + 1, width: 60 },
+    { title: 'TÊN DANH MỤC', dataIndex: 'name', key: 'name', render: (v) => <b>{v}</b> },
+    { title: 'SLUG', dataIndex: 'slug', key: 'slug', render: (v) => <span style={{ color: '#64748b' }}>{v}</span> },
+    { title: 'SỐ BÀI VIẾT', dataIndex: 'blogCount', key: 'blogCount', render: (v) => <b>{v || 0}</b> },
+    { title: 'NGÀY TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    {
+      title: 'THAO TÁC', key: 'action', render: (_, r) => (
+        <Space>
+          <Button size="small" onClick={() => handleEdit(r)}>Sửa</Button>
+          <Popconfirm title="Xoá danh mục này?" onConfirm={() => handleDelete(r._id)}>
+            <Button size="small" danger>Xoá</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng danh mục</span>
+            <span className="value">{rows.length}</span>
+            <span className="sub">Danh mục</span>
+          </div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-card-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}><FileTextOutlined /></div>
+          <div className="kpi-card-content">
+            <span className="label">Tổng bài viết</span>
+            <span className="value">{stats.totalBlogs}</span>
+            <span className="sub">Bài viết</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-card" style={{ padding: 0 }}>
+        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} pagination={false} />
+      </div>
+
+      <Modal
+        title={editingCat ? "Cập nhật danh mục" : "Thêm danh mục mới"}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item name="name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}>
+            <Input placeholder="VD: Marketing" />
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <Button onClick={() => setIsModalOpen(false)}>Huỷ</Button>
+            <Button type="primary" htmlType="submit">Lưu lại</Button>
+          </div>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+export function AdminBlogs() {
+  const navigate = useNavigate()
+  const [mainTab, setMainTab] = useState('blogs')
+
+  return (
+    <>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Quản lý bài viết</h1>
+          <p style={{ margin: 0, color: '#64748b' }}>Quản lý bài viết, danh mục và thẻ trên website</p>
+        </div>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            if (mainTab === 'blogs') navigate('/admin/blogs/editor');
+            if (mainTab === 'categories') {
+              window.dispatchEvent(new Event('openAddCategoryModal'))
+            }
+          }}
+          style={{ background: '#0d9488', borderRadius: 8 }}
+        >
+          {mainTab === 'categories' ? 'Thêm danh mục mới' : 'Viết bài mới'}
+        </Button>
+      </div>
+
+      <Tabs
+        activeKey={mainTab}
+        onChange={setMainTab}
+        items={[
+          { key: 'blogs', label: 'Tất cả bài viết', children: <BlogsView /> },
+          { key: 'categories', label: 'Danh mục', children: <CategoriesView /> },
+          { key: 'tags', label: 'Thẻ', children: <BlogTagsTable /> }
+        ]}
+      />
+    </>
+  )
+}
+
+export function AdminBlogEditor() {
+  const { message } = App.useApp()
+  const navigate = useNavigate()
+  const { state } = useLocation()
+  const editing = state?.blog
+  const [form] = Form.useForm()
+  const coverImageUrl = Form.useWatch('coverImageUrl', form)
+  const [saving, setSaving] = useState(false)
+  const [titleValue, setTitleValue] = useState(editing?.title || '')
+  const [metaDescValue, setMetaDescValue] = useState(editing?.metaDescription || editing?.excerpt || '')
+  const [slugValue, setSlugValue] = useState(editing?.slug || '')
+  
+  const categoriesQuery = useApiQuery(() => blogCategoriesService.getCategories(), [])
+  const categoryOptions = (categoriesQuery.data?.items || []).map(c => ({ value: c._id, label: c.name }))
+
+  const tagsQuery = useApiQuery(() => blogTagsService.getTags({ limit: 1000 }), [])
+  const tagOptions = (tagsQuery.data?.items || []).map(t => ({ value: t._id, label: t.name }))
+
+  const handleTitleChange = (e) => {
+    setTitleValue(e.target.value)
+  }
+  
+  const handleMetaDescChange = (e) => {
+    setMetaDescValue(e.target.value)
+  }
+
+  const handleSlugChange = (e) => {
+    setSlugValue(e.target.value)
+  }
+
+  const generateAutoSlug = () => {
+    if (!titleValue) return
+    const str = titleValue.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đĐ]/g, "d")
+      .replace(/([^0-9a-z-\s])/g, '')
+      .replace(/(\s+)/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    setSlugValue(str)
+    form.setFieldValue('slug', str)
+  }
+
+  const onFinish = async (values) => {
+    setSaving(true)
+    try {
+      const payload = {
+        ...values,
+        excerpt: values.metaDescription, // map metaDescription to excerpt if backend needs it, but backend also has metaDescription now.
+      }
+      if (editing?._id) await blogsService.updateBlog(editing._id, payload)
+      else await blogsService.createBlog(payload)
+      message.success('Đã lưu bài viết')
+      navigate('/admin/blogs')
+    } catch (e) { message.error(e?.error?.message || 'Không lưu được bài viết') }
+    finally { setSaving(false) }
+  }
+
+  const handleSaveDraft = () => {
+    form.setFieldValue('status', 'draft')
+    form.submit()
+  }
+
+  const handlePublish = () => {
+    form.setFieldValue('status', 'published')
+    form.submit()
+  }
+
+  return (
+    <>
+      <PageHeader
+        title={editing ? 'Sửa bài viết' : 'Viết bài mới'}
+        extra={<Button icon={<CloseOutlined />} onClick={() => navigate('/admin/blogs')}>Huỷ</Button>}
+      />
+      <Form form={form} layout="vertical" onFinish={onFinish}
+        initialValues={editing ? { 
+          ...editing, 
+          category: editing.category?._id || editing.category,
+          metaDescription: editing.metaDescription || editing.excerpt,
+          allowComments: editing.allowComments ?? true,
+          allowIndexing: editing.allowIndexing ?? true,
+          showToc: editing.showToc ?? true,
+          isFeatured: editing.isFeatured ?? false,
+          publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : undefined,
+        } : { 
+          status: 'draft',
+          allowComments: true,
+          allowIndexing: true,
+          showToc: true,
+          isFeatured: false,
+        }}>
+        <Row gutter={24}>
+          <Col xs={24} lg={16}>
+            <Card>
+              <Form.Item name="title" label="Tiêu đề bài viết" rules={[{ required: true, message: 'Nhập tiêu đề' }]}>
+                <Input size="large" placeholder="Nhập tiêu đề bài viết..." showCount maxLength={100} onChange={handleTitleChange} />
+              </Form.Item>
+              
+              <Form.Item label="Slug (URL)" required>
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input prefix="https://losa247.vn/blog/" placeholder="nhap-slug-bai-viet" value={slugValue} onChange={(e) => {
+                    handleSlugChange(e)
+                    form.setFieldValue('slug', e.target.value)
+                  }} />
+                  <Button onClick={generateAutoSlug}>Tạo tự động</Button>
+                </Space.Compact>
+                {/* Hidden field for form submission */}
+                <Form.Item name="slug" noStyle><Input type="hidden" /></Form.Item>
+              </Form.Item>
+
+              <Form.Item name="metaDescription" label="Mô tả ngắn (Meta Description)">
+                <Input.TextArea rows={3} placeholder="Nhập mô tả ngắn, tối đa 160 ký tự..." showCount maxLength={160} onChange={handleMetaDescChange} />
+              </Form.Item>
+              
+              <Form.Item name="content" label="Nội dung bài viết" rules={[{ required: true, message: 'Nhập nội dung' }]} trigger="onEditorChange">
+                <Editor
+                  apiKey="y94yfrtyeua7to4tduqvzo5x5fmeyi8rp89wtrhrlfl8ue40"
+                  init={{
+                    height: 500,
+                    menubar: false,
+                    plugins: [
+                      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                      'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                    ],
+                    toolbar: 'blocks fontfamily fontsize | ' +
+                      'bold italic underline strikethrough forecolor backcolor code | alignleft aligncenter ' +
+                      'alignright alignjustify | bullist numlist outdent indent | ' +
+                      'link image media table | removeformat | help',
+                    content_style: 'body { font-family:"Google Sans Flex",sans-serif,Helvetica,Arial; font-size:16px; line-height: 1.6; color: #101828; } a { color: #0068FF; text-decoration: none; } a:hover { text-decoration: underline; } img { display: block; max-width: 100%; height: auto; margin: 32px auto; border-radius: 12px; } img[style*="float: left"], img[style*="float:left"], img[align="left"] { float: none !important; display: block !important; margin: 32px auto 32px 0 !important; } img[style*="float: right"], img[style*="float:right"], img[align="right"] { float: none !important; display: block !important; margin: 32px 0 32px auto !important; } figure.image { margin: 32px auto; text-align: center; } figure.image img { margin: 0 auto; } figure.image figcaption { margin-top: 12px; font-size: 14px; color: #667085; font-style: italic; text-align: center; }',
+                    placeholder: 'Nhập nội dung bài viết...',
+                    statusbar: true,
+                    file_picker_types: 'image',
+                    file_picker_callback: (cb, value, meta) => {
+                      const input = document.createElement('input');
+                      input.setAttribute('type', 'file');
+                      input.setAttribute('accept', 'image/*');
+
+                      input.addEventListener('change', async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          try {
+                            message.loading({ content: 'Đang tải ảnh...', key: 'uploadMCE' });
+                            const res = await settingsService.uploadAsset(file);
+                            if (res?.url) {
+                              cb(res.url, { title: file.name });
+                              message.success({ content: 'Tải ảnh thành công', key: 'uploadMCE' });
+                            } else {
+                              throw new Error('Upload failed');
+                            }
+                          } catch (error) {
+                            message.error({ content: 'Lỗi khi tải ảnh lên', key: 'uploadMCE' });
+                          }
+                        }
+                      });
+                      input.click();
+                    },
+                  }}
+                />
+              </Form.Item>
+            </Card>
+            
+            <Card title="Xem trước trên Google" style={{ marginTop: 24 }}>
+              <div style={{ maxWidth: 600 }}>
+                <div style={{ color: '#1a0dab', fontSize: 20, cursor: 'pointer', marginBottom: 2 }}>
+                  {titleValue || 'Tiêu đề bài viết sẽ hiển thị ở đây'}
+                </div>
+                <div style={{ color: '#006621', fontSize: 14, marginBottom: 2 }}>
+                  https://losa247.vn/blog/{slugValue || 'nhap-slug-bai-viet'}
+                </div>
+                <div style={{ color: '#545454', fontSize: 14, lineHeight: 1.5 }}>
+                  {metaDescValue || 'Đây là mô tả ngắn của bài viết hiển thị trên kết quả tìm kiếm của Google.'}
+                </div>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} lg={8}>
+            <Card title="Xuất bản" style={{ position: 'sticky', top: 24 }}>
+              <Form.Item name="category" label="Danh mục">
+                <Select
+                  allowClear
+                  placeholder="Chọn danh mục"
+                  options={categoryOptions}
+                  loading={categoriesQuery.loading}
+                  dropdownRender={(menu) => (
+                    <>
+                      {menu}
+                      <div style={{ padding: '8px', borderTop: '1px solid #e8e8e8' }}>
+                        <Button type="text" icon={<PlusOutlined />} block onClick={() => navigate('/admin/blogs', { state: { openCategoryForm: true }})}>
+                          Thêm danh mục
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                />
+              </Form.Item>
+
+              <Form.Item name="tags" label="Tags">
+                <Select mode="multiple" placeholder="Chọn thẻ..." options={tagOptions} loading={tagsQuery.loading} />
+              </Form.Item>
+
+              <Form.Item name="coverImageUrl" hidden>
+                <Input />
+              </Form.Item>
+              <Form.Item label="Ảnh đại diện">
+                <Upload.Dragger accept="image/png, image/jpeg, image/webp" maxCount={1}
+                  showUploadList={false}
+                  customRequest={async ({ file, onSuccess, onError }) => {
+                    try {
+                      const res = await settingsService.uploadAsset(file)
+                      if (res?.url) {
+                        form.setFieldValue('coverImageUrl', res.url)
+                        onSuccess('ok')
+                      } else {
+                        throw new Error('Upload failed')
+                      }
+                    } catch (error) {
+                      onError(error)
+                      message.error('Lỗi khi tải ảnh lên Cloudinary')
+                    }
+                  }}
+                >
+                  {coverImageUrl ? (
+                    <img src={coverImageUrl} alt="Ảnh đại diện" style={{ width: '100%', maxHeight: 160, objectFit: 'contain', padding: 8 }} />
+                  ) : (
+                    <>
+                      <p className="ant-upload-drag-icon"><UploadOutlined /></p>
+                      <p className="ant-upload-text">Kéo thả ảnh vào đây hoặc</p>
+                      <Button size="small">Chọn ảnh</Button>
+                      <p className="ant-upload-hint">JPEG, PNG, WEBP. Tối đa 2MB</p>
+                    </>
+                  )}
+                </Upload.Dragger>
+              </Form.Item>
+
+              <Form.Item name="status" label="Trạng thái">
+                <Select options={Object.entries(BLOG_STATUS).map(([value, cfg]) => ({ value, label: cfg.label }))} />
+              </Form.Item>
+
+              <Form.Item name="publishedAt" label="Đăng ngay lập tức">
+                <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm" />
+              </Form.Item>
+
+
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span>Bài viết nổi bật</span>
+                <Form.Item name="isFeatured" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <span>Cho phép bình luận</span>
+                <Form.Item name="allowComments" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <span>Cho phép Google index</span>
+                <Form.Item name="allowIndexing" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <span>Hiển thị mục lục</span>
+                <Form.Item name="showToc" valuePropName="checked" noStyle><Switch /></Form.Item>
+              </div>
+
+              <Dropdown.Button 
+                type="primary" 
+                size="large" 
+                loading={saving}
+                onClick={() => form.submit()}
+                menu={{ items: [
+                  { key: 'draft', label: 'Lưu nháp', onClick: handleSaveDraft },
+                  { key: 'publish', label: 'Xuất bản', onClick: handlePublish }
+                ]}}
+                style={{ width: '100%' }}
+              >
+                Lưu bài
+              </Dropdown.Button>
+            </Card>
+          </Col>
+        </Row>
+      </Form>
+    </>
+  )
+}
+
+
+// ---- FAQs -----------------------------------------------------------------
+export function AdminFaqs() {
+  const { message } = App.useApp()
+  const [editing, setEditing] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const query = useApiQuery(
+    () => faqsService.getFaqs({ search: debounced || undefined, page, limit: pageSize }),
+    [debounced, page],
+  )
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const openModal = (row) => { setEditing(row || null); setOpen(true) }
+  const submit = async () => {
+    const values = await form.validateFields()
+    // Loại bỏ field rỗng/null để không gửi '' cho các field ObjectId (category, relatedService).
+    const payload = Object.fromEntries(Object.entries(values).filter(([, v]) => v !== '' && v != null))
+    try {
+      if (editing?._id) await faqsService.updateFaq(editing._id, payload)
+      else await faqsService.createFaq(payload)
+      message.success('Đã lưu FAQ'); setOpen(false); query.refetch()
+    } catch (e) { message.error(e?.error?.message || 'Không lưu được FAQ') }
+  }
+  const remove = async (row) => {
+    try { await faqsService.deleteFaq(row._id); message.success('Đã xoá'); query.refetch() } catch { message.error('Không xoá được') }
+  }
+  const move = async (index, dir) => {
+    const next = [...rows]
+    const target = index + dir
+    if (target < 0 || target >= next.length) return
+      ;[next[index], next[target]] = [next[target], next[index]]
+    try { await faqsService.reorder(next.map((f) => f._id)); message.success('Đã cập nhật thứ tự'); query.refetch() }
+    catch { message.error('Không cập nhật được thứ tự') }
+  }
+
+  const columns = [
+    {
+      title: '#', key: 'order', width: 90, render: (_, __, i) => (
+        <Space>
+          <Button size="small" disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
+          <Button size="small" disabled={i === rows.length - 1} onClick={() => move(i, 1)}>↓</Button>
+        </Space>
+      )
+    },
+    { title: 'Câu hỏi', dataIndex: 'question', key: 'question', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Danh mục', dataIndex: 'category', key: 'category', render: (v) => v?.name || (typeof v === 'string' && v.length !== 24 ? v : '—') },
+    {
+      title: '', key: 'action', render: (_, r) => (
+        <Space>
+          <Button size="small" onClick={() => openModal(r)}>Sửa</Button>
+          <Popconfirm title="Xoá FAQ?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm>
+        </Space>
+      )
+    },
+  ]
+
+  return (
+    <>
+      <PageHeader title="Quản lý Hỏi đáp" extra={
+        <Space wrap>
+          <Input.Search allowClear placeholder="Tìm câu hỏi" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Tạo FAQ</Button>
+        </Space>} />
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      <Modal title={editing ? 'Sửa FAQ' : 'Tạo FAQ'} open={open} onOk={submit} onCancel={() => setOpen(false)} destroyOnHidden>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'} initialValues={editing || { question: '', answer: '' }}>
+          <Form.Item name="question" label="Câu hỏi" rules={[{ required: true, message: 'Nhập câu hỏi' }]}><Input /></Form.Item>
+          <Form.Item name="answer" label="Trả lời" rules={[{ required: true, message: 'Nhập câu trả lời' }]}><Input.TextArea rows={4} /></Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+// ---- Services (Pricing Plans & Comparisons) -------------------------------------------
+export function AdminServices() {
+  return (
+    <>
+      <PageHeader title="Gói dịch vụ (pricingPlans)" />
+      <Tabs items={[
+        { key: 'plans', label: 'Gói dịch vụ', children: <PricingPlansTable /> },
+        { key: 'comparisons', label: 'Bảng so sánh', children: <PricingComparisonsTable /> },
+      ]} />
+    </>
+  )
+}
+
+function PricingPlansTable() {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced } = useListParams()
+  const [isActive, setIsActive] = useState('')
+  const query = useApiQuery(
+    () => pricingService.getPlans({ search: debounced || undefined, isActive }),
+    [debounced, isActive],
+  )
+  const rows = query.data?.items || []
+
+  const openModal = (row) => { 
+    setEditing(row || null)
+    form.setFieldsValue(row || { name: '', price: '', badge: '', buttonText: '', order: 0, isActive: true, subtitle: [], feature: [] })
+    setOpen(true) 
+  }
+  const submit = async () => {
+    const values = await form.validateFields()
+    try {
+      if (editing?._id) await pricingService.updatePlan(editing._id, values)
+      else await pricingService.createPlan(values)
+      message.success('Đã lưu gói dịch vụ')
+      setOpen(false)
+      query.refetch()
+    } catch { message.error('Không lưu được gói dịch vụ') }
+  }
+  const remove = async (row) => { 
+    try { await pricingService.deletePlan(row._id); message.success('Đã xoá'); query.refetch() } 
+    catch { message.error('Không xoá được') } 
+  }
+  const toggleActive = async (row, checked) => {
+    try { await pricingService.updatePlan(row._id, { isActive: checked }); message.success('Đã cập nhật'); query.refetch() }
+    catch { message.error('Lỗi') }
+  }
+
+  const columns = [
+    { title: 'STT', key: 'stt', render: (_, __, i) => i + 1, width: 60, align: 'center' },
+    { title: 'Tên gói', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Giá', dataIndex: 'price', key: 'price' },
+    { title: 'Badge', dataIndex: 'badge', key: 'badge', render: (v) => v ? <Tag color="purple">{v}</Tag> : '—' },
+    { title: 'Subtitle (số lượng)', dataIndex: 'subtitle', key: 'subtitle', render: (v) => v?.length ? `${v.length} dòng` : '—' },
+    { title: 'Features (số lượng)', dataIndex: 'feature', key: 'feature', render: (v) => v?.length ? `${v.length} tính năng` : '—' },
+    { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
+    { title: 'Trạng thái', dataIndex: 'isActive', key: 'isActive', render: (v, r) => <Switch checked={v} onChange={(c) => toggleActive(r, c)} /> },
+    {
+      title: 'Hành động', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
+  ]
+
+  return (
+    <>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Input.Search allowClear placeholder="Tìm kiếm gói dịch vụ..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
+        <Select allowClear placeholder="Tất cả trạng thái" value={isActive} onChange={setIsActive} style={{ width: 160 }} options={[{ label: 'Tất cả', value: '' }, { label: 'Hiển thị', value: 'true' }, { label: 'Đang ẩn', value: 'false' }]} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm gói dịch vụ</Button>
+      </Space>
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} pagination={false} />
+      
+      <Drawer title={editing ? 'Sửa gói dịch vụ' : 'Thêm gói dịch vụ'} width={500} open={open} onClose={() => setOpen(false)} extra={<Space><Button onClick={() => setOpen(false)}>Hủy</Button><Button type="primary" onClick={submit}>Lưu</Button></Space>}>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'}>
+          <Form.Item name="name" label="Tên gói" rules={[{ required: true, message: 'Nhập tên gói' }]}><Input /></Form.Item>
+          <Form.Item name="price" label="Giá" rules={[{ required: true, message: 'Nhập giá' }]}><Input placeholder="VD: 6.000.000đ / tháng hoặc Liên hệ" /></Form.Item>
+          <Form.Item name="badge" label="Badge"><Input placeholder="VD: PHỔ BIẾN NHẤT" /></Form.Item>
+          <Form.Item name="buttonText" label="Button Text"><Input placeholder="VD: Bắt đầu ngay" /></Form.Item>
+          <Form.Item name="order" label="Thứ tự hiển thị"><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
+          <Form.Item name="isActive" label="Trạng thái" valuePropName="checked"><Switch /></Form.Item>
+          
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 8 }}>Subtitle (Nội dung phụ dưới giá)</div>
+            <Form.List name="subtitle">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item {...restField} name={[name]} style={{ margin: 0, width: 400 }}><Input placeholder="Nhập dòng subtitle" /></Form.Item>
+                      <CloseOutlined onClick={() => remove(name)} style={{ color: '#ef4444', cursor: 'pointer' }} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>Thêm dòng</Button>
+                </>
+              )}
+            </Form.List>
+          </div>
+
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 8 }}>Features (Tính năng)</div>
+            <Form.List name="feature">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item {...restField} name={[name]} style={{ margin: 0, width: 400 }}><Input placeholder="Nhập tính năng" /></Form.Item>
+                      <CloseOutlined onClick={() => remove(name)} style={{ color: '#ef4444', cursor: 'pointer' }} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>Thêm tính năng</Button>
+                </>
+              )}
+            </Form.List>
+          </div>
+        </Form>
+      </Drawer>
+    </>
+  )
+}
+
+function PricingComparisonsTable() {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  
+  const plansQ = useApiQuery(() => pricingService.getPlans({}), [])
+  const plans = plansQ.data?.items || []
+
+  const query = useApiQuery(() => pricingService.getComparisons(), [])
+  const rows = query.data?.items || []
+
+  const openModal = (row) => { 
+    setEditing(row || null)
+    form.setFieldsValue(row || { title: '', order: 0, values: {} })
+    setOpen(true) 
+  }
+
+  const submit = async () => {
+    const values = await form.validateFields()
+    try {
+      // Chuyển đổi các values nhập vào (nếu là chuỗi 'true'/'false' -> boolean)
+      const formattedValues = { ...values.values }
+      for (const key in formattedValues) {
+        let val = formattedValues[key];
+        if (Array.isArray(val) && val.length > 0) val = val[0]; // Extract string from tag array
+        if (val === 'true') formattedValues[key] = true
+        else if (val === 'false') formattedValues[key] = false
+        else formattedValues[key] = val
+      }
+      values.values = formattedValues
+
+      if (editing?._id) await pricingService.updateComparison(editing._id, values)
+      else await pricingService.createComparison(values)
+      message.success('Đã lưu dòng so sánh')
+      setOpen(false)
+      query.refetch()
+    } catch { message.error('Không lưu được dòng so sánh') }
+  }
+
+  const remove = async (row) => { 
+    try { await pricingService.deleteComparison(row._id); message.success('Đã xoá'); query.refetch() } 
+    catch { message.error('Không xoá được') } 
+  }
+
+  // Generate dynamic columns based on active plans
+  const dynamicCols = plans.map(plan => ({
+    title: plan.name,
+    dataIndex: ['values', plan._id],
+    key: plan._id,
+    render: (val) => {
+      if (typeof val === 'boolean') {
+        return val ? <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span> : <span style={{ color: '#94a3b8' }}>-</span>
+      }
+      return val || '—'
+    }
+  }))
+
+  const columns = [
+    { title: 'STT', key: 'stt', render: (_, __, i) => i + 1, width: 60, align: 'center' },
+    { title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: (v) => <span className="cell-strong">{v}</span> },
+    ...dynamicCols,
+    { title: 'Thứ tự', dataIndex: 'order', key: 'order', align: 'center' },
+    {
+      title: 'Hành động', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
+  ]
+
+  return (
+    <>
+      <Space style={{ marginBottom: 12 }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm dòng so sánh</Button>
+      </Space>
+      <Table rowKey="_id" loading={query.loading || plansQ.loading} columns={columns} dataSource={rows} pagination={false} />
+      
+      <Drawer title={editing ? 'Sửa dòng so sánh' : 'Thêm dòng so sánh'} width={500} open={open} onClose={() => setOpen(false)} extra={<Space><Button onClick={() => setOpen(false)}>Hủy</Button><Button type="primary" onClick={submit}>Lưu</Button></Space>}>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'}>
+          <Form.Item name="title" label="Tiêu đề (VD: Thời hạn sử dụng, Số trang...)" rules={[{ required: true, message: 'Nhập tiêu đề' }]}><Input /></Form.Item>
+          
+          <div style={{ background: '#f8fafc', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+            <div style={{ fontWeight: 500, marginBottom: 16 }}>Giá trị của từng gói dịch vụ</div>
+            {plans.map(plan => (
+              <Row key={plan._id} style={{ marginBottom: 12 }}>
+                <Col span={8} style={{ display: 'flex', alignItems: 'center' }}>
+                  <strong>{plan.name}</strong>
+                </Col>
+                <Col span={16}>
+                  <Form.Item name={['values', plan._id]} style={{ margin: 0 }}>
+                    <Select
+                      mode="tags"
+                      maxCount={1}
+                      placeholder="Nhập giá trị, hoặc chọn ✓ / -"
+                      options={[
+                        { label: '✓ (Có)', value: 'true' },
+                        { label: '- (Không)', value: 'false' }
+                      ]}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            ))}
+          </div>
+          
+          <Form.Item name="order" label="Thứ tự hiển thị"><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
+        </Form>
+      </Drawer>
+    </>
+  )
+}
+
+export function AdminStore() {
+  return (
+    <>
+      <PageHeader title="Gian hàng workflow" />
+      <StoreProductsTable />
+    </>
+  )
+}
+
+function StoreProductsTable() {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const query = useApiQuery(
+    () => storeProductsService.getStoreProducts({ search: debounced || undefined, page, limit: pageSize }),
+    [debounced, page],
+  )
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const openModal = (row) => { setEditing(row || null); setOpen(true) }
+  const submit = async () => {
+    const values = await form.validateFields()
+    // Validate JSON workflow trước khi submit (theo Agent.md 3.7).
+    if (values.n8nWorkflowJson) {
+      try { JSON.parse(values.n8nWorkflowJson) } catch { message.error('n8nWorkflowJson không phải JSON hợp lệ'); return }
+    }
+    try {
+      if (editing?._id) await storeProductsService.updateProduct(editing._id, values)
+      else await storeProductsService.createProduct(values)
+      message.success('Đã lưu sản phẩm'); setOpen(false); query.refetch()
+    } catch { message.error('Không lưu được sản phẩm') }
+  }
+  const remove = async (row) => { try { await storeProductsService.deleteProduct(row._id); message.success('Đã xoá'); query.refetch() } catch { message.error('Không xoá được') } }
+
+  const columns = [
+    { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Nền tảng', dataIndex: 'platform', key: 'platform' },
+    { title: 'Giá', dataIndex: 'price', key: 'price', render: (v) => formatCurrency(v) },
+    {
+      title: '', key: 'action', render: (_, r) => (
+        <Space><Button size="small" onClick={() => openModal(r)}>Sửa</Button><Popconfirm title="Xoá?" onConfirm={() => remove(r)}><Button size="small" danger>Xoá</Button></Popconfirm></Space>
+      )
+    },
+  ]
+  return (
+    <>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Input.Search allowClear placeholder="Tìm tên sản phẩm" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal(null)}>Thêm sản phẩm</Button>
+      </Space>
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+      <Modal title={editing ? 'Sửa sản phẩm' : 'Thêm sản phẩm'} open={open} onOk={submit} onCancel={() => setOpen(false)} destroyOnHidden width={640}>
+        <Form form={form} layout="vertical" key={editing?._id || 'new'} initialValues={editing || { name: '', price: 0, platform: '', n8nWorkflowJson: '' }}>
+          <Form.Item name="name" label="Tên" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
+          <Form.Item name="platform" label="Nền tảng"><Input placeholder="Facebook / Zalo / Shopee..." /></Form.Item>
+          <Form.Item name="price" label="Giá" rules={[{ required: true, message: 'Nhập giá' }]}><InputNumber style={{ width: '100%' }} min={0} /></Form.Item>
+          <Form.Item name="description" label="Mô tả"><Input.TextArea rows={2} /></Form.Item>
+          <Form.Item name="n8nWorkflowJson" label="n8n Workflow JSON"><Input.TextArea rows={6} placeholder='{ "nodes": [] }' /></Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+// ---- Chat center ----------------------------------------------------------
+export function AdminChat() {
+  const { message } = App.useApp()
+  const [activeId, setActiveId] = useState(null)
+  const [text, setText] = useState('')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [attachments, setAttachments] = useState([])
+  const [uploading, setUploading] = useState(false)
+  
+  const chatEndRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const imageInputRef = useRef(null)
+  const emojiPickerRef = useRef(null)
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams(5)
+  const sessionsQ = useApiQuery(
+    () => chatService.getSessions({ search: debounced || undefined, page, limit: pageSize }),
+    [debounced, page],
+  )
+  const sessions = sessionsQ.data?.items || []
+  const total = sessionsQ.data?.pagination?.total || 0
+  const messagesQ = useApiQuery(() => chatService.getMessages(activeId), [activeId], { enabled: !!activeId })
+  const messages = messagesQ.data || []
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [emojiPickerRef]);
+
+  const { sendMessage } = useChatSocket(activeId, {
+    role: 'admin',
+    onMessage: () => messagesQ.refetch(),
+  })
+
+  const active = useMemo(() => sessions.find((s) => s._id === activeId), [sessions, activeId])
+
+  const takeover = async () => { try { await chatService.takeover(activeId); message.success('Đã tiếp quản hội thoại'); sessionsQ.refetch() } catch { message.error('Lỗi tiếp quản') } }
+  const release = async () => { try { await chatService.release(activeId); message.success('Đã trả về Bot'); sessionsQ.refetch() } catch { message.error('Lỗi trả về bot') } }
+  const feedback = async (msgId, value) => { try { await chatService.setFeedback(msgId, value); message.success('Đã ghi nhận'); messagesQ.refetch() } catch { message.error('Lỗi') } }
+  
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const data = await settingsService.uploadAsset(file)
+      if (data?.url) {
+        setAttachments(prev => [...prev, data.url])
+      }
+    } catch (err) {
+      console.error('Lỗi tải file:', err)
+      message.error('Lỗi tải file')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const send = () => { 
+    if (!text.trim() && !attachments.length) return; 
+    sendMessage(text, attachments); 
+    setText(''); 
+    setAttachments([]);
+    setShowEmojiPicker(false);
+    setTimeout(() => messagesQ.refetch(), 300) 
+  }
+
+  const onEmojiClick = (emojiObject) => {
+    setText(prev => prev + emojiObject.emoji)
+  }
+
+  return (
+    <>
+      <PageHeader title="Trung tâm Chat" extra={<Button icon={<ReloadOutlined />} onClick={sessionsQ.refetch}>Làm mới</Button>} />
+      <Row gutter={16}>
+        <Col xs={24} md={8}>
+          <Input.Search allowClear placeholder="Tìm tên / SĐT khách" value={search} onChange={(e) => onSearch(e.target.value)} style={{ marginBottom: 12 }} />
+          <Card styles={{ body: { padding: 0, maxHeight: 'calc(100vh - 280px)', overflow: 'auto' } }}>
+            <List
+              loading={sessionsQ.loading}
+              dataSource={sessions}
+              locale={{ emptyText: 'Chưa có phiên chat' }}
+              pagination={total > pageSize ? { current: page, pageSize, total, onChange: setPage, size: 'small', align: 'center' } : false}
+              renderItem={(s) => (
+                <List.Item onClick={() => setActiveId(s._id)}
+                  style={{ padding: 12, cursor: 'pointer', background: s._id === activeId ? '#CCFBF1' : undefined }}>
+                  <List.Item.Meta
+                    title={<Space>{s.customerName || 'Khách ẩn danh'} <StatusTag map={CHAT_MODE} value={s.mode} /></Space>}
+                    description={s.customerPhone || 'Ẩn danh'} />
+                </List.Item>
+              )} />
+          </Card>
+        </Col>
+        <Col xs={24} md={16}>
+          <Card
+            title={active ? (active.customerName || 'Khách ẩn danh') : 'Chọn một phiên chat'}
+            extra={active && (active.mode === 'bot'
+              ? <Button size="small" type="primary" onClick={takeover}>Nhảy vào hội thoại</Button>
+              : <Button size="small" onClick={release}>Trả về cho Bot</Button>)}
+          >
+            <QueryState loading={messagesQ.loading} empty={activeId && !messages.length} error={messagesQ.error}>
+              {!activeId ? <Empty description="Chọn phiên để xem hội thoại" /> : (
+                <div style={{ height: 'calc(100vh - 380px)', minHeight: 300, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
+                  {messages.map((m) => (
+                    <div key={m._id} style={{ alignSelf: m.sender === 'customer' ? 'flex-start' : 'flex-end', maxWidth: '70%' }}>
+                      <div style={{ padding: '8px 12px', borderRadius: 12, background: m.sender === 'customer' ? '#F1F5F9' : '#CCFBF1' }}>
+                        {m.content && <div>{m.content}</div>}
+                        {m.attachments?.map((url, i) => (
+                          <img key={i} src={url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
+                        ))}
+                      </div>
+                      {m.sender === 'bot' && (
+                        <Space size={4} style={{ marginTop: 2 }}>
+                          <Button type="text" size="small" icon={<LikeOutlined />} onClick={() => feedback(m._id, 'good')} />
+                          <Button type="text" size="small" icon={<DislikeOutlined />} onClick={() => feedback(m._id, 'bad')} />
+                        </Space>
+                      )}
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+              )}
+            </QueryState>
+            {activeId && (
+              <div style={{ position: 'relative', marginTop: 12 }}>
+                {showEmojiPicker && (
+                  <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 10 }}>
+                    <EmojiPicker onEmojiClick={onEmojiClick} height={350} width={300} />
+                  </div>
+                )}
+                
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                    {attachments.map((url, i) => (
+                      <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                        <img src={url} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                        <Button 
+                          type="primary" 
+                          danger 
+                          shape="circle" 
+                          icon={<CloseOutlined />} 
+                          size="small"
+                          style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, minWidth: 20 }}
+                          onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {uploading && <div style={{ fontSize: 12, color: '#1677ff', marginBottom: 8 }}>Đang tải file lên...</div>}
+
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input placeholder="Nhập phản hồi..." value={text} onChange={(e) => setText(e.target.value)} onPressEnter={send} />
+                  <Button icon={<SmileOutlined />} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                  <Button icon={<PictureOutlined />} onClick={() => imageInputRef.current?.click()} />
+                  <Button icon={<PaperClipOutlined />} onClick={() => fileInputRef.current?.click()} />
+                  <Button type="primary" onClick={send} disabled={uploading}>Gửi</Button>
+                </Space.Compact>
+
+                <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={handleFileUpload} />
+                <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} />
+              </div>
+            )}
+          </Card>
+        </Col>
+      </Row>
+    </>
+  )
+}
+
+// ---- Logs -----------------------------------------------------------------
+export function AdminLogs() {
+  const { message } = App.useApp()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+  const query = useApiQuery(
+    () => logsService.getLogs({ page, limit: pageSize, search: debounced || undefined }),
+    [page, debounced],
+  )
+  const rows = query.data?.items || []
+
+  const exportCsv = async () => {
+    try { const blob = await logsService.exportLogs({}); downloadBlob(blob, 'logs.csv'); message.success('Đã xuất CSV') }
+    catch { message.error('Backend chưa hỗ trợ logs export') }
+  }
+  const columns = [
+    { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v, true) },
+    { title: 'Người thực hiện', dataIndex: ['actor', 'name'], key: 'actor', render: (v, r) => v || r.actor || '—' },
+    { title: 'Hành động', dataIndex: 'action', key: 'action' },
+    { title: 'Module', dataIndex: 'module', key: 'module' },
+    { title: 'IP', dataIndex: 'ip', key: 'ip' },
+  ]
+  return (
+    <>
+      <PageHeader title="Nhật ký hệ thống" extra={
+        <Space wrap>
+          <Input.Search allowClear placeholder="Tìm hành động / người" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
+          <Button icon={<DownloadOutlined />} onClick={exportCsv}>Xuất CSV</Button>
+        </Space>} />
+      {query.error && <Alert type="warning" showIcon title="Backend chưa có endpoint /admin/logs (xem API_ADDITIONS.md)" style={{ marginBottom: 12 }} />}
+      <Table rowKey={(r) => r._id || r.id || Math.random()} loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+    </>
+  )
+}
+
+// ---- Users & permissions --------------------------------------------------
+export function AdminUsers() {
+  return (
+    <>
+      <PageHeader title="Người dùng & Phân quyền" />
+      <Tabs items={[
+        { key: 'admin', label: 'Admin', children: <UsersTab type="admin" /> },
+        { key: 'client', label: 'User', children: <UsersTab type="client" /> },
+        { key: 'permissions', label: 'Ma trận quyền', children: <PermissionsTab /> },
+      ]} />
+    </>
+  )
+}
+
+function UsersTab({ type = 'admin' }) {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [form] = Form.useForm()
+  const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
+
+  const query = useApiQuery(
+    () => usersService.getUsers({ search: debounced || undefined, page, limit: pageSize, type }),
+    [debounced, page, type],
+  )
+  const rolesQuery = useApiQuery(() => rolesService.getRoles(), [])
+  const rolesList = Array.isArray(rolesQuery.data) ? rolesQuery.data : []
+
+  const rows = query.data?.items || []
+  const total = query.data?.pagination?.total || 0
+
+  const toggleStatus = async (row, checked) => {
+    try { await usersService.updateUser(row._id, { status: checked ? 'active' : 'locked' }); message.success('Đã cập nhật'); query.refetch() }
+    catch { message.error('Không cập nhật được') }
+  }
+  const createUser = async () => {
+    const values = await form.validateFields()
+    try { await usersService.createUser(values); message.success('Đã tạo tài khoản'); setOpen(false); query.refetch() }
+    catch (e) { message.error(e?.error?.message || 'Không tạo được tài khoản') }
+  }
+
+  const columns = [
+    { title: 'Tên', dataIndex: 'name', key: 'name', render: (v) => <span className="cell-strong">{v}</span> },
+    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: 'Vai trò', dataIndex: 'role', key: 'role', render: (v) => <Tag>{v}</Tag> },
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v, r) => <Switch checked={v === 'active'} onChange={(c) => toggleStatus(r, c)} /> },
+  ]
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
+        <Input.Search
+          allowClear
+          placeholder="Nhập tên hoặc email để tìm kiếm..."
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          style={{ width: 350 }}
+          size="large"
+        />
+        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm tài khoản</Button>
+      </div>
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ marginBottom: 12 }} />}
+      <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
+        pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+
+      <Modal title="Thêm tài khoản" open={open} onOk={createUser} onCancel={() => setOpen(false)} destroyOnHidden>
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Họ tên" rules={[{ required: true, message: 'Nhập tên' }]}><Input /></Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Email không hợp lệ' }]}><Input /></Form.Item>
+          <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, min: 6, message: 'Tối thiểu 6 ký tự' }]}><Input.Password /></Form.Item>
+          <Form.Item name="role" label="Vai trò" initialValue="customer">
+            <Select options={rolesList.map(r => ({ value: r.name, label: r.name })).concat([{ value: 'customer', label: 'customer' }])} />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+const PERM_MODULES = ['leads', 'orders', 'blogs', 'faqs', 'chat', 'logs', 'users', 'roles']
+const PERM_ACTIONS = ['view', 'create', 'update', 'delete']
+
+function PermissionsTab() {
+  const { message } = App.useApp()
+  const [open, setOpen] = useState(false)
+  const [form] = Form.useForm()
+  const query = useApiQuery(() => rolesService.getRoles(), [])
+  const roles = Array.isArray(query.data) ? query.data : []
+
+  const togglePerm = async (role, permStr, checked) => {
+    let newPerms = [...role.permissions]
+    if (checked) newPerms.push(permStr)
+    else newPerms = newPerms.filter(p => p !== permStr)
+
+    try {
+      await rolesService.updateRole(role._id, { permissions: newPerms })
+      message.success('Đã lưu')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi lưu quyền')
+    }
+  }
+
+  const deleteRole = async (roleId) => {
+    try {
+      await rolesService.deleteRole(roleId)
+      message.success('Đã xoá vai trò')
+      query.refetch()
+    } catch {
+      message.error('Lỗi khi xoá')
+    }
+  }
+
+  const columns = [
+    { title: 'Phân quyền', dataIndex: 'name', key: 'name', width: 250 },
+    ...roles.map(role => ({
+      title: (
+        <Space>
+          {role.name}
+          <Popconfirm title="Xoá vai trò này?" onConfirm={() => deleteRole(role._id)}>
+            <Button size="small" type="text" danger>Xoá</Button>
+          </Popconfirm>
+        </Space>
+      ),
+      key: role.name,
+      align: 'center',
+      render: (_, row) => {
+        if (row.isModule) return null
+        const hasPerm = role.permissions.includes(row.key)
+        return <Switch size="small" checked={hasPerm} onChange={(c) => togglePerm(role, row.key, c)} />
+      }
+    }))
+  ]
+
+  const dataSource = [];
+  PERM_MODULES.forEach(m => {
+    dataSource.push({
+      key: `header_${m}`,
+      name: <span style={{ color: '#0050b3', fontWeight: 700, fontSize: '1.05em', textTransform: 'uppercase' }}>{m}</span>,
+      isModule: true,
+    });
+    PERM_ACTIONS.forEach(act => {
+      dataSource.push({
+        key: `${m}_${act}`,
+        name: <span style={{ marginLeft: 24, color: '#595959' }}>{act.charAt(0).toUpperCase() + act.slice(1)}</span>,
+        isModule: false,
+      });
+    });
+  });
+
+  const addRole = async () => {
+    try {
+      const values = await form.validateFields()
+      await rolesService.createRole({ name: values.name })
+      message.success('Đã thêm vai trò')
+      setOpen(false)
+      form.resetFields()
+      query.refetch()
+    } catch (e) {
+      if (e?.errorFields) return; // Validation error
+      message.error(e?.error?.message || 'Lỗi thêm vai trò')
+    }
+  }
+
+  return (
+    <>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" size="middle" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm vai trò</Button>
+      </div>
+      <Table rowKey="key"
+        pagination={false}
+        columns={columns}
+        dataSource={dataSource}
+        loading={query.loading}
+      />
+
+      <Modal title="Thêm vai trò mới" open={open} onOk={addRole} onCancel={() => setOpen(false)} destroyOnHidden>
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Tên vai trò"
+            rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }]}
+          >
+            <Input placeholder="Ví dụ: marketing, ketoan..." autoFocus />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  )
+}
+
+// ---- Settings -------------------------------------------------------------
+export function AdminSettings() {
+  return (
+    <>
+      <PageHeader title="Cấu hình hệ thống" />
+      <Tabs items={[
+        { key: 'appearance', label: 'Giao diện', children: <AppearanceTab /> },
+        { key: 'site', label: 'Thông tin website', children: <SiteInfoTab /> },
+        { key: 'api', label: 'Cấu hình API', children: <ApiConfigsTab /> },
+      ]} />
+    </>
+  )
+}
+
+function AppearanceTab() {
+  const { message } = App.useApp()
+  const query = useApiQuery(() => settingsService.getAppearance(), [])
+  const [form] = Form.useForm()
+  const save = async () => {
+    const values = await form.validateFields()
+    try { await settingsService.updateAppearance(values); message.success('Đã lưu giao diện') } catch { message.error('Không lưu được') }
+  }
+  return (
+    <Card style={{ maxWidth: 520 }}>
+      <QueryState loading={query.loading} error={query.error}>
+        <Form form={form} layout="vertical" initialValues={query.data || { themeMode: 'light', primaryColor: '#0F766E' }}>
+          <Form.Item name="themeMode" label="Chế độ"><Segmented options={[{ label: 'Sáng', value: 'light' }, { label: 'Tối', value: 'dark' }]} /></Form.Item>
+          <Form.Item name="primaryColor" label="Màu thương hiệu"><Input type="color" style={{ width: 80, padding: 2 }} /></Form.Item>
+          <Button type="primary" onClick={save}>Lưu thay đổi</Button>
+        </Form>
+      </QueryState>
+    </Card>
+  )
+}
+
+function SiteInfoTab() {
+  const { message } = App.useApp()
+  const query = useApiQuery(() => settingsService.getSiteInfo(), [])
+  const [form] = Form.useForm()
+
+  useEffect(() => {
+    if (query.data) {
+      form.setFieldsValue(query.data)
+    }
+  }, [query.data, form])
+
+  const save = async () => {
+    const values = await form.validateFields()
+    try { await settingsService.updateSiteInfo(values); message.success('Đã lưu thông tin site') } catch { message.error('Không lưu được') }
+  }
+  const uploadProps = {
+    showUploadList: false,
+    customRequest: async ({ file, onSuccess, onError }) => {
+      try { const res = await settingsService.uploadAsset(file); form.setFieldValue('logoUrl', res?.url || res); message.success('Đã tải lên'); onSuccess?.(res) }
+      catch (e) { message.error('Tải lên thất bại'); onError?.(e) }
+    },
+  }
+  return (
+    <Card style={{ maxWidth: 520 }}>
+      <QueryState loading={query.loading} error={query.error}>
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="Tên website"><Input placeholder="LOSA247.VN" /></Form.Item>
+          <Form.Item name="slogan" label="Slogan"><Input /></Form.Item>
+          <Form.Item name="logoUrl" label="Logo (URL)"><Input placeholder="https://..." /></Form.Item>
+          <Upload {...uploadProps}><Button icon={<UploadOutlined />}>Tải logo lên</Button></Upload>
+          <div style={{ marginTop: 16 }}><Button type="primary" onClick={save}>Lưu thông tin</Button></div>
+        </Form>
+      </QueryState>
+    </Card>
+  )
+}
+
+function ApiConfigsTab() {
+  const { message } = App.useApp()
+  const query = useApiQuery(() => apiConfigsService.getConfigs(), [])
+  const configs = query.data || []
+  const providers = ['facebook', 'zalo', 'openai', 'anthropic', 'n8n']
+
+  const test = async (provider) => {
+    try { const res = await apiConfigsService.testConnection(provider); message.success(res?.message || `Kết nối ${provider} OK`) }
+    catch (e) { message.error(e?.error?.message || `Kết nối ${provider} thất bại`) }
+  }
+
+  return (
+    <QueryState loading={query.loading} error={query.error}>
+      <Row gutter={[16, 16]}>
+        {providers.map((p) => {
+          const cfg = configs.find((c) => c.provider === p) || {}
+          return <Col xs={24} md={12} key={p}><ApiConfigCard provider={p} config={cfg} onTest={() => test(p)} onSaved={query.refetch} /></Col>
+        })}
+      </Row>
+    </QueryState>
+  )
+}
+
+function ApiConfigCard({ provider, config, onTest, onSaved }) {
+  const { message } = App.useApp()
+  const [form] = Form.useForm()
+  const save = async () => {
+    const values = await form.validateFields()
+    try { await apiConfigsService.updateConfig(provider, values); message.success(`Đã lưu ${provider}`); onSaved?.() }
+    catch { message.error('Không lưu được cấu hình') }
+  }
+  return (
+    <Card title={provider.toUpperCase()} extra={<Button size="small" onClick={onTest}>Test kết nối</Button>}>
+      <Form form={form} layout="vertical" initialValues={{ apiKey: config.apiKey || '', isActive: config.isActive ?? false }}>
+        <Form.Item name="apiKey" label="API Key"><Input.Password placeholder="••••••" /></Form.Item>
+        <Form.Item name="isActive" label="Kích hoạt" valuePropName="checked"><Switch /></Form.Item>
+        <Button type="primary" size="small" onClick={save}>Lưu</Button>
+      </Form>
+    </Card>
+  )
+}
