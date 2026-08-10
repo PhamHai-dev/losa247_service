@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import EmojiPicker from 'emoji-picker-react'
-import { MessageCircle, Volume2, MoreVertical, X, Check, CheckCheck, Smile, Image as ImageIcon, Paperclip, Send, Bot, ChevronDown, BarChart2, Rocket, User, ArrowRight, Layers, MessageSquare, Magnet, Headphones, Phone, Mail, MapPin, Menu as MenuIcon, CheckCircle, Shield, Briefcase, Grid } from 'lucide-react'
+import { MessageCircle, Volume2, MoreVertical, X, Check, CheckCheck, Smile, Image as ImageIcon, Paperclip, Send, Bot, ChevronDown, BarChart2, Rocket, User, ArrowRight, Layers, MessageSquare, Magnet, Headphones, Phone, Mail, MapPin, Menu as MenuIcon, CheckCircle, Shield, Briefcase, Grid, Zap } from 'lucide-react'
 import { Drawer, message } from 'antd'
 import { useAuthStore } from '../stores/authStore'
 import { useUIStore } from '../stores/uiStore'
@@ -406,151 +406,162 @@ export function ClientLayout() {
         <Outlet />
       </div>
 
-      <section className="client-cta-section">
-        <div className="container">
-          <div className="cta-grid">
-            <div className="cta-content">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-                <img src={logoUrl} alt="Logo" style={{ height: 48, objectFit: 'contain' }} />
-                <BrandText siteName={siteName} theme="dark" />
+      <div className="client-footer-shell">
+        <section className="client-cta-section" aria-labelledby="footer-cta-title">
+          <div className="footer-ambient footer-ambient--one" aria-hidden="true"></div>
+          <div className="footer-ambient footer-ambient--two" aria-hidden="true"></div>
+          <div className="container">
+            <div className="cta-grid">
+              <div className="cta-content">
+                <span className="footer-eyebrow"><Zap size={15} /> Bắt đầu hành trình tự động hóa</span>
+                <div className="cta-brand-lockup">
+                  <img src={logoUrl} alt="Logo Losa247" />
+                  <BrandText siteName={siteName} theme="dark" />
+                </div>
+                <h2 id="footer-cta-title" className="cta-title">Kết nối khách hàng thông minh hơn, <span>tăng trưởng nhanh hơn cùng Losa</span></h2>
+                <p className="cta-lead">Một nền tảng duy nhất để đội ngũ của bạn tư vấn, chăm sóc và chuyển đổi khách hàng liên tục trên mọi kênh.</p>
+                <ul className="cta-benefits">
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>Tự động hóa 24/7</strong> quy trình nhắn tin và chăm sóc khách hàng</span></li>
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>Tiếp cận quy mô lớn</strong> qua các chiến dịch đa kênh thông minh</span></li>
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>AI liền mạch</strong> hỗ trợ đội ngũ bán hàng trong từng hội thoại</span></li>
+                </ul>
+                <div className="cta-trust-row">
+                  <span><Shield size={15} /> Bảo mật dữ liệu</span>
+                  <span><Headphones size={15} /> Đồng hành triển khai</span>
+                  <span><Zap size={15} /> Thiết lập nhanh</span>
+                </div>
               </div>
-              <h2 className="cta-title">Khám phá cách doanh nghiệp của bạn kết nối với khách hàng <span style={{ color: 'var(--blue-400)' }}>24/7</span> cùng Losa</h2>
-              <ul className="cta-benefits">
-                <li><CheckCircle size={20} color="var(--blue-400)" /> Tự động hóa quy trình nhắn tin với khách hàng</li>
-                <li><CheckCircle size={20} color="var(--blue-400)" /> Tiếp cận hàng nghìn khách qua chiến dịch gửi tin nhắn hàng loạt</li>
-                <li><CheckCircle size={20} color="var(--blue-400)" /> Kết hợp sức mạnh AI vào dịch vụ khách hàng một cách liền mạch</li>
-              </ul>
-            </div>
-            <div className="cta-form-card">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Họ và tên</label>
-                  <div className="input-wrapper">
-                    <User size={16} className="input-icon" />
-                    <input type="text" placeholder="Nhập họ và tên" value={ctaName} onChange={(e) => setCtaName(e.target.value)} />
+
+              <div className="cta-form-card">
+                <div className="cta-form-heading">
+                  <div className="cta-form-icon"><Rocket size={21} /></div>
+                  <div>
+                    <span>Tư vấn miễn phí</span>
+                    <h3>Đặt lịch demo cùng chuyên gia</h3>
+                  </div>
+                </div>
+                <p className="cta-form-intro">Để lại thông tin, đội ngũ Losa sẽ liên hệ và tư vấn giải pháp phù hợp nhất với doanh nghiệp của bạn.</p>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="footer-demo-name">Họ và tên <span>*</span></label>
+                    <div className="input-wrapper">
+                      <User size={17} className="input-icon" />
+                      <input id="footer-demo-name" type="text" placeholder="Nguyễn Văn A" value={ctaName} onChange={(e) => setCtaName(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="footer-demo-email">Email doanh nghiệp</label>
+                    <div className="input-wrapper">
+                      <Mail size={17} className="input-icon" />
+                      <input id="footer-demo-email" type="email" placeholder="you@company.vn" value={ctaEmail} onChange={(e) => setCtaEmail(e.target.value)} />
+                    </div>
                   </div>
                 </div>
                 <div className="form-group">
-                  <label>Email doanh nghiệp</label>
-                  <div className="input-wrapper">
-                    <Mail size={16} className="input-icon" />
-                    <input type="email" placeholder="Nhập email doanh nghiệp" value={ctaEmail} onChange={(e) => setCtaEmail(e.target.value)} />
-                  </div>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Số điện thoại <span>*</span></label>
+                  <label htmlFor="footer-demo-phone">Số điện thoại <span>*</span></label>
                   <div className="input-wrapper phone-input">
                     <div className="phone-prefix">
-                      <Phone size={16} className="input-icon" />
+                      <Phone size={16} />
                       <span>+84</span>
-                      <ChevronDown size={14} style={{ marginLeft: 4 }} />
                     </div>
-                    <input type="tel" placeholder="Nhập số điện thoại" value={ctaPhone} onChange={(e) => setCtaPhone(e.target.value)} />
+                    <input id="footer-demo-phone" type="tel" placeholder="901 247 247" value={ctaPhone} onChange={(e) => setCtaPhone(e.target.value)} />
                   </div>
                 </div>
-                <div style={{ flex: 1 }}></div>
-              </div>
-              <button className="btn btn-primary cta-submit-btn" onClick={handleCtaSubmit} disabled={ctaSubmitting}>
-                {ctaSubmitting ? 'Đang gửi...' : <><span style={{ marginRight: 8 }}>Đặt lịch demo</span> <ArrowRight size={16} /></>}
-              </button>
-              <div className="cta-secure-note">
-                <Shield size={14} color="var(--blue-400)" /> Thông tin của bạn được bảo mật tuyệt đối
+                <button id="footer-demo-submit" className="cta-submit-btn" onClick={handleCtaSubmit} disabled={ctaSubmitting}>
+                  {ctaSubmitting ? 'Đang gửi thông tin...' : <><span>Nhận tư vấn miễn phí</span><ArrowRight size={17} /></>}
+                </button>
+                <div className="cta-secure-note">
+                  <Shield size={14} /> Thông tin của bạn được mã hóa và bảo mật tuyệt đối
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer className="client-footer">
-        <div className="container">
-          <div className="footer-top-grid">
-            {/* Column 1: Thương hiệu */}
-            <div className="footer-col brand-col">
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24, textDecoration: 'none' }}>
-                <img src={logoUrl} alt="Logo" style={{ height: 60, objectFit: 'contain' }} />
-                <BrandText siteName={siteName} theme="dark" />
-              </Link>
-              <p className="footer-desc">Giải pháp tự động hóa bán hàng & chăm sóc khách hàng thông minh qua Messenger.</p>
-              <div className="footer-socials">
-                <a href="#" className="social-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+        <footer className="client-footer">
+          <div className="container">
+            <div className="footer-main-grid">
+              <section className="footer-brand-card" aria-label="Giới thiệu Losa247">
+                <Link to="/" className="footer-brand-link">
+                  <img src={logoUrl} alt="Logo Losa247" />
+                  <BrandText siteName={siteName} theme="dark" />
+                </Link>
+                <p className="footer-desc">Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và tăng trưởng bền vững.</p>
+                <div className="footer-brand-pills">
+                  <span><Bot size={14} /> AI đa kênh</span>
+                  <span><CheckCircle size={14} /> Hỗ trợ 24/7</span>
+                </div>
+                <div className="footer-socials">
+                  <a href="#" className="social-icon" aria-label="Facebook Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                  <a href="#" className="social-icon" aria-label="Messenger Losa247"><MessageCircle size={18} /></a>
+                  <a href="#" className="social-icon social-icon--zalo" aria-label="Zalo Losa247">Zalo</a>
+                  <a href="#" className="social-icon" aria-label="YouTube Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg></a>
+                </div>
+              </section>
+
+              <nav className="footer-nav-grid" aria-label="Điều hướng chân trang">
+                <div className="footer-col">
+                  <h3>Sản phẩm</h3>
+                  <ul>
+                    <li><Link to="/giai-phap/chatbot">Chatbot AI</Link></li>
+                    <li><Link to="/giai-phap/crm">CRM</Link></li>
+                    <li><Link to="/giai-phap/marketing">Marketing Automation</Link></li>
+                    <li><Link to="/bang-gia">Bảng giá</Link></li>
+                  </ul>
+                </div>
+                <div className="footer-col">
+                  <h3>Tài nguyên</h3>
+                  <ul>
+                    <li><Link to="/blog">Blog kiến thức</Link></li>
+                    <li><Link to="#">Hướng dẫn sử dụng</Link></li>
+                    <li><Link to="#">Trung tâm trợ giúp</Link></li>
+                    <li><Link to="#">Câu hỏi thường gặp</Link></li>
+                  </ul>
+                </div>
+                <div className="footer-col">
+                  <h3>Doanh nghiệp</h3>
+                  <ul>
+                    <li><Link to="#">Về Losa247</Link></li>
+                    <li><Link to="#">Đối tác tích hợp</Link></li>
+                    <li><Link to="#">Cơ hội nghề nghiệp</Link></li>
+                    <li><Link to="#">Liên hệ</Link></li>
+                  </ul>
+                </div>
+              </nav>
+
+              <section className="footer-contact-card" aria-labelledby="footer-contact-title">
+                <span className="footer-contact-eyebrow">Luôn sẵn sàng hỗ trợ</span>
+                <h3 id="footer-contact-title">Kết nối với Losa247</h3>
+                <a href="tel:19001234" className="footer-contact-item">
+                  <span className="footer-contact-icon"><Phone size={17} /></span>
+                  <span><small>Hotline tư vấn</small><strong>1900 1234</strong></span>
                 </a>
-                <a href="#" className="social-icon"><MessageCircle size={18} /></a>
-                <a href="#" className="social-icon" style={{ fontWeight: 'bold', fontSize: 12, lineHeight: 1 }}>Zalo</a>
-                <a href="#" className="social-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                <a href="mailto:contact@losa247.vn" className="footer-contact-item">
+                  <span className="footer-contact-icon"><Mail size={17} /></span>
+                  <span><small>Email</small><strong>contact@losa247.vn</strong></span>
                 </a>
+                <div className="footer-contact-item">
+                  <span className="footer-contact-icon"><MapPin size={17} /></span>
+                  <span><small>Văn phòng</small><strong>Quận 1, TP. Hồ Chí Minh</strong></span>
+                </div>
+              </section>
+            </div>
+
+            <div className="footer-bottom">
+              <div className="footer-copyright">
+                <span className="footer-trust-icon"><Shield size={15} /></span>
+                <span>© 2024 Losa247. Tất cả quyền được bảo lưu.</span>
               </div>
-            </div>
-
-            {/* Column 2: SẢN PHẨM */}
-            <div className="footer-col">
-              <h3>SẢN PHẨM</h3>
-              <ul>
-                <li><Link to="#">Tính năng</Link></li>
-                <li><Link to="#">Bảng giá</Link></li>
-                <li><Link to="#">Demo</Link></li>
-                <li><Link to="#">Giao diện</Link></li>
-                <li><Link to="#">Cập nhật</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 3: DỊCH VỤ */}
-            <div className="footer-col">
-              <h3>DỊCH VỤ</h3>
-              <ul>
-                <li><Link to="#">Chatbot Messenger</Link></li>
-                <li><Link to="#">Gửi tin nhắn hàng loạt</Link></li>
-                <li><Link to="#">Tự động hóa quy trình</Link></li>
-                <li><Link to="#">Tích hợp API</Link></li>
-                <li><Link to="#">Tư vấn giải pháp</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 4: HỖ TRỢ */}
-            <div className="footer-col">
-              <h3>HỖ TRỢ</h3>
-              <ul>
-                <li><Link to="#">Trung tâm trợ giúp</Link></li>
-                <li><Link to="#">Hướng dẫn sử dụng</Link></li>
-                <li><Link to="#">Blog hướng dẫn</Link></li>
-                <li><Link to="#">FAQ</Link></li>
-                <li><Link to="#">Liên hệ hỗ trợ</Link></li>
-              </ul>
-            </div>
-
-            {/* Column 5: LIÊN HỆ */}
-            <div className="footer-col contact-col">
-              <h3>LIÊN HỆ</h3>
-              <ul>
-                <li><Phone size={16} className="contact-icon" /> 1900 1234</li>
-                <li><Mail size={16} className="contact-icon" /> contact@losa247.vn</li>
-                <li style={{ alignItems: 'flex-start' }}><MapPin size={16} className="contact-icon" style={{ marginTop: 4 }} /> <span>123 Đường ABC, Quận 1,<br />TP. Hồ Chí Minh</span></li>
-              </ul>
-            </div>
-
-
-          </div>
-
-          <div className="footer-bottom">
-            <div className="footer-copyright" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ background: 'rgba(14, 165, 233, .12)', padding: '6px', borderRadius: '8px', display: 'flex' }}>
-                <Shield size={16} color="var(--blue-400)" />
+              <div className="footer-links">
+                <Link to="#">Bảo mật</Link>
+                <Link to="#">Điều khoản</Link>
+                <Link to="#">Hoàn tiền</Link>
               </div>
-              © 2024 Losa247. Tất cả quyền được bảo lưu.
-            </div>
-            <div className="footer-links">
-              <Link to="#">Chính sách bảo mật</Link>
-              <span className="separator">|</span>
-              <Link to="#">Điều khoản sử dụng</Link>
-              <span className="separator">|</span>
-              <Link to="#">Chính sách hoàn tiền</Link>
+              <span className="footer-made-in"><span></span> Phát triển tại Việt Nam</span>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
       <ChatWidget user={user} />
       <LeadFormModal />

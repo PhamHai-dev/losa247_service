@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight, BarChart3, Bot, Calendar, CheckCircle2, ChevronDown, ChevronUp,
-  CircleCheck, Clock3, Headset, MessageCircleMore, ShieldCheck,
-  Sparkles, Star, TrendingDown, Workflow
+  CircleCheck, Clock3, Headset, MessageCircleMore,
+  Sparkles, Star, Workflow
 } from 'lucide-react'
 import { FaFacebookMessenger, FaInstagram, FaTelegramPlane, FaWhatsapp } from 'react-icons/fa'
 import { SiZalo } from 'react-icons/si'
@@ -82,16 +82,19 @@ export function HomePage() {
           </header>
           <motion.div className="home-why-grid" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             {[
-              { icon: <Clock3 />, value: '24/7', title: 'Vận hành liên tục', text: 'Tiếp nhận và xử lý yêu cầu khách hàng bất kể thời gian.' },
-              { icon: <TrendingDown />, value: '80%', title: 'Giảm công việc thủ công', text: 'Tự động hóa tác vụ lặp lại để đội ngũ tập trung vào tăng trưởng.' },
-              { icon: <Workflow />, value: 'Đa kênh', title: 'Kết nối đồng bộ', text: 'Hợp nhất tương tác và dữ liệu khách hàng trên nhiều nền tảng.' },
-              { icon: <ShieldCheck />, value: 'Linh hoạt', title: 'Theo đúng nghiệp vụ', text: 'Tùy chỉnh quy trình theo mô hình và mục tiêu của từng doanh nghiệp.' }
+              { icon: <Clock3 />, value: '24/7', title: 'Không bỏ lỡ khách hàng', text: 'Phản hồi và chăm sóc liên tục, kể cả ngoài giờ làm việc.' },
+              { icon: <MessageCircleMore />, value: 'Đa kênh', title: 'Một luồng hội thoại', text: 'Kết nối Website, Zalo, Messenger và các kênh phổ biến.' },
+              { icon: <BarChart3 />, value: 'Tập trung', title: 'Dữ liệu trên một nền tảng', text: 'Quản lý khách hàng và hiệu quả vận hành tại một nơi duy nhất.' },
+              { icon: <Bot />, value: 'AI', title: 'Tự động hóa thông minh', text: 'Giảm tác vụ lặp lại để đội ngũ tập trung vào chuyển đổi.' },
+              { icon: <Workflow />, value: 'Linh hoạt', title: 'Thiết kế theo nghiệp vụ', text: 'Tùy chỉnh quy trình phù hợp từng mô hình và giai đoạn tăng trưởng.' }
             ].map((item) => (
               <motion.article className="home-why-item" variants={fadeUp} key={item.title}>
                 <span className="home-why-icon">{item.icon}</span>
-                <strong>{item.value}</strong>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
+                <div className="home-why-copy">
+                  <strong>{item.value}</strong>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </div>
               </motion.article>
             ))}
           </motion.div>
@@ -167,12 +170,34 @@ export function HomePage() {
 
       <section className="saas-section home-testimonials" aria-labelledby="testimonials-title">
         <div className="saas-container">
-          <header className="home-section-heading"><span>Khách hàng chia sẻ</span><h2 id="testimonials-title">Doanh nghiệp nói gì về Losa</h2><p>Câu chuyện thành công thực tế từ những doanh nghiệp đang vận hành cùng Losa.</p></header>
+          <header className="home-section-heading">
+            <span>Góc nhìn khách hàng</span>
+            <h2 id="testimonials-title">Doanh nghiệp nói gì về Losa</h2>
+            <p>Những tình huống ứng dụng tiêu biểu cho thấy Losa có thể đồng hành cùng nhiều mô hình vận hành khác nhau.</p>
+          </header>
           <div className="home-testimonial-grid">{[
-            { stat: 'Giảm 60% thời gian phản hồi', quote: 'Từ khi dùng Losa, khách hàng được tư vấn ngay cả lúc nửa đêm và đội ngũ không còn bỏ lỡ cơ hội bán hàng.', author: 'Nguyễn Văn A', role: 'CEO – Thời trang X' },
-            { stat: 'Tăng 40% năng suất Sale', quote: 'Quy trình báo giá và quản lý khách hàng tập trung giúp đội ngũ bán hàng xử lý cơ hội nhanh, chính xác hơn.', author: 'Trần Thị B', role: 'Giám đốc Kinh doanh – BĐS Y' },
-            { stat: 'Tăng 25% khách quay lại', quote: 'Hệ thống tự động nhắc lịch và chăm sóc khách cũ giúp chúng tôi duy trì trải nghiệm nhất quán mà không tăng nhân sự.', author: 'Lê Văn C', role: 'Founder – Spa Z' }
-          ].map((item) => <article className="home-testimonial-card" key={item.author}><span>{item.stat}</span><p>“{item.quote}”</p><div><strong>{item.author}</strong><small>{item.role}</small></div></article>)}</div>
+            { tag: 'Bán lẻ đa kênh', quote: 'Losa giúp đội ngũ gom hội thoại từ nhiều kênh về một nơi. Việc tư vấn ngoài giờ trở nên liền mạch và chúng tôi kiểm soát cơ hội bán hàng tốt hơn.', author: 'Nguyễn Minh Anh', position: 'Giám đốc vận hành', company: 'An Nhiên Retail', initials: 'MA' },
+            { tag: 'Dịch vụ chuyên nghiệp', quote: 'Quy trình tiếp nhận và phân loại khách hàng rõ ràng hơn trước. Nhân viên biết chính xác cần ưu tiên ai và quản lý dễ dàng theo dõi tiến độ xử lý.', author: 'Trần Quốc Huy', position: 'Trưởng phòng Kinh doanh', company: 'NovaLink Solutions', initials: 'QH' },
+            { tag: 'Chăm sóc khách hàng', quote: 'Các kịch bản nhắc lịch và chăm sóc sau dịch vụ giúp trải nghiệm khách hàng nhất quán hơn mà đội ngũ không phải tăng thêm khối lượng công việc thủ công.', author: 'Lê Thảo Nguyên', position: 'Nhà sáng lập', company: 'Mộc An Wellness', initials: 'TN' }
+          ].map((item) => (
+            <article className="home-testimonial-card" key={item.author}>
+              <div className="home-testimonial-topline">
+                <span className="home-testimonial-tag">{item.tag}</span>
+                <span className="home-testimonial-stars" aria-label="5 trên 5 sao">★★★★★</span>
+              </div>
+              <span className="home-testimonial-quote-mark" aria-hidden="true">“</span>
+              <blockquote>{item.quote}</blockquote>
+              <footer className="home-testimonial-author">
+                <span className="home-testimonial-avatar">{item.initials}</span>
+                <span className="home-testimonial-person">
+                  <strong>{item.author}</strong>
+                  <small>{item.position}</small>
+                </span>
+                <span className="home-testimonial-company">{item.company}</span>
+              </footer>
+            </article>
+          ))}</div>
+          <p className="home-testimonial-note">* Nội dung và danh tính được xây dựng nhằm minh họa các tình huống ứng dụng tiêu biểu.</p>
         </div>
       </section>
 
