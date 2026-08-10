@@ -14,6 +14,7 @@ import { formatDate } from '../../utils/format'
 import { publicBlogsService } from '../../features/blogs/blogsService'
 import { publicFaqsService } from '../../features/faqs/faqsService'
 import { useUIStore } from '../../stores/uiStore'
+import { ClientFaqSection } from '../../components/client/ClientFaqSection'
 
 const BLOG_FALLBACK = 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png'
 
@@ -203,12 +204,7 @@ export function HomePage() {
 
       <section className="saas-section home-final-cta"><div className="saas-container"><div className="home-cta-box"><div><span>Chuyển đổi hôm nay</span><h2>Sẵn sàng để Losa đồng hành cùng doanh nghiệp bạn?</h2><p>Chia sẻ bài toán vận hành, đội ngũ Losa sẽ tư vấn giải pháp phù hợp với mục tiêu và quy mô của bạn.</p></div><button id="home-final-consultation-btn" type="button" onClick={openLeadModal}>Đăng ký tư vấn miễn phí <ArrowRight size={18} /></button></div></div></section>
 
-      <section className="saas-section home-faq-section" id="home-faq" aria-labelledby="home-faq-title">
-        <div className="saas-container home-faq-layout">
-          <div className="home-faq-intro"><span className="home-faq-eyebrow"><MessageCircleMore size={15} /> Giải đáp cùng Losa</span><h2 id="home-faq-title">Câu hỏi thường gặp</h2><p>Tìm hiểu nhanh về giải pháp, quy trình triển khai và cách Losa đồng hành cùng doanh nghiệp trong hành trình chuyển đổi số.</p><div className="home-faq-assurance"><span className="home-faq-assurance-icon"><Headset size={24} /></span><div><strong>Bạn cần tư vấn thêm?</strong><span>Đội ngũ Losa luôn sẵn sàng lắng nghe bài toán của doanh nghiệp.</span></div></div><button id="home-faq-consultation-btn" type="button" onClick={openLeadModal} className="home-faq-cta">Nhận tư vấn miễn phí <ArrowRight size={17} /></button></div>
-          <div className="home-faq-accordion-wrap"><Collapse className="home-faq-collapse" accordion ghost expandIconPosition="end" expandIcon={({ isActive }) => <span className={`home-faq-toggle ${isActive ? 'active' : ''}`}>{isActive ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>} items={homeFaqs.length ? homeFaqs.map((faq, index) => ({ key: faq._id, label: <span className="home-faq-question"><span>{String(index + 1).padStart(2, '0')}</span>{faq.question}</span>, children: <p className="home-faq-answer">{faq.answer}</p> })) : [{ key: 'empty', label: <span className="home-faq-question"><span>01</span>Thông tin đang được cập nhật</span>, children: <p className="home-faq-answer">Bạn có thể liên hệ Losa để được giải đáp trực tiếp.</p> }]} /></div>
-        </div>
-      </section>
+      <ClientFaqSection faqs={homeFaqs} />
     </main>
   )
 }

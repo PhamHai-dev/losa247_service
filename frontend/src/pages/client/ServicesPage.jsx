@@ -14,6 +14,7 @@ import { FaFacebookMessenger, FaTelegramPlane, FaInstagram, FaWhatsapp, FaYoutub
 import { SiZalo } from "react-icons/si";
 import PricingSection from '../../components/client/pricing/PricingSection'
 import { App, Button, Empty, Form, Input, InputNumber, Result, Spin, Steps, Select, Pagination, Tag, Skeleton, Collapse, Modal } from 'antd'
+import { ClientFaqSection } from '../../components/client/ClientFaqSection'
 import { SearchOutlined, FilterOutlined, CalendarOutlined, EyeOutlined, RightOutlined, CheckCircleOutlined, CloseOutlined, TrophyOutlined, ToolOutlined, TeamOutlined, MenuOutlined, RocketOutlined, ProjectOutlined, BankOutlined, ThunderboltOutlined, ClockCircleOutlined, DollarOutlined, SafetyOutlined, RobotOutlined, CommentOutlined, ContactsOutlined, PartitionOutlined, LineChartOutlined, CustomerServiceOutlined, DownOutlined, UpOutlined, UserOutlined, CrownOutlined, MessageOutlined, GlobalOutlined, InstagramOutlined, DatabaseOutlined, ShoppingCartOutlined, HeartOutlined } from '@ant-design/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -137,30 +138,9 @@ export function ServicesPage() {
                 </div>
               )}
 
-              {/* FAQ Section */}
               {faqs.length > 0 && (
-                <div className="saas-faq-wrapper">
-                  <h2 className="saas-section-title">Câu hỏi thường gặp</h2>
-                  <div className="saas-faq-list">
-                    {faqs.map((f) => (
-                      <div
-                        key={f._id}
-                        className={`saas-faq-item ${faqOpen === f._id ? 'active' : ''}`}
-                        onClick={() => setFaqOpen(faqOpen === f._id ? null : f._id)}
-                      >
-                        <div className="saas-faq-question" onClick={() => setFaqOpen(faqOpen === f._id ? null : f._id)}>
-                          <span>{f.question}</span>
-                          {faqOpen === f._id ? <UpOutlined /> : <DownOutlined />}
-                        </div>
-                        <div className="saas-faq-answer">
-                          <div className="saas-faq-answer-inner">{f.answer}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <ClientFaqSection faqs={faqs} showAssurance={false} />
               )}
-
             </>
           )}
         </Spin>
