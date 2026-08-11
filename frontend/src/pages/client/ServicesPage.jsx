@@ -138,13 +138,14 @@ export function ServicesPage() {
                 </div>
               )}
 
-              {faqs.length > 0 && (
-                <ClientFaqSection faqs={faqs} showAssurance={false} />
-              )}
             </>
           )}
         </Spin>
       </div>
+
+      {faqs.length > 0 && (
+        <ClientFaqSection faqs={faqs} />
+      )}
 
     </main>
   )

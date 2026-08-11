@@ -55,6 +55,7 @@ export function BlogPage() {
 
   const [activeCategory, setActiveCategory] = useState(null);
   const [sort, setSort] = useState('newest');
+  const openLeadModal = useUIStore((state) => state.openLeadModal);
 
   // Reset page when search changes
   useEffect(() => {
@@ -88,23 +89,32 @@ export function BlogPage() {
 
   return (
     <main className="blog-page-container">
-      <section className="blog-hero">
+      <section className="blog-hero" aria-labelledby="blog-hero-title">
         <div className="blog-container-fluid">
           <div className="blog-hero-inner">
-            <div className="blog-hero-content">
-              <span className="blog-hero-badge">BLOG</span>
-              <h1>Kiến thức AI Marketing<br />và AI Sales</h1>
-              <p>Cập nhật xu hướng, hướng dẫn, case study và các giải pháp giúp doanh nghiệp tăng trưởng với AI.</p>
-              <button className="blog-hero-btn">Khám phá bài viết <ArrowRight size={18} /></button>
-            </div>
-            <div className="blog-hero-illustration">
-              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt="Blog Illustration" />
-            </div>
+            <motion.div className="blog-hero-content" initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.12 } } }}>
+              <motion.span className="blog-hero-badge" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}><Star size={14} fill="currentColor" /> Góc kiến thức từ Losa</motion.span>
+              <motion.h1 id="blog-hero-title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></motion.h1>
+              <motion.p className="blog-hero-lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.</motion.p>
+              <motion.div className="blog-hero-proof" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                <span><CircleCheck size={17} /> Xu hướng mới nhất</span>
+                <span><CircleCheck size={17} /> Kiến thức ứng dụng</span>
+                <span><CircleCheck size={17} /> Case study thực tế</span>
+              </motion.div>
+              <motion.div className="blog-hero-actions" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                <button id="blog-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('blog-categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Khám phá bài viết <ArrowRight size={18} /></button>
+                <button id="blog-hero-featured-btn" type="button" className="saas-btn blog-hero-secondary" onClick={() => document.getElementById('blog-articles')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Xem bài viết nổi bật</button>
+              </motion.div>
+            </motion.div>
+            <motion.div className="blog-hero-illustration" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+              <div className="blog-hero-glow" />
+              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt="Kho kiến thức AI Marketing và AI Sales từ Losa" />
+            </motion.div>
           </div>
         </div>
       </section>
 
-      <div className="blog-container-fluid" style={{ marginTop: 40 }}>
+      <div id="blog-categories" className="blog-container-fluid" style={{ marginTop: 40, scrollMarginTop: 100 }}>
         <div className="category-pills" style={{ justifyContent: 'center', marginBottom: 40 }}>
           <button className={`category-pill ${!activeCategory ? 'active' : ''}`} onClick={() => { setActiveCategory(null); setPage(1); }}>
             Tất cả
@@ -118,7 +128,7 @@ export function BlogPage() {
 
 
 
-        <div className="blog-layout" style={{ marginTop: 60 }}>
+        <div id="blog-articles" className="blog-layout" style={{ marginTop: 60, scrollMarginTop: 100 }}>
           <div className="blog-main-content">
             {mainFeatured && !search && page === 1 && (
               <div className="featured-section" style={{ marginBottom: 40, ...(sideFeatured.length === 0 ? { gridTemplateColumns: '1fr' } : {}) }}>
@@ -267,8 +277,8 @@ export function BlogPage() {
               <h3>Không bỏ lỡ bài viết mới!</h3>
               <p>Đăng ký nhận bản tin để cập nhật kiến thức và xu hướng mới nhất.</p>
               <Input placeholder="Nhập email của bạn" size="large" style={{ marginBottom: 12, borderRadius: 8 }} />
-              <Button type="primary" size="large" block style={{ borderRadius: 8, fontWeight: 600 }}>
-                Đăng ký ngay
+              <Button id="blog-newsletter-register-btn" type="primary" size="large" block className="newsletter-register-btn" onClick={openLeadModal}>
+                Đăng ký ngay <ArrowRight size={17} />
               </Button>
             </div>
           </div>

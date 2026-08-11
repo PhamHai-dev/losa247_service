@@ -198,11 +198,8 @@ export function HomePage() {
               </footer>
             </article>
           ))}</div>
-          <p className="home-testimonial-note">* Nội dung và danh tính được xây dựng nhằm minh họa các tình huống ứng dụng tiêu biểu.</p>
         </div>
       </section>
-
-      <section className="saas-section home-final-cta"><div className="saas-container"><div className="home-cta-box"><div><span>Chuyển đổi hôm nay</span><h2>Sẵn sàng để Losa đồng hành cùng doanh nghiệp bạn?</h2><p>Chia sẻ bài toán vận hành, đội ngũ Losa sẽ tư vấn giải pháp phù hợp với mục tiêu và quy mô của bạn.</p></div><button id="home-final-consultation-btn" type="button" onClick={openLeadModal}>Đăng ký tư vấn miễn phí <ArrowRight size={18} /></button></div></div></section>
 
       <ClientFaqSection faqs={homeFaqs} />
     </main>

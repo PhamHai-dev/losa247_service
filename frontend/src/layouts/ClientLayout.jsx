@@ -413,11 +413,6 @@ export function ClientLayout() {
           <div className="container">
             <div className="cta-grid">
               <div className="cta-content">
-                <span className="footer-eyebrow"><Zap size={15} /> Bắt đầu hành trình tự động hóa</span>
-                <div className="cta-brand-lockup">
-                  <img src={logoUrl} alt="Logo Losa247" />
-                  <BrandText siteName={siteName} theme="dark" />
-                </div>
                 <h2 id="footer-cta-title" className="cta-title">Kết nối khách hàng thông minh hơn, <span>tăng trưởng nhanh hơn cùng Losa</span></h2>
                 <p className="cta-lead">Một nền tảng duy nhất để đội ngũ của bạn tư vấn, chăm sóc và chuyển đổi khách hàng liên tục trên mọi kênh.</p>
                 <ul className="cta-benefits">

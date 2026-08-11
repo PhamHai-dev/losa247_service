@@ -75,7 +75,7 @@ export function ServiceDetailPage() {
             </div>
 
             {faqs.length > 0 && (
-              <ClientFaqSection faqs={faqs} showAssurance={false} />
+              <ClientFaqSection faqs={faqs} />
             )}
           </>
         )}
