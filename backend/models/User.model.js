@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       default: 'customer',
+      trim: true,
+      lowercase: true,
     },
     status: {
       type: String,

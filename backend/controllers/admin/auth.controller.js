@@ -4,107 +4,74 @@ const User = require('../../models/User.model');
 const Role = require('../../models/Role.model');
 const env = require('../../config/env');
 const { loginSchema } = require('../../validators/admin/auth.validator');
+const { normalizeRoleName } = require('../../constants/permissions');
+
+const findAdminRole = async (user) => {
+  const roleName = normalizeRoleName(user?.role);
+  if (!roleName || roleName === 'customer' || user?.status !== 'active') return null;
+  return Role.findOne({ name: roleName });
+};
+
+const serializeAdmin = (user, role) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: normalizeRoleName(user.role),
+  status: user.status,
+  avatarUrl: user.avatarUrl,
+  permissions: role.name === 'admin' ? ['*'] : (role.permissions || []),
+});
+
+const signTokens = (user) => ({
+  accessToken: jwt.sign({ id: user._id, role: user.role }, env.JWT_ADMIN_SECRET, { expiresIn: '15m' }),
+  refreshToken: jwt.sign({ id: user._id, role: user.role }, env.JWT_ADMIN_SECRET, { expiresIn: '7d' }),
+});
 
 exports.login = async (req, res, next) => {
   try {
-    // 1. Validate dữ liệu đầu vào
-    const validatedData = loginSchema.parse(req.body);
-    const { email, password } = validatedData;
-
-    // 2. Tìm người dùng
+    const { email, password } = loginSchema.parse(req.body);
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ success: false, error: { code: 'INVALID_CREDENTIALS', message: 'Email hoặc mật khẩu không đúng' } });
     }
 
-    // 3. Kiểm tra quyền admin
-    if (!['admin', 'sales', 'editor'].includes(user.role)) {
-      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Không có quyền truy cập quản trị' } });
+    const role = await findAdminRole(user);
+    if (!role) {
+      const code = user.status !== 'active' ? 'ACCOUNT_LOCKED' : 'ADMIN_ACCESS_DENIED';
+      return res.status(403).json({ success: false, error: { code, message: user.status !== 'active' ? 'Tài khoản đã bị khóa' : 'Vai trò không có quyền truy cập quản trị' } });
     }
 
-    // 4. Kiểm tra trạng thái tài khoản
-    if (user.status !== 'active') {
-      return res.status(403).json({ success: false, error: { code: 'ACCOUNT_LOCKED', message: 'Tài khoản đã bị khóa' } });
-    }
-
-    // 5. Kiểm tra mật khẩu
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, error: { code: 'INVALID_CREDENTIALS', message: 'Email hoặc mật khẩu không đúng' } });
-    }
-
-    // 6. Tạo token
-    const accessToken = jwt.sign(
-      { id: user._id, role: user.role },
-      env.JWT_ADMIN_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: user._id, role: user.role },
-      env.JWT_ADMIN_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    // Lưu refreshToken vào DB
-    user.refreshTokens.push(refreshToken);
+    const tokens = signTokens(user);
+    user.refreshTokens.push(tokens.refreshToken);
     await user.save();
-
-    const roleDoc = await Role.findOne({ name: user.role });
-    const permissions = roleDoc ? roleDoc.permissions : [];
-
-    // 7. Trả kết quả
-    res.json({
-      success: true,
-      data: {
-        accessToken,
-        refreshToken,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          permissions,
-        },
-      },
-    });
+    return res.json({ success: true, data: { ...tokens, user: serializeAdmin(user, role) } });
   } catch (err) {
     if (err.name === 'ZodError') {
-      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors[0].message } });
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors?.[0]?.message || 'Dữ liệu không hợp lệ' } });
     }
-    next(err);
+    return next(err);
   }
 };
 
 exports.getMe = async (req, res, next) => {
   try {
-    const roleDoc = await Role.findOne({ name: req.user.role });
-    const userObj = req.user.toObject();
-    userObj.permissions = roleDoc ? roleDoc.permissions : [];
-    delete userObj.passwordHash;
-
-    // 1. Trả về thông tin user đã được gắn ở auth.middleware
-    res.json({
-      success: true,
-      data: userObj,
-    });
+    const role = req.auth?.role || await findAdminRole(req.user);
+    if (!role) return res.status(403).json({ success: false, error: { code: 'ROLE_NOT_FOUND', message: 'Vai trò quản trị không còn tồn tại' } });
+    return res.json({ success: true, data: serializeAdmin(req.user, role) });
   } catch (err) {
-    next(err);
+    return next(err);
   }
 };
 
 exports.refresh = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(400).json({ success: false, error: { code: 'NO_TOKEN', message: 'Thiếu refresh token' } });
-    }
+    if (!refreshToken) return res.status(400).json({ success: false, error: { code: 'NO_TOKEN', message: 'Thiếu refresh token' } });
 
-    // Xác thực token
     let decoded;
     try {
       decoded = jwt.verify(refreshToken, env.JWT_ADMIN_SECRET);
-    } catch (err) {
+    } catch {
       return res.status(401).json({ success: false, error: { code: 'INVALID_TOKEN', message: 'Token không hợp lệ hoặc đã hết hạn' } });
     }
 
@@ -112,34 +79,20 @@ exports.refresh = async (req, res, next) => {
     if (!user || !user.refreshTokens.includes(refreshToken)) {
       return res.status(401).json({ success: false, error: { code: 'INVALID_TOKEN', message: 'Token đã bị thu hồi hoặc không hợp lệ' } });
     }
+    const role = await findAdminRole(user);
+    if (!role) {
+      user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+      await user.save();
+      return res.status(403).json({ success: false, error: { code: user.status !== 'active' ? 'ACCOUNT_LOCKED' : 'ROLE_NOT_FOUND', message: 'Phiên quản trị không còn hợp lệ' } });
+    }
 
-    // Tạo token mới
-    const newAccessToken = jwt.sign(
-      { id: user._id, role: user.role },
-      env.JWT_ADMIN_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    // Xoá token cũ, tạo token mới
-    user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
-    
-    const newRefreshToken = jwt.sign(
-      { id: user._id, role: user.role },
-      env.JWT_ADMIN_SECRET,
-      { expiresIn: '7d' }
-    );
-    user.refreshTokens.push(newRefreshToken);
+    const tokens = signTokens(user);
+    user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+    user.refreshTokens.push(tokens.refreshToken);
     await user.save();
-
-    res.json({
-      success: true,
-      data: {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      },
-    });
+    return res.json({ success: true, data: { ...tokens, user: serializeAdmin(user, role) } });
   } catch (err) {
-    next(err);
+    return next(err);
   }
 };
 
@@ -147,20 +100,19 @@ exports.logout = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) {
-      let decoded;
       try {
-        decoded = jwt.verify(refreshToken, env.JWT_ADMIN_SECRET);
+        const decoded = jwt.verify(refreshToken, env.JWT_ADMIN_SECRET);
         const user = await User.findById(decoded.id);
         if (user) {
-          user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+          user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
           await user.save();
         }
-      } catch (err) {
-        // Bỏ qua lỗi verify khi logout
+      } catch {
+        // Logout is best-effort for expired or invalid tokens.
       }
     }
-    res.json({ success: true, data: null });
+    return res.json({ success: true, data: null });
   } catch (err) {
-    next(err);
+    return next(err);
   }
 };

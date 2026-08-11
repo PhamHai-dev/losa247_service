@@ -41,6 +41,19 @@ const validationError = (res, err) => res.status(400).json({
   success: false,
   error: { code: 'VALIDATION_ERROR', message: err.errors?.[0]?.message || err.message },
 });
+const hasPermission = (req, permission) => req.auth?.permissions?.includes('*') || req.auth?.permissions?.includes(permission);
+const enforceLeadUpdatePermissions = (req, data, res) => {
+  const fields = Object.keys(data || {});
+  if (fields.includes('assignedTo') && !hasPermission(req, 'leads.assign')) {
+    res.status(403).json({ success: false, error: { code: 'MISSING_PERMISSION', message: 'Thiếu quyền leads.assign' } });
+    return false;
+  }
+  if (fields.some((field) => field !== 'assignedTo') && !hasPermission(req, 'leads.update')) {
+    res.status(403).json({ success: false, error: { code: 'MISSING_PERMISSION', message: 'Thiếu quyền leads.update' } });
+    return false;
+  }
+  return true;
+};
 
 exports.createLead = async (req, res, next) => {
   try {
@@ -102,8 +115,8 @@ exports.getLeadById = async (req, res, next) => {
 
 exports.updateLead = async (req, res, next) => {
   try {
-    // 1. Validate data
     const validatedData = updateLeadSchema.parse(req.body);
+    if (!enforceLeadUpdatePermissions(req, validatedData, res)) return;
 
     // 2. Cập nhật lead
     const lead = await Lead.findByIdAndUpdate(req.params.id, validatedData, { new: true });
@@ -249,6 +262,7 @@ exports.getLeadStats = async (req, res, next) => {
 exports.bulkUpdateLeads = async (req, res, next) => {
   try {
     const { ids, data } = bulkUpdateLeadSchema.parse(req.body);
+    if (!enforceLeadUpdatePermissions(req, data, res)) return;
     const result = await Lead.updateMany({ _id: { $in: ids } }, { $set: data });
     res.json({ success: true, data: { matched: result.matchedCount, updated: result.modifiedCount } });
   } catch (err) {

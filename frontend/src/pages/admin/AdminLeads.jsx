@@ -33,6 +33,7 @@ import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
 import { useChatSocket } from '../../features/chat/useChatSocket'
+import { useAuthStore } from '../../stores/authStore'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -77,6 +78,13 @@ export function AdminLeads() {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [form] = Form.useForm()
   const [emailForm] = Form.useForm()
+  const hasPermission = useAuthStore((state) => state.hasPermission)
+  const canCreate = hasPermission('leads.create')
+  const canUpdate = hasPermission('leads.update')
+  const canDelete = hasPermission('leads.delete')
+  const canAssign = hasPermission('leads.assign')
+  const canExport = hasPermission('leads.export')
+  const canViewUsers = hasPermission('users.view')
 
   const params = {
     page, limit: pageSize, search: debounced || undefined,
@@ -87,7 +95,7 @@ export function AdminLeads() {
   }
   const query = useApiQuery(() => leadsService.getLeads(params), [page, debounced, filters.status, filters.source, filters.assignedTo, filters.dates])
   const statsQuery = useApiQuery(() => leadsService.getLeadStats(), [])
-  const usersQuery = useApiQuery(() => usersService.getUsers({ limit: 100 }), [])
+  const usersQuery = useApiQuery(() => usersService.getUsers({ limit: 100 }), [], { enabled: canViewUsers })
   const rows = query.data?.items || []
   const total = query.data?.pagination?.total || 0
   const stats = statsQuery.data || { total: 0, byStatus: {}, percentChange: 0 }
@@ -182,8 +190,8 @@ export function AdminLeads() {
     {
       title: '', key: 'actions', fixed: 'right', width: 110, render: (_, lead) => <Space size={2}>
         <Button type="text" icon={<EyeOutlined />} onClick={() => setDetailId(lead._id)} />
-        <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(lead)} />
-        <Popconfirm title="Xóa Lead này?" onConfirm={() => handleDelete(lead._id)}><Button type="text" danger icon={<DeleteOutlined />} /></Popconfirm>
+        {canUpdate && <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(lead)} />}
+        {canDelete && <Popconfirm title="Xóa Lead này?" onConfirm={() => handleDelete(lead._id)}><Button type="text" danger icon={<DeleteOutlined />} /></Popconfirm>}
       </Space>,
     },
   ]
@@ -196,7 +204,7 @@ export function AdminLeads() {
 
   return <>
     <PageHeader title={<><span>Quản lý Lead</span><div style={{ fontSize: 13, color: '#64748b', fontWeight: 400, marginTop: 4 }}>Quản lý và chăm sóc khách hàng tiềm năng</div></>}
-      extra={<><Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button><Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm Lead</Button></>} />
+      extra={<>{canExport && <Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button>}{canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm Lead</Button>}</>} />
 
     <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
       {statItems.map((item) => <Col xs={24} sm={12} lg={6} key={item.key}><Card bordered={false} style={{ borderRadius: 14, boxShadow: '0 5px 24px rgba(15,23,42,.06)' }}>
@@ -222,11 +230,11 @@ export function AdminLeads() {
 
       {selectedRowKeys.length > 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '13px 16px', marginBottom: 16, borderRadius: 12, border: '1px solid #c4b5fd', background: 'linear-gradient(100deg,#f5f3ff,#faf5ff)' }}>
         <Space wrap><Badge count={selectedRowKeys.length} showZero color="#7c3aed" /><div><strong>Đã chọn {selectedRowKeys.length} Lead</strong><br /><Button type="link" size="small" style={{ padding: 0 }} onClick={() => setSelectedRowKeys([])}>Bỏ chọn</Button></div>
-          <Select disabled={bulkLoading} placeholder="Đổi trạng thái" onChange={(value) => runBulkUpdate({ status: value })} options={Object.entries(LEAD_STATUS).map(([value, item]) => ({ value, label: item.label }))} style={{ width: 155 }} value={undefined} />
-          <Select disabled={bulkLoading} showSearch optionFilterProp="label" placeholder="Gán nhân viên" onChange={(value) => runBulkUpdate({ assignedTo: value })} options={users.map((user) => ({ value: user._id, label: user.name }))} style={{ width: 175 }} value={undefined} />
-          <Select disabled={bulkLoading} placeholder="Đổi nguồn" onChange={(value) => runBulkUpdate({ source: value })} options={sourceOptions} style={{ width: 145 }} value={undefined} />
+          {canUpdate && <Select disabled={bulkLoading} placeholder="Đổi trạng thái" onChange={(value) => runBulkUpdate({ status: value })} options={Object.entries(LEAD_STATUS).map(([value, item]) => ({ value, label: item.label }))} style={{ width: 155 }} value={undefined} />}
+          {canAssign && <Select disabled={bulkLoading} showSearch optionFilterProp="label" placeholder="Gán nhân viên" onChange={(value) => runBulkUpdate({ assignedTo: value })} options={users.map((user) => ({ value: user._id, label: user.name }))} style={{ width: 175 }} value={undefined} />}
+          {canUpdate && <Select disabled={bulkLoading} placeholder="Đổi nguồn" onChange={(value) => runBulkUpdate({ source: value })} options={sourceOptions} style={{ width: 145 }} value={undefined} />}
         </Space>
-        <Space wrap><Button icon={<MailOutlined />} onClick={() => setEmailOpen(true)}>Gửi email</Button><Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button><Popconfirm title={`Xóa ${selectedRowKeys.length} Lead đã chọn?`} onConfirm={handleBulkDelete}><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm></Space>
+        <Space wrap>{canUpdate && <Button icon={<MailOutlined />} onClick={() => setEmailOpen(true)}>Gửi email</Button>}{canExport && <Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button>}{canDelete && <Popconfirm title={`Xóa ${selectedRowKeys.length} Lead đã chọn?`} onConfirm={handleBulkDelete}><Button danger icon={<DeleteOutlined />}>Xóa</Button></Popconfirm>}</Space>
       </div>}
 
       {query.error && <Alert type="error" showIcon message={query.error} style={{ marginBottom: 12 }} />}

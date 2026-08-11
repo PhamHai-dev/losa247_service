@@ -1,39 +1,43 @@
 import { useEffect, useRef, useState } from 'react'
 import { getSocket } from '../../services/socketClient'
 
-// Hook kết nối namespace /chat theo đúng event backend hiện có:
-//  - emit: join_session, customer_message, admin_message, request_human
-//  - listen: new_message, bot_reply, session_mode_changed
-export function useChatSocket(sessionId, { role = 'customer', onMessage, onModeChange } = {}) {
+export function useChatSocket(sessionId, {
+  role = 'customer', onMessage, onModeChange, onPermissionError, enabled = true,
+} = {}) {
   const [connected, setConnected] = useState(false)
   const socketRef = useRef(null)
   const onMessageRef = useRef(onMessage)
   const onModeRef = useRef(onModeChange)
+  const onPermissionErrorRef = useRef(onPermissionError)
   onMessageRef.current = onMessage
   onModeRef.current = onModeChange
+  onPermissionErrorRef.current = onPermissionError
 
   useEffect(() => {
+    if (!enabled) {
+      setConnected(false)
+      return undefined
+    }
     const socket = getSocket('/chat')
     socketRef.current = socket
     if (!socket.connected) socket.connect()
 
     const handleConnect = () => {
       setConnected(true)
-      if (sessionId) {
-        socket.emit('join_session', { sessionId })
-      }
+      if (sessionId) socket.emit('join_session', { sessionId })
     }
     const handleDisconnect = () => setConnected(false)
     const handleNewMessage = (msg) => onMessageRef.current?.(msg)
     const handleBotReply = (msg) => onMessageRef.current?.(msg)
     const handleModeChange = (payload) => onModeRef.current?.(payload)
+    const handlePermissionError = (payload) => onPermissionErrorRef.current?.(payload)
 
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
     socket.on('new_message', handleNewMessage)
     socket.on('bot_reply', handleBotReply)
     socket.on('session_mode_changed', handleModeChange)
-
+    socket.on('permission_error', handlePermissionError)
     if (socket.connected) handleConnect()
 
     return () => {
@@ -42,23 +46,22 @@ export function useChatSocket(sessionId, { role = 'customer', onMessage, onModeC
       socket.off('new_message', handleNewMessage)
       socket.off('bot_reply', handleBotReply)
       socket.off('session_mode_changed', handleModeChange)
+      socket.off('permission_error', handlePermissionError)
     }
-  }, [sessionId])
+  }, [sessionId, enabled])
 
-  const joinSession = (id) => {
-    socketRef.current?.emit('join_session', { sessionId: id })
-  }
-
+  const joinSession = (id) => socketRef.current?.emit('join_session', { sessionId: id })
   const sendMessage = (content, attachments = [], overrideSessionId = null) => {
     const socket = socketRef.current
     const targetSessionId = overrideSessionId || sessionId
-    if (!socket || (!content?.trim() && !attachments.length) || !targetSessionId) return
+    if (!enabled || !socket || (!content?.trim() && !attachments.length) || !targetSessionId) return
     const event = role === 'admin' ? 'admin_message' : 'customer_message'
-    socket.emit(event, { sessionId: targetSessionId, content, attachments })
+    socket.emit(event, { sessionId: targetSessionId, content, attachments }, (response) => {
+      if (response?.success === false) onPermissionErrorRef.current?.(response.error)
+    })
   }
-
   const requestHuman = () => {
-    socketRef.current?.emit('request_human', { sessionId })
+    if (enabled) socketRef.current?.emit('request_human', { sessionId })
   }
 
   return { connected, sendMessage, requestHuman, joinSession }

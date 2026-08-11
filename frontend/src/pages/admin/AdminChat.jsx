@@ -32,6 +32,7 @@ import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
 import { useChatSocket } from '../../features/chat/useChatSocket'
+import { useAuthStore } from '../../stores/authStore'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
@@ -77,13 +78,18 @@ export function AdminChat() {
   const imageInputRef = useRef(null)
   const emojiPickerRef = useRef(null)
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams(5)
+  const hasPermission = useAuthStore((state) => state.hasPermission)
+  const canView = hasPermission('chat.view')
+  const canReply = hasPermission('chat.reply')
+  const canAssign = hasPermission('chat.assign')
   const sessionsQ = useApiQuery(
     () => chatService.getSessions({ search: debounced || undefined, page, limit: pageSize }),
     [debounced, page],
+    { enabled: canView },
   )
   const sessions = sessionsQ.data?.items || []
   const total = sessionsQ.data?.pagination?.total || 0
-  const messagesQ = useApiQuery(() => chatService.getMessages(activeId), [activeId], { enabled: !!activeId })
+  const messagesQ = useApiQuery(() => chatService.getMessages(activeId), [activeId], { enabled: canView && !!activeId })
   const messages = messagesQ.data || []
 
   useEffect(() => {
@@ -102,9 +108,11 @@ export function AdminChat() {
     };
   }, [emojiPickerRef]);
 
-  const { sendMessage } = useChatSocket(activeId, {
-    role: 'admin',
+  const { sendMessage } = useChatSocket(canView ? activeId : null, {
+    role: canReply ? 'admin' : 'viewer',
+    enabled: canView,
     onMessage: () => messagesQ.refetch(),
+    onPermissionError: () => message.error('Bạn không có quyền phản hồi hội thoại'),
   })
 
   const active = useMemo(() => sessions.find((s) => s._id === activeId), [sessions, activeId])
@@ -131,18 +139,21 @@ export function AdminChat() {
     }
   }
 
-  const send = () => { 
-    if (!text.trim() && !attachments.length) return; 
-    sendMessage(text, attachments); 
-    setText(''); 
-    setAttachments([]);
-    setShowEmojiPicker(false);
-    setTimeout(() => messagesQ.refetch(), 300) 
+  const send = () => {
+    if (!canReply) return message.error('Bạn không có quyền phản hồi hội thoại')
+    if (!text.trim() && !attachments.length) return
+    sendMessage(text, attachments)
+    setText('')
+    setAttachments([])
+    setShowEmojiPicker(false)
+    setTimeout(() => messagesQ.refetch(), 300)
   }
 
   const onEmojiClick = (emojiObject) => {
     setText(prev => prev + emojiObject.emoji)
   }
+
+  if (!canView) return <Alert type="warning" showIcon message="Không có quyền truy cập Chat" description="Tài khoản cần quyền chat.view để xem các hội thoại." />
 
   return (
     <>
@@ -169,7 +180,7 @@ export function AdminChat() {
         <Col xs={24} md={16}>
           <Card
             title={active ? (active.customerName || 'Khách ẩn danh') : 'Chọn một phiên chat'}
-            extra={active && (active.mode === 'bot'
+            extra={active && canAssign && (active.mode === 'bot'
               ? <Button size="small" type="primary" onClick={takeover}>Nhảy vào hội thoại</Button>
               : <Button size="small" onClick={release}>Trả về cho Bot</Button>)}
           >
@@ -184,7 +195,7 @@ export function AdminChat() {
                           <img key={i} src={url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
                         ))}
                       </div>
-                      {m.sender === 'bot' && (
+                      {m.sender === 'bot' && canReply && (
                         <Space size={4} style={{ marginTop: 2 }}>
                           <Button type="text" size="small" icon={<LikeOutlined />} onClick={() => feedback(m._id, 'good')} />
                           <Button type="text" size="small" icon={<DislikeOutlined />} onClick={() => feedback(m._id, 'bad')} />
@@ -196,7 +207,7 @@ export function AdminChat() {
                 </div>
               )}
             </QueryState>
-            {activeId && (
+            {activeId && canReply && (
               <div style={{ position: 'relative', marginTop: 12 }}>
                 {showEmojiPicker && (
                   <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 10 }}>

@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import EmojiPicker from 'emoji-picker-react'
 import {
-  Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
+  Alert, App, Button, Card, Checkbox, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
   Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
   Tag, Timeline, Typography, Upload, Dropdown, DatePicker,
 } from 'antd'
@@ -31,6 +31,7 @@ import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
+import { useAuthStore } from '../../stores/authStore'
 import { useChatSocket } from '../../features/chat/useChatSocket'
 import dayjs from 'dayjs'
 
@@ -140,116 +141,128 @@ function UsersTab({ type = 'admin' }) {
   )
 }
 
-const PERM_MODULES = ['leads', 'orders', 'blogs', 'faqs', 'chat', 'logs', 'users', 'roles']
-const PERM_ACTIONS = ['view', 'create', 'update', 'delete']
+const RESOURCE_LABELS = {
+  dashboard: 'Tổng quan', leads: 'Khách hàng tiềm năng', blogs: 'Bài viết', faqs: 'Câu hỏi thường gặp',
+  pricing: 'Gói dịch vụ', chat: 'Trò chuyện', users: 'Người dùng', roles: 'Vai trò', settings: 'Cài đặt',
+  apiConfigs: 'Cấu hình API', logs: 'Nhật ký', notifications: 'Thông báo',
+}
+const ACTION_LABELS = {
+  view: 'View', create: 'Create', update: 'Update', delete: 'Delete', assign: 'Assign', export: 'Export',
+  publish: 'Publish', reply: 'Reply', lock: 'Lock',
+}
 
 function PermissionsTab() {
   const { message } = App.useApp()
+  const hasPermission = useAuthStore((state) => state.hasPermission)
   const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draft, setDraft] = useState({})
   const [form] = Form.useForm()
-  const query = useApiQuery(() => rolesService.getRoles(), [])
-  const roles = Array.isArray(query.data) ? query.data : []
+  const rolesQuery = useApiQuery(() => rolesService.getRoles(), [])
+  const catalogQuery = useApiQuery(() => rolesService.getPermissionCatalog(), [])
+  const roles = useMemo(() => Array.isArray(rolesQuery.data) ? rolesQuery.data : [], [rolesQuery.data])
+  const catalog = useMemo(() => Array.isArray(catalogQuery.data) ? catalogQuery.data : [], [catalogQuery.data])
+  const canCreate = hasPermission('roles.create')
+  const canUpdate = hasPermission('roles.update')
+  const canDelete = hasPermission('roles.delete')
 
-  const togglePerm = async (role, permStr, checked) => {
-    let newPerms = [...role.permissions]
-    if (checked) newPerms.push(permStr)
-    else newPerms = newPerms.filter(p => p !== permStr)
+  useEffect(() => {
+    const next = {}
+    roles.forEach((role) => { next[role._id] = role.name === 'admin' ? ['*'] : [...new Set(role.permissions || [])] })
+    setDraft(next)
+  }, [roles])
 
-    try {
-      await rolesService.updateRole(role._id, { permissions: newPerms })
-      message.success('Đã lưu')
-      query.refetch()
-    } catch {
-      message.error('Lỗi khi lưu quyền')
-    }
+  const originalFor = (role) => role.name === 'admin' ? ['*'] : [...new Set(role.permissions || [])].sort()
+  const draftFor = (role) => [...new Set(draft[role._id] || [])].sort()
+  const dirtyRoles = roles.filter((role) => role.name !== 'admin' && JSON.stringify(originalFor(role)) !== JSON.stringify(draftFor(role)))
+  const dirtyCount = dirtyRoles.reduce((total, role) => {
+    const before = new Set(originalFor(role)); const after = new Set(draftFor(role))
+    return total + [...new Set([...before, ...after])].filter((permission) => before.has(permission) !== after.has(permission)).length
+  }, 0)
+
+  const togglePerm = (role, permission, checked) => {
+    if (!canUpdate || role.name === 'admin') return
+    setDraft((current) => {
+      const permissions = new Set(current[role._id] || [])
+      if (checked) permissions.add(permission); else permissions.delete(permission)
+      return { ...current, [role._id]: [...permissions] }
+    })
   }
 
-  const deleteRole = async (roleId) => {
+  const resetDraft = () => {
+    const next = {}; roles.forEach((role) => { next[role._id] = originalFor(role) }); setDraft(next)
+  }
+
+  const saveDraft = async () => {
+    if (!dirtyRoles.length) return
+    setSaving(true)
     try {
-      await rolesService.deleteRole(roleId)
-      message.success('Đã xoá vai trò')
-      query.refetch()
-    } catch {
-      message.error('Lỗi khi xoá')
-    }
+      await rolesService.bulkUpdatePermissions(dirtyRoles.map((role) => ({ roleId: role._id, permissions: draftFor(role) })))
+      message.success(`Đã cập nhật ${dirtyRoles.length} vai trò`)
+      await rolesQuery.refetch()
+    } catch (error) { message.error(error?.error?.message || 'Không cập nhật được ma trận quyền') }
+    finally { setSaving(false) }
+  }
+
+  const deleteRole = async (role) => {
+    try { await rolesService.deleteRole(role._id); message.success('Đã xóa vai trò'); rolesQuery.refetch() }
+    catch (error) { message.error(error?.error?.message || 'Không thể xóa vai trò') }
   }
 
   const columns = [
-    { title: 'Phân quyền', dataIndex: 'name', key: 'name', width: 250 },
-    ...roles.map(role => ({
-      title: (
-        <Space>
-          {role.name}
-          <Popconfirm title="Xoá vai trò này?" onConfirm={() => deleteRole(role._id)}>
-            <Button size="small" type="text" danger>Xoá</Button>
-          </Popconfirm>
-        </Space>
-      ),
-      key: role.name,
-      align: 'center',
-      render: (_, row) => {
-        if (row.isModule) return null
-        const hasPerm = role.permissions.includes(row.key)
-        return <Switch size="small" checked={hasPerm} onChange={(c) => togglePerm(role, row.key, c)} />
-      }
-    }))
+    { title: 'Phân quyền', dataIndex: 'label', key: 'label', width: 260, fixed: 'left', render: (label, row) => row.isModule
+      ? <Text strong style={{ color: '#1677ff' }}>{label}</Text>
+      : <span style={{ paddingLeft: 24 }}>{label}</span> },
+    ...roles.map((role) => ({
+      title: <Space size={4}><Text strong>{role.name}</Text>{role.name === 'admin' && <Tag color="gold">Hệ thống</Tag>}
+        {role.name !== 'admin' && canDelete && <Popconfirm title="Xóa vai trò này?" description="Chỉ xóa được khi chưa có người dùng." onConfirm={() => deleteRole(role)}><Button size="small" type="text" danger>Xóa</Button></Popconfirm>}
+      </Space>,
+      key: role._id, align: 'center', width: 150,
+      render: (_, row) => row.isModule ? null : <Checkbox
+        aria-label={`${role.name} - ${row.permission}`}
+        checked={role.name === 'admin' || draftFor(role).includes(row.permission)}
+        disabled={role.name === 'admin' || !canUpdate || saving}
+        onChange={(event) => togglePerm(role, row.permission, event.target.checked)} />,
+    })),
   ]
 
-  const dataSource = [];
-  PERM_MODULES.forEach(m => {
-    dataSource.push({
-      key: `header_${m}`,
-      name: <span style={{ color: '#0050b3', fontWeight: 700, fontSize: '1.05em', textTransform: 'uppercase' }}>{m}</span>,
-      isModule: true,
-    });
-    PERM_ACTIONS.forEach(act => {
-      dataSource.push({
-        key: `${m}_${act}`,
-        name: <span style={{ marginLeft: 24, color: '#595959' }}>{act.charAt(0).toUpperCase() + act.slice(1)}</span>,
-        isModule: false,
-      });
-    });
-  });
+  const dataSource = catalog.flatMap((group) => [
+    { key: `header.${group.resource}`, label: RESOURCE_LABELS[group.resource] || group.resource, isModule: true },
+    ...(group.permissions || []).map((permission) => {
+      const action = permission.split('.')[1]
+      return { key: permission, permission, label: ACTION_LABELS[action] || action, isModule: false }
+    }),
+  ])
 
   const addRole = async () => {
     try {
-      const values = await form.validateFields()
-      await rolesService.createRole({ name: values.name })
-      message.success('Đã thêm vai trò')
-      setOpen(false)
-      form.resetFields()
-      query.refetch()
-    } catch (e) {
-      if (e?.errorFields) return; // Validation error
-      message.error(e?.error?.message || 'Lỗi thêm vai trò')
-    }
+      const values = await form.validateFields(); await rolesService.createRole({ name: values.name, permissions: [] })
+      message.success('Đã thêm vai trò'); setOpen(false); form.resetFields(); rolesQuery.refetch()
+    } catch (error) { if (!error?.errorFields) message.error(error?.error?.message || 'Không thêm được vai trò') }
   }
 
-  return (
-    <>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button type="primary" size="middle" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm vai trò</Button>
-      </div>
-      <Table rowKey="key"
-        pagination={false}
-        columns={columns}
-        dataSource={dataSource}
-        loading={query.loading}
-      />
-
-      <Modal title="Thêm vai trò mới" open={open} onOk={addRole} onCancel={() => setOpen(false)} destroyOnHidden>
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Tên vai trò"
-            rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }]}
-          >
-            <Input placeholder="Ví dụ: marketing, ketoan..." autoFocus />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
-  )
+  return <>
+    <Alert type="info" showIcon style={{ marginBottom: 16 }} message="Thay đổi được lưu ở bản nháp"
+      description="Bật hoặc tắt quyền rồi bấm Cập nhật quyền ở cuối bảng. Vai trò admin luôn có toàn quyền và không thể chỉnh sửa." />
+    {(rolesQuery.error || catalogQuery.error) && <Alert type="error" showIcon style={{ marginBottom: 16 }} message={rolesQuery.error || catalogQuery.error} />}
+    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <Space><Tag color={dirtyCount ? 'orange' : 'default'}>{dirtyCount} thay đổi chưa lưu</Tag></Space>
+      {canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm vai trò</Button>}
+    </div>
+    <Table rowKey="key" pagination={false} columns={columns} dataSource={dataSource}
+      loading={rolesQuery.loading || catalogQuery.loading} scroll={{ x: Math.max(800, 260 + roles.length * 150) }} />
+    {canUpdate && <div style={{ position: 'sticky', bottom: 0, zIndex: 5, padding: '16px 0', display: 'flex', justifyContent: 'flex-end', gap: 12, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(8px)' }}>
+      <Button disabled={!dirtyRoles.length || saving} onClick={resetDraft}>Hủy thay đổi</Button>
+      <Button type="primary" loading={saving} disabled={!dirtyRoles.length} onClick={saveDraft}>Cập nhật quyền ({dirtyCount})</Button>
+    </div>}
+    <Modal title="Thêm vai trò mới" open={open} onOk={addRole} onCancel={() => setOpen(false)} destroyOnHidden>
+      <Form form={form} layout="vertical"><Form.Item name="name" label="Tên vai trò"
+        rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }, { pattern: /^[a-zA-Z][a-zA-Z0-9_-]{1,31}$/, message: 'Dùng 2-32 ký tự chữ, số, _ hoặc -' }]}>
+        <Input placeholder="Ví dụ: marketing, ketoan" autoFocus />
+      </Form.Item></Form>
+    </Modal>
+  </>
 }
+
 
 // ---- Settings -------------------------------------------------------------

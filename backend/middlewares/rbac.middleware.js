@@ -1,27 +1,38 @@
-const rbacMiddleware = (requiredPermissions = []) => {
-  return (req, res, next) => {
-    // 1. Lấy thông tin user đã được gắn từ auth.middleware
-    const user = req.user;
-    if (!user) {
-      return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Chưa xác thực' } });
-    }
-
-    // 2. Nếu là admin tối cao thì luôn cho qua
-    if (user.role === 'admin') {
-      return next();
-    }
-
-    // 3. Kiểm tra xem user có đủ permission không
-    if (requiredPermissions.length > 0) {
-      const hasPermission = requiredPermissions.some((perm) => user.permissions.includes(perm));
-      if (!hasPermission) {
-        return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Bạn không có quyền thực hiện hành động này' } });
-      }
-    }
-
-    // 4. Cho qua nếu pass
-    next();
-  };
+const getPermissions = (req) => {
+  const permissions = req.auth?.permissions || req.user?.permissions;
+  return Array.isArray(permissions) ? permissions : [];
 };
+
+const isSuperAdmin = (req, permissions) => req.auth?.role?.name === 'admin' && permissions.includes('*');
+
+const deny = (res, missingPermissions) => res.status(403).json({
+  success: false,
+  error: {
+    code: 'MISSING_PERMISSION',
+    message: 'Bạn không có quyền thực hiện hành động này',
+    permissions: missingPermissions,
+  },
+});
+
+const checkPermissions = (requiredPermissions, mode = 'any') => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Chưa xác thực' } });
+  }
+
+  const required = Array.isArray(requiredPermissions) ? requiredPermissions.filter(Boolean) : [requiredPermissions].filter(Boolean);
+  const permissions = getPermissions(req);
+  if (isSuperAdmin(req, permissions) || required.length === 0) return next();
+
+  const allowed = mode === 'all'
+    ? required.every((permission) => permissions.includes(permission))
+    : required.some((permission) => permissions.includes(permission));
+  if (!allowed) return deny(res, required.filter((permission) => !permissions.includes(permission)));
+  return next();
+};
+
+const rbacMiddleware = (requiredPermissions = []) => checkPermissions(requiredPermissions, 'any');
+rbacMiddleware.requirePermission = (permission) => checkPermissions([permission], 'all');
+rbacMiddleware.requireAnyPermission = (permissions) => checkPermissions(permissions, 'any');
+rbacMiddleware.requireAllPermissions = (permissions) => checkPermissions(permissions, 'all');
 
 module.exports = rbacMiddleware;

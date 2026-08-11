@@ -10,7 +10,9 @@ export const usersService = {
 
 export const rolesService = {
   getRoles: () => axiosClient.get('/admin/roles').then((res) => res?.data),
+  getPermissionCatalog: () => axiosClient.get('/admin/roles/permissions/catalog').then((res) => res?.data),
   createRole: (payload) => axiosClient.post('/admin/roles', payload).then((res) => res?.data),
   updateRole: (id, payload) => axiosClient.put(`/admin/roles/${id}`, payload).then((res) => res?.data),
+  bulkUpdatePermissions: (updates) => axiosClient.put('/admin/roles/permissions/bulk', { updates }).then((res) => res?.data),
   deleteRole: (id) => axiosClient.delete(`/admin/roles/${id}`).then((res) => res?.data),
 }
