@@ -316,7 +316,6 @@ export function ClientLayout() {
           </Link>
           <div className="menu">
             <NavLink to="/">Trang chủ</NavLink>
-            <NavLink to="/blog">Blog</NavLink>
 
             <div className="dropdown-container" onMouseEnter={() => setForceCloseDropdown(false)}>
               <a href="#" className={`dropdown-trigger ${isSolutionsActive ? 'active' : ''}`} onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -379,6 +378,7 @@ export function ClientLayout() {
                 </NavLink>
               </div>
             </div>
+            <NavLink to="/blog">Kiến thức</NavLink>
 
           </div>
           <div className="menu" style={{ gap: '16px' }}>
@@ -570,7 +570,6 @@ export function ClientLayout() {
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <NavLink to="/" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Trang chủ</NavLink>
-          <NavLink to="/blog" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Blog</NavLink>
 
           <div className="mobile-nav-submenu">
             <div className="mobile-nav-link" style={{ background: '#f8fafc', borderBottom: 'none', cursor: 'pointer' }} onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}>
@@ -597,6 +596,7 @@ export function ClientLayout() {
               </div>
             )}
           </div>
+          <NavLink to="/blog" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Kiến thức</NavLink>
         </div>
 
         <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>

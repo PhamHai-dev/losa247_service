@@ -53,11 +53,16 @@ function BusinessValueStory() {
     const storyRefs = useRef([]);
 
     useEffect(() => {
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) setActiveStory(Number(entry.target.dataset.story));
-            });
-        }, { rootMargin: '-38% 0px -38% 0px', threshold: 0 });
+        const observer = new IntersectionObserver(() => {
+            const viewportCenter = window.innerHeight / 2;
+            const closestIndex = storyRefs.current.reduce((closest, node, index) => {
+                if (!node) return closest;
+                const rect = node.getBoundingClientRect();
+                const distance = Math.abs(rect.top + rect.height / 2 - viewportCenter);
+                return distance < closest.distance ? { index, distance } : closest;
+            }, { index: 0, distance: Infinity }).index;
+            setActiveStory(closestIndex);
+        }, { rootMargin: '-32% 0px -32% 0px', threshold: [0, .25, .5, .75, 1] });
         storyRefs.current.forEach(node => node && observer.observe(node));
         return () => observer.disconnect();
     }, []);
@@ -82,7 +87,7 @@ function BusinessValueStory() {
                     >
                         <div className="csp-business-story__index">0{i + 1}</div>
                         <div className="csp-business-story__chapter-icon"><Icon /></div>
-                        <div><small>GIÁ TRỊ 0{i + 1}</small><h4>{title}</h4><p>{text}</p><span><CheckCircle2 />{result}</span></div>
+                        <div><h4>{title}</h4><p>{text}</p><span><CheckCircle2 />{result}</span></div>
                     </article>)}
                 </div>
                 <div className="csp-business-story__sticky">
