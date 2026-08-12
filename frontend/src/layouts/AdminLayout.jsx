@@ -4,7 +4,7 @@ import {
   HomeOutlined, ThunderboltOutlined, ShoppingCartOutlined,
   FileTextOutlined, QuestionCircleOutlined, ShopOutlined,
   MessageOutlined, TeamOutlined, HistoryOutlined, SettingOutlined,
-  MenuOutlined, BellOutlined, DoubleLeftOutlined, RightOutlined
+  BellOutlined, DoubleLeftOutlined, RightOutlined, CloseOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../stores/authStore'
 import { useNotificationStore } from '../stores/notificationStore'
@@ -58,7 +58,7 @@ const menuGroups = [
   }
 ]
 
-function SubMenuItem({ item }) {
+function SubMenuItem({ item, onNavigate }) {
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const isActive = item.children.some(([to]) => location.pathname.startsWith(to))
@@ -68,53 +68,27 @@ function SubMenuItem({ item }) {
   }, [isActive])
 
   return (
-    <div className={`admin-submenu ${isActive ? 'active' : ''}`} style={{ marginBottom: 4 }}>
-      <div
+    <div className={`admin-submenu ${isActive ? 'active' : ''} ${open ? 'open' : ''}`}>
+      <button
+        type="button"
         className="admin-submenu-title"
         onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 16px', cursor: 'pointer', borderRadius: 8,
-          color: isActive ? '#fff' : '#cbd5e1',
-          background: isActive ? '#3b82f6' : 'transparent',
-          transition: 'all 0.3s'
-        }}
+        aria-expanded={open}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 500 }}>
-          {item.icon} <span className="menu-label">{item.label}</span>
+        <span className="admin-menu-item-main">
+          <span className="admin-menu-icon">{item.icon}</span>
+          <span className="menu-label">{item.label}</span>
         </span>
-        <span className="submenu-arrow" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', fontSize: 10 }}>▼</span>
-      </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateRows: open ? '1fr' : '0fr',
-        transition: 'grid-template-rows 0.3s ease-in-out',
-        opacity: open ? 1 : 0
-      }}>
-        <div style={{ overflow: 'hidden' }}>
-          <div style={{ paddingLeft: 34, paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {item.children.map(([to, label]) => {
-              const isChildActive = location.pathname.startsWith(to);
-              return (
-                <NavLink
-                  key={to}
-                  to={to}
-                  style={{
-                    padding: '8px 12px', borderRadius: 8,
-                    color: isChildActive ? '#fff' : '#94a3b8',
-                    background: isChildActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => { if (!isChildActive) { e.target.style.color = '#fff'; e.target.style.background = 'rgba(255,255,255,0.05)' } }}
-                  onMouseOut={(e) => { if (!isChildActive) { e.target.style.color = '#94a3b8'; e.target.style.background = 'transparent' } }}
-                >
-                  <span style={{ display: 'inline-block', width: 4, height: 4, borderRadius: '50%', background: 'currentColor' }} />
-                  {label}
-                </NavLink>
-              )
-            })}
-          </div>
+        <span className="submenu-arrow" aria-hidden="true">⌄</span>
+      </button>
+      <div className="admin-submenu-panel">
+        <div className="admin-submenu-panel-inner">
+          {item.children.map(([to, label]) => (
+            <NavLink key={to} to={to} onClick={onNavigate}>
+              <span className="submenu-dot" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
         </div>
       </div>
     </div>
@@ -126,6 +100,7 @@ export function AdminLayout() {
   const { user, authType, logout } = useAuthStore()
   const { notifications, unreadCount, fetchNotifications, markAsRead, initSocket, disconnectSocket } = useNotificationStore()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notifVisible, setNotifVisible] = useState(false)
 
   useEffect(() => {
@@ -184,41 +159,72 @@ export function AdminLayout() {
   }
 
   return (
-    <div className={`admin-shell ${collapsed ? 'collapsed' : ''}`}>
+    <div className={`admin-shell ${collapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+      <button
+        type="button"
+        className="admin-sidebar-overlay"
+        aria-label="Đóng menu quản trị"
+        onClick={() => setMobileMenuOpen(false)}
+      />
       <aside className="admin-sidebar">
+        <div className="admin-sidebar-glow" aria-hidden="true" />
         <div className="admin-brand">
-          <span className="brand-text">Losa247 Admin</span>
-          <DoubleLeftOutlined
+          <div className="admin-brand-mark" aria-hidden="true"><span>L</span></div>
+          <div className="admin-brand-copy">
+            <span className="brand-text">Losa247</span>
+            <span className="brand-subtitle">Control Center</span>
+          </div>
+          <button
+            type="button"
             className="collapse-btn"
-            onClick={() => setCollapsed(!collapsed)}
-          />
+            onClick={() => setCollapsed(true)}
+            aria-label="Thu gọn sidebar"
+          >
+            <DoubleLeftOutlined />
+          </button>
+          <button
+            type="button"
+            className="mobile-close-btn"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Đóng sidebar"
+          >
+            <CloseOutlined />
+          </button>
         </div>
-        <nav className="admin-menu">
-          {menuGroups.map((group, idx) => (
-            <div key={idx}>
-              <div className="sidebar-group-title">{group.title}</div>
+        <nav className="admin-menu" aria-label="Điều hướng quản trị">
+          {menuGroups.map((group) => (
+            <div className="admin-menu-group" key={group.title}>
+              <div className="sidebar-group-title"><span>{group.title}</span></div>
               {group.items.map((item) => {
                 if (Array.isArray(item)) {
                   const [to, label, icon] = item
                   return (
-                    <NavLink key={to} to={to}>
-                      {icon} <span className="menu-label">{label}</span>
+                    <NavLink key={to} to={to} onClick={() => setMobileMenuOpen(false)}>
+                      <span className="admin-menu-icon">{icon}</span>
+                      <span className="menu-label">{label}</span>
                     </NavLink>
                   )
                 }
-                return <SubMenuItem key={item.label} item={item} />
+                return <SubMenuItem key={item.label} item={item} onNavigate={() => setMobileMenuOpen(false)} />
               })}
             </div>
           ))}
         </nav>
+        <div className="admin-sidebar-status">
+          <span className="status-pulse" />
+          <div><strong>Hệ thống ổn định</strong><span>Tất cả dịch vụ hoạt động</span></div>
+        </div>
       </aside>
       <main className="admin-main">
         <div className="admin-topbar" style={{ justifyContent: collapsed ? 'space-between' : 'flex-end' }}>
           {collapsed && (
-            <div className="header-collapse-btn" onClick={() => setCollapsed(false)}>
+            <button type="button" className="header-collapse-btn" onClick={() => setCollapsed(false)} aria-label="Mở sidebar">
               <RightOutlined />
-            </div>
+            </button>
           )}
+          <button type="button" className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Mở menu quản trị">
+            <span /><span /><span />
+          </button>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
             <Popover
               content={notifContent}

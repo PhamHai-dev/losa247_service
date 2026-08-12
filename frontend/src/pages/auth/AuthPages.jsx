@@ -4,7 +4,7 @@ import { Alert, App, Button, Form, Input, Result, Checkbox } from 'antd'
 import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertificateOutlined, LoginOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
-import '../../styles/admin-login.css'
+import '../../styles/admin/login.css'
 
 function AuthLayout({ title, subtitle, children }) {
   return (

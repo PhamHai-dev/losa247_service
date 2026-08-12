@@ -4,8 +4,8 @@ import { ArrowRight, Bot, BrainCircuit, Building2, Camera, Check, CheckCircle2, 
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { publicFaqsService } from '../../features/faqs/faqsService';
 import { ClientFaqSection } from '../../components/client/ClientFaqSection';
-import '../../styles/chatbot-solutions-modern.css';
-import '../../styles/custom-industry-panel.css';
+import '../../styles/client/chatbot-solutions-modern.css';
+import '../../styles/client/industry-panel.css';
 
 const businessBenefits = [
     [Globe2, 'Chăm sóc khách hàng đa kênh', 'Hợp nhất Website, Messenger, Zalo và các nền tảng nhắn tin phổ biến trong một luồng vận hành liền mạch.', 'Phản hồi nhanh · Không bỏ sót hội thoại'],

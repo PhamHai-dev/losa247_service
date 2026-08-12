@@ -42,7 +42,6 @@ function PageHeader({ title, extra }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
       <div>
-        <Text type="secondary" style={{ fontSize: 12, letterSpacing: 1 }}>LOSA247 ADMIN</Text>
         <Title level={3} style={{ margin: 0 }}>{title}</Title>
       </div>
       <Space wrap>{extra}</Space>

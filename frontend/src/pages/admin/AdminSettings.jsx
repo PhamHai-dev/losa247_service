@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { App, Button, Drawer, Form, Input, Segmented, Skeleton, Switch, Tag, Upload } from 'antd'
+import { App, Button, Drawer, Form, Input, Segmented, Skeleton, Switch, Tag, Typography, Upload } from 'antd'
 import {
   ApiOutlined, BgColorsOutlined, CloudUploadOutlined, GlobalOutlined, LinkOutlined,
   PictureOutlined, SaveOutlined, SettingOutlined, ShareAltOutlined,
@@ -7,8 +7,9 @@ import {
 import { useSearchParams } from 'react-router-dom'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { apiConfigsService, settingsService } from '../../features/settings/settingsService'
-import '../../styles/admin-settings.css'
+import '../../styles/admin/settings.css'
 
+const { Title } = Typography
 const DEFAULT_APPEARANCE = { themeMode: 'light', accentColor: '#0284C7' }
 
 const SECTIONS = [
@@ -117,7 +118,10 @@ export function AdminSettings() {
   return (
     <div className="settings-page">
       <header className="settings-header">
-        <div><span className="settings-eyebrow">LOSA247 ADMIN / HỆ THỐNG</span><h1>Cấu hình hệ thống</h1><p>Quản lý thông tin hiển thị và kết nối vận hành tại một nơi.</p></div>
+        <div>
+          <Title level={3} style={{ margin: 0 }}>Cấu hình hệ thống</Title>
+          <p>Quản lý thông tin hiển thị và kết nối vận hành tại một nơi.</p>
+        </div>
       </header>
 
       {loading ? <div className="settings-skeleton"><Skeleton active /><Skeleton active /></div> : (
