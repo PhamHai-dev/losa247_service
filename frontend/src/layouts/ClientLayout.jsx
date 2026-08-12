@@ -301,7 +301,7 @@ export function ClientLayout() {
   const siteInfo = siteQuery.data || {}
   // Default values to fallback gracefully
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || 'https://amqkxxpqkoagqqephtgl.supabase.co/storage/v1/object/sign/web_losa/logo_web.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82M2FmMGExMS0yYjgxLTQ5YzYtODgyYy04ZTY0ZGU5NTE3OGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJfbG9zYS9sb2dvX3dlYi5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzg1MjM5MzkzLCJleHAiOjE4MTY3NzUzOTN9.itlV_P4NE_0_9O-oEA7Us2xIsEqwr8pyIGa92fgIUCs'
+  const logoUrl = siteInfo.logoUrl || 'https://amqkxxpqkoagqqephtgl.supabase.co/storage/v1/object/sign/web_losa/ChatGPT%20Image%2015_54_19%205%20thg%208,%202026.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82M2FmMGExMS0yYjgxLTQ5YzYtODgyYy04ZTY0ZGU5NTE3OGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJfbG9zYS9DaGF0R1BUIEltYWdlIDE1XzU0XzE5IDUgdGhnIDgsIDIwMjYucG5nIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTkyMDExMCwiZXhwIjoxODE3NDU2MTEwfQ.3MzypgINjseGJ4-6ME76F9l7IMjzTRynvnrFo0j7b5M'
   const slogan = siteInfo.slogan || 'AI Sales'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
