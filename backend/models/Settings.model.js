@@ -10,7 +10,7 @@ const settingsSchema = new mongoose.Schema(
       },
       accentColor: {
         type: String,
-        default: '#007bff',
+        default: '#0284C7',
       },
     },
     siteInfo: {

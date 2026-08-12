@@ -234,14 +234,14 @@ function ChatWidget({ user }) {
   )
 }
 
-const BrandText = ({ siteName }) => {
+const BrandText = ({ siteName, slogan, theme = 'light' }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
-      <div style={{ fontSize: '26px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.5px', fontFamily: '"Inter", "Montserrat", sans-serif' }}>
-        <span style={{ color: '#0B192C' }}>Losa</span><span style={{ color: 'var(--blue-500)' }}>247</span>
+      <div style={{ fontSize: '26px', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.5px', fontFamily: '"Inter", "Montserrat", sans-serif', color: theme === 'dark' ? '#fff' : '#0B192C' }}>
+        {siteName}
       </div>
-      <div style={{ fontSize: '9px', fontWeight: 700, color: '#475569', letterSpacing: '0.8px', marginTop: '4px', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
-        Tự động hóa chăm sóc 24/7
+      <div style={{ fontSize: '9px', fontWeight: 700, color: theme === 'dark' ? '#cbd5e1' : '#475569', letterSpacing: '0.8px', marginTop: '4px', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
+        {slogan}
       </div>
     </div>
   )
@@ -253,6 +253,7 @@ export function ClientLayout() {
   const location = useLocation()
   const { authType, user, logout } = useAuthStore()
   const siteQuery = useApiQuery(() => settingsService.getPublicSiteInfo(), [])
+  const appearanceQuery = useApiQuery(() => settingsService.getPublicAppearance(), [])
 
   const { openLeadModal } = useUIStore()
   const [forceCloseDropdown, setForceCloseDropdown] = useState(false)
@@ -299,12 +300,52 @@ export function ClientLayout() {
   }
 
   const siteInfo = siteQuery.data || {}
-  // Default values to fallback gracefully
   const siteName = siteInfo.name || 'LOSA247'
   const logoUrl = siteInfo.logoUrl || 'https://amqkxxpqkoagqqephtgl.supabase.co/storage/v1/object/sign/web_losa/ChatGPT%20Image%2015_54_19%205%20thg%208,%202026.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82M2FmMGExMS0yYjgxLTQ5YzYtODgyYy04ZTY0ZGU5NTE3OGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJfbG9zYS9DaGF0R1BUIEltYWdlIDE1XzU0XzE5IDUgdGhnIDgsIDIwMjYucG5nIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTkyMDExMCwiZXhwIjoxODE3NDU2MTEwfQ.3MzypgINjseGJ4-6ME76F9l7IMjzTRynvnrFo0j7b5M'
-  const slogan = siteInfo.slogan || 'AI Sales'
+  const slogan = siteInfo.slogan || 'Tự động hóa chăm sóc 24/7'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
+  const address = siteInfo.address || 'TP. Hồ Chí Minh'
+  const facebookUrl = siteInfo.socialLinks?.facebook || '#'
+  const zaloUrl = siteInfo.socialLinks?.zalo || '#'
+
+  useEffect(() => {
+    if (!siteQuery.data) return
+    document.title = siteName
+    if (siteInfo.faviconUrl) {
+      let favicon = document.querySelector('link[rel="icon"]')
+      if (!favicon) { favicon = document.createElement('link'); favicon.rel = 'icon'; document.head.appendChild(favicon) }
+      favicon.href = siteInfo.faviconUrl
+    }
+  }, [siteQuery.data, siteInfo.faviconUrl, siteName])
+
+  useEffect(() => {
+    const appearance = appearanceQuery.data
+    if (!appearance) return
+    const accent = appearance.accentColor || '#0284C7'
+    const hexToRgb = (hex) => {
+      const normalized = hex.replace('#', '')
+      const value = Number.parseInt(normalized.length === 3 ? normalized.split('').map((char) => char + char).join('') : normalized, 16)
+      return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 }
+    }
+    const mix = (hex, target, weight) => {
+      const color = hexToRgb(hex)
+      const channel = (value, targetValue) => Math.round(value + (targetValue - value) * weight).toString(16).padStart(2, '0')
+      return `#${channel(color.r, target)}${channel(color.g, target)}${channel(color.b, target)}`
+    }
+    const root = document.documentElement
+    const palette = {
+      '--blue-950': mix(accent, 0, .62), '--blue-900': mix(accent, 0, .48),
+      '--blue-800': mix(accent, 0, .34), '--blue-700': mix(accent, 0, .18),
+      '--blue-600': accent, '--blue-500': mix(accent, 255, .16),
+      '--blue-400': mix(accent, 255, .32), '--blue-200': mix(accent, 255, .68),
+      '--blue-100': mix(accent, 255, .84), '--blue-50': mix(accent, 255, .94),
+      '--primary': accent, '--primary2': mix(accent, 255, .16), '--green': accent,
+    }
+    Object.entries(palette).forEach(([token, value]) => root.style.setProperty(token, value))
+    root.dataset.theme = appearance.themeMode || 'light'
+    root.style.colorScheme = appearance.themeMode || 'light'
+  }, [appearanceQuery.data])
 
   return (
     <div className="client-app-wrapper">
@@ -312,7 +353,7 @@ export function ClientLayout() {
         <nav className="client-nav container">
           <Link className="logo" to="/" style={{ display: 'flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
             <img src={logoUrl} alt="Logo" style={{ height: 80, objectFit: 'contain' }} />
-            <BrandText siteName={siteName} />
+            <BrandText siteName={siteName} slogan={slogan} />
           </Link>
           <div className="menu">
             <NavLink to="/">Trang chủ</NavLink>
@@ -479,7 +520,7 @@ export function ClientLayout() {
               <section className="footer-brand-card" aria-label="Giới thiệu Losa247">
                 <Link to="/" className="footer-brand-link">
                   <img src={logoUrl} alt="Logo Losa247" />
-                  <BrandText siteName={siteName} theme="dark" />
+                  <BrandText siteName={siteName} slogan={slogan} theme="dark" />
                 </Link>
                 <p className="footer-desc">Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và tăng trưởng bền vững.</p>
                 <div className="footer-brand-pills">
@@ -487,9 +528,9 @@ export function ClientLayout() {
                   <span><CheckCircle size={14} /> Hỗ trợ 24/7</span>
                 </div>
                 <div className="footer-socials">
-                  <a href="#" className="social-icon" aria-label="Facebook Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
-                  <a href="#" className="social-icon" aria-label="Messenger Losa247"><MessageCircle size={18} /></a>
-                  <a href="#" className="social-icon social-icon--zalo" aria-label="Zalo Losa247">Zalo</a>
+                  <a href={facebookUrl} target="_blank" rel="noreferrer" className="social-icon" aria-label="Facebook Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+                  <a href={facebookUrl} target="_blank" rel="noreferrer" className="social-icon" aria-label="Messenger Losa247"><MessageCircle size={18} /></a>
+                  <a href={zaloUrl} target="_blank" rel="noreferrer" className="social-icon social-icon--zalo" aria-label="Zalo Losa247">Zalo</a>
                   <a href="#" className="social-icon" aria-label="YouTube Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg></a>
                 </div>
               </section>
@@ -527,17 +568,17 @@ export function ClientLayout() {
               <section className="footer-contact-card" aria-labelledby="footer-contact-title">
                 <span className="footer-contact-eyebrow">Luôn sẵn sàng hỗ trợ</span>
                 <h3 id="footer-contact-title">Kết nối với Losa247</h3>
-                <a href="tel:19001234" className="footer-contact-item">
+                <a href={`tel:${hotline.replace(/\s/g, '')}`} className="footer-contact-item">
                   <span className="footer-contact-icon"><Phone size={17} /></span>
-                  <span><small>Hotline tư vấn</small><strong>1900 1234</strong></span>
+                  <span><small>Hotline tư vấn</small><strong>{hotline}</strong></span>
                 </a>
-                <a href="mailto:contact@losa247.vn" className="footer-contact-item">
+                <a href={`mailto:${email}`} className="footer-contact-item">
                   <span className="footer-contact-icon"><Mail size={17} /></span>
-                  <span><small>Email</small><strong>contact@losa247.vn</strong></span>
+                  <span><small>Email</small><strong>{email}</strong></span>
                 </a>
                 <div className="footer-contact-item">
                   <span className="footer-contact-icon"><MapPin size={17} /></span>
-                  <span><small>Văn phòng</small><strong>Quận 1, TP. Hồ Chí Minh</strong></span>
+                  <span><small>Văn phòng</small><strong>{address}</strong></span>
                 </div>
               </section>
             </div>

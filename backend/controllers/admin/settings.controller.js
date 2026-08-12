@@ -45,10 +45,20 @@ exports.getSiteInfo = async (req, res, next) => {
 
 exports.updateSiteInfo = async (req, res, next) => {
   try {
-    const data = req.body;
+    const allowedFields = ['name', 'slogan', 'logoUrl', 'faviconUrl', 'hotline', 'email', 'address'];
     const settings = await getSettings();
-    
-    settings.siteInfo = { ...settings.siteInfo.toObject(), ...data };
+    const current = settings.siteInfo.toObject();
+    const nextSiteInfo = { ...current };
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) nextSiteInfo[field] = req.body[field];
+    });
+    if (req.body.socialLinks && typeof req.body.socialLinks === 'object') {
+      nextSiteInfo.socialLinks = {
+        ...current.socialLinks,
+        ...Object.fromEntries(Object.entries(req.body.socialLinks).filter(([key]) => ['facebook', 'zalo'].includes(key))),
+      };
+    }
+    settings.siteInfo = nextSiteInfo;
     await settings.save();
 
     res.json({ success: true, data: settings.siteInfo });

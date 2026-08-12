@@ -1,178 +1,160 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import EmojiPicker from 'emoji-picker-react'
+import { useEffect, useMemo, useState } from 'react'
+import { App, Button, Drawer, Form, Input, Segmented, Skeleton, Switch, Tag, Upload } from 'antd'
 import {
-  Alert, App, Button, Card, Col, Descriptions, Drawer, Empty, Form, Input, InputNumber, List,
-  Modal, Popconfirm, Row, Segmented, Select, Space, Spin, Statistic, Steps, Switch, Table, Tabs,
-  Tag, Timeline, Typography, Upload, Dropdown, DatePicker,
-} from 'antd'
-import { Editor } from '@tinymce/tinymce-react'
-import {
-  DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
-  FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined
+  ApiOutlined, BgColorsOutlined, CloudUploadOutlined, GlobalOutlined, LinkOutlined,
+  PictureOutlined, SaveOutlined, SettingOutlined, ShareAltOutlined,
 } from '@ant-design/icons'
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
+import { useSearchParams } from 'react-router-dom'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useDebounce } from '../../hooks/useDebounce'
-import { useListParams } from '../../hooks/useListParams'
-import { formatCurrency, formatDate } from '../../utils/format'
-import { downloadBlob } from '../../utils/downloadBlob'
-import { ORDER_STATUS, LEAD_STATUS, BLOG_STATUS, CHAT_MODE, ORDER_STEPS } from '../../constants/statusConfig'
-import { dashboardService } from '../../features/dashboard/dashboardService'
-import { leadsService } from '../../features/leads/leadsService'
-import { ordersService } from '../../features/orders/ordersService'
-import { cartsAdminService } from '../../features/carts/cartsAdminService'
-import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
-import { faqsService } from '../../features/faqs/faqsService'
-import { servicesService } from '../../features/services/servicesService'
-import { pricingService } from '../../features/services/pricingService'
-import { storeProductsService } from '../../features/storeProducts/storeProductsService'
-import { chatService } from '../../features/chat/chatService'
-import { logsService } from '../../features/logs/logsService'
-import { usersService, rolesService } from '../../features/users/usersService'
-import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
-import { useChatSocket } from '../../features/chat/useChatSocket'
-import dayjs from 'dayjs'
+import { apiConfigsService, settingsService } from '../../features/settings/settingsService'
+import '../../styles/admin-settings.css'
 
-const { Title, Text } = Typography
+const DEFAULT_APPEARANCE = { themeMode: 'light', accentColor: '#0284C7' }
 
-// ---- Reusable bits --------------------------------------------------------
-function PageHeader({ title, extra }) {
+const SECTIONS = [
+  { key: 'site-info', group: 'general', title: 'Thông tin website', description: 'Tên website, slogan và thông tin liên hệ', icon: <GlobalOutlined />, tone: 'blue' },
+  { key: 'branding', group: 'general', title: 'Nhận diện thương hiệu', description: 'Quản lý logo và favicon của website', icon: <PictureOutlined />, tone: 'violet' },
+  { key: 'appearance', group: 'general', title: 'Giao diện', description: 'Chế độ hiển thị và màu thương hiệu', icon: <BgColorsOutlined />, tone: 'emerald' },
+  { key: 'social', group: 'general', title: 'Mạng xã hội', description: 'Liên kết Facebook và Zalo chính thức', icon: <ShareAltOutlined />, tone: 'rose' },
+  { key: 'n8n', group: 'integration', title: 'n8n Automation', description: 'Webhook tự động hóa và khóa xác thực', icon: <ApiOutlined />, tone: 'amber' },
+]
+
+export function AdminSettings() {
+  const { message, modal } = App.useApp()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeKey = searchParams.get('section')
+  const [saving, setSaving] = useState(false)
+  const [form] = Form.useForm()
+  const siteQuery = useApiQuery(() => settingsService.getSiteInfo(), [])
+  const appearanceQuery = useApiQuery(() => settingsService.getAppearance(), [])
+  const n8nQuery = useApiQuery(() => apiConfigsService.getN8nConfig(), [])
+  const activeSection = SECTIONS.find((item) => item.key === activeKey)
+
+  const openSection = (key) => setSearchParams({ section: key })
+  const closeSection = () => {
+    if (form.isFieldsTouched()) {
+      modal.confirm({
+        title: 'Bỏ các thay đổi chưa lưu?',
+        content: 'Những nội dung bạn vừa chỉnh sửa sẽ không được giữ lại.',
+        okText: 'Bỏ thay đổi', cancelText: 'Tiếp tục chỉnh sửa',
+        onOk: () => { form.resetFields(); setSearchParams({}) },
+      })
+      return
+    }
+    setSearchParams({})
+  }
+
+  useEffect(() => {
+    if (!activeSection) return
+    if (activeKey === 'appearance' && appearanceQuery.data) form.setFieldsValue(appearanceQuery.data)
+    else if (activeKey === 'n8n' && n8nQuery.data) {
+      form.setFieldsValue({
+        apiKey: '',
+        webhookUrl: n8nQuery.data.extra?.webhookUrl || '',
+        isActive: n8nQuery.data.isActive ?? false,
+      })
+    } else if (siteQuery.data) {
+      if (activeKey === 'social') form.setFieldsValue(siteQuery.data.socialLinks || {})
+      else form.setFieldsValue(siteQuery.data)
+    }
+  }, [activeKey, activeSection, appearanceQuery.data, n8nQuery.data, siteQuery.data, form])
+
+  const loading = siteQuery.loading || appearanceQuery.loading || n8nQuery.loading
+  const configured = useMemo(() => ({
+    'site-info': Boolean(siteQuery.data?.name && siteQuery.data?.email),
+    branding: Boolean(siteQuery.data?.logoUrl),
+    appearance: Boolean(appearanceQuery.data?.accentColor),
+    social: Boolean(siteQuery.data?.socialLinks?.facebook || siteQuery.data?.socialLinks?.zalo),
+    n8n: Boolean(n8nQuery.data?.hasApiKey || n8nQuery.data?.extra?.webhookUrl),
+  }), [siteQuery.data, appearanceQuery.data, n8nQuery.data])
+
+  const save = async () => {
+    const values = await form.validateFields()
+    setSaving(true)
+    try {
+      if (activeKey === 'appearance') await settingsService.updateAppearance(values)
+      else if (activeKey === 'n8n') {
+        const payload = { isActive: values.isActive, extra: { webhookUrl: values.webhookUrl } }
+        if (values.apiKey) payload.apiKey = values.apiKey
+        await apiConfigsService.updateConfig('n8n', payload)
+      } else if (activeKey === 'social') {
+        await settingsService.updateSiteInfo({ socialLinks: values })
+      } else {
+        await settingsService.updateSiteInfo(values)
+      }
+      form.resetFields()
+      await Promise.all([siteQuery.refetch(), appearanceQuery.refetch(), n8nQuery.refetch()])
+      message.success('Đã lưu cấu hình')
+      setSearchParams({})
+    } catch (error) {
+      message.error(error?.error?.message || 'Không lưu được cấu hình')
+    } finally { setSaving(false) }
+  }
+
+  const upload = (field) => ({
+    showUploadList: false,
+    accept: 'image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon',
+    customRequest: async ({ file, onSuccess, onError }) => {
+      try {
+        const result = await settingsService.uploadAsset(file)
+        form.setFieldValue(field, result?.url || result)
+        message.success('Đã tải ảnh lên')
+        onSuccess?.(result)
+      } catch (error) { message.error('Tải ảnh thất bại'); onError?.(error) }
+    },
+  })
+
+  const resetAppearance = () => {
+    form.setFieldsValue(DEFAULT_APPEARANCE)
+    message.info('Đã đưa về màu giao diện mặc định. Nhấn “Lưu thay đổi” để áp dụng.')
+  }
+
+  const testN8n = async () => {
+    try { const result = await apiConfigsService.testConnection('n8n'); message.success(result?.message || 'Kết nối n8n thành công') }
+    catch (error) { message.error(error?.error?.message || 'Không thể kết nối n8n') }
+  }
+
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
-      <div>
-        <Text type="secondary" style={{ fontSize: 12, letterSpacing: 1 }}>LOSA247 ADMIN</Text>
-        <Title level={3} style={{ margin: 0 }}>{title}</Title>
-      </div>
-      <Space wrap>{extra}</Space>
+    <div className="settings-page">
+      <header className="settings-header">
+        <div><span className="settings-eyebrow">LOSA247 ADMIN / HỆ THỐNG</span><h1>Cấu hình hệ thống</h1><p>Quản lý thông tin hiển thị và kết nối vận hành tại một nơi.</p></div>
+      </header>
+
+      {loading ? <div className="settings-skeleton"><Skeleton active /><Skeleton active /></div> : (
+        <>
+          <SettingsGroup title="Cài đặt chung" description="Thông tin và nhận diện hiển thị trên website">
+            {SECTIONS.filter((item) => item.group === 'general').map((item) => <SettingsCard key={item.key} item={item} configured={configured[item.key]} onClick={() => openSection(item.key)} />)}
+          </SettingsGroup>
+          <SettingsGroup title="Kết nối & tích hợp" description="Cấu hình luồng tự động hóa của hệ thống">
+            {SECTIONS.filter((item) => item.group === 'integration').map((item) => <SettingsCard key={item.key} item={item} configured={configured[item.key]} onClick={() => openSection(item.key)} />)}
+          </SettingsGroup>
+        </>
+      )}
+
+      <Drawer title={activeSection?.title} open={Boolean(activeSection)} onClose={closeSection} width={560} className="settings-drawer" destroyOnHidden extra={<SettingOutlined />} footer={<div className="settings-drawer-actions"><Button onClick={closeSection}>Hủy</Button><Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={save}>Lưu thay đổi</Button></div>}>
+        {activeSection && <Form form={form} layout="vertical" requiredMark={false} className="settings-form"><p className="settings-drawer-description">{activeSection.description}</p><SectionForm section={activeKey} form={form} upload={upload} hasApiKey={n8nQuery.data?.hasApiKey} onTest={testN8n} onResetAppearance={resetAppearance} /></Form>}
+      </Drawer>
     </div>
   )
 }
 
-function StatusTag({ map, value }) {
-  const cfg = map[value] || { label: value || '—', color: 'default' }
-  return <Tag color={cfg.color}>{cfg.label}</Tag>
+function SettingsGroup({ title, description, children }) {
+  return <section className="settings-group"><div className="settings-group-heading"><div><h2>{title}</h2><p>{description}</p></div></div><div className="settings-grid">{children}</div></section>
 }
 
-// Bọc trạng thái loading/error/empty cho các khối dữ liệu.
-function QueryState({ loading, error, empty, children }) {
-  if (loading) return <div style={{ padding: 48, textAlign: 'center' }}><Spin /></div>
-  if (error) return <Alert type="error" showIcon title={error} style={{ margin: '12px 0' }} />
-  if (empty) return <Empty description="Chưa có dữ liệu" style={{ padding: 32 }} />
-  return children
+function SettingsCard({ item, configured, onClick }) {
+  return <button id={`settings-card-${item.key}`} className="settings-card" onClick={onClick}><span className={`settings-card-icon ${item.tone}`}>{item.icon}</span><span className="settings-card-copy"><span className="settings-card-title">{item.title}</span><span className="settings-card-description">{item.description}</span></span><Tag color={configured ? 'success' : 'default'}>{configured ? 'Đã thiết lập' : 'Chưa hoàn tất'}</Tag><LinkOutlined className="settings-card-arrow" /></button>
 }
 
-// ---- Dashboard ------------------------------------------------------------
-
-export function AdminSettings() {
-  return (
-    <>
-      <PageHeader title="Cấu hình hệ thống" />
-      <Tabs items={[
-        { key: 'appearance', label: 'Giao diện', children: <AppearanceTab /> },
-        { key: 'site', label: 'Thông tin website', children: <SiteInfoTab /> },
-        { key: 'api', label: 'Cấu hình API', children: <ApiConfigsTab /> },
-      ]} />
-    </>
-  )
+function SectionForm({ section, form, upload, hasApiKey, onTest, onResetAppearance }) {
+  if (section === 'site-info') return <><Form.Item name="name" label="Tên website" rules={[{ required: true, message: 'Nhập tên website' }]}><Input placeholder="LOSA247" /></Form.Item><Form.Item name="slogan" label="Slogan"><Input placeholder="Tự động hóa chăm sóc 24/7" /></Form.Item><Form.Item name="hotline" label="Hotline"><Input placeholder="0901 247 247" /></Form.Item><Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Email không hợp lệ' }]}><Input placeholder="contact@losa247.vn" /></Form.Item><Form.Item name="address" label="Địa chỉ"><Input.TextArea rows={3} /></Form.Item></>
+  if (section === 'branding') return <><AssetField form={form} field="logoUrl" label="Logo website" upload={upload('logoUrl')} /><AssetField form={form} field="faviconUrl" label="Favicon" upload={upload('faviconUrl')} /></>
+  if (section === 'appearance') return <><Form.Item name="themeMode" label="Chế độ hiển thị"><Segmented block options={[{ label: 'Sáng', value: 'light' }, { label: 'Tối', value: 'dark' }]} /></Form.Item><Form.Item name="accentColor" label="Màu thương hiệu"><Input type="color" className="settings-color-input" /></Form.Item><div className="appearance-default"><span><i style={{ background: DEFAULT_APPEARANCE.accentColor }} /><span><strong>Màu mặc định hiện tại</strong><small>{DEFAULT_APPEARANCE.accentColor}</small></span></span><Button onClick={onResetAppearance}>Khôi phục mặc định</Button></div></>
+  if (section === 'social') return <><Form.Item name="facebook" label="Facebook" rules={[{ type: 'url', warningOnly: true, message: 'URL chưa hợp lệ' }]}><Input placeholder="https://facebook.com/..." /></Form.Item><Form.Item name="zalo" label="Zalo" rules={[{ type: 'url', warningOnly: true, message: 'URL chưa hợp lệ' }]}><Input placeholder="https://zalo.me/..." /></Form.Item></>
+  return <><div className="n8n-status"><span><strong>n8n Automation</strong><small>Điều khiển các webhook tự động hóa</small></span><Form.Item name="isActive" valuePropName="checked" noStyle><Switch checkedChildren="Bật" unCheckedChildren="Tắt" /></Form.Item></div><Form.Item name="webhookUrl" label="Webhook URL" rules={[{ required: true, message: 'Nhập webhook URL' }, { type: 'url', message: 'URL không hợp lệ' }]}><Input placeholder="https://n8n.example.com/webhook/..." /></Form.Item><Form.Item name="apiKey" label={`API Key ${hasApiKey ? '— đã cấu hình' : ''}`}><Input.Password placeholder={hasApiKey ? 'Để trống để giữ khóa hiện tại' : 'Nhập API key'} /></Form.Item><Button icon={<ApiOutlined />} onClick={onTest}>Kiểm tra kết nối hiện tại</Button></>
 }
 
-function AppearanceTab() {
-  const { message } = App.useApp()
-  const query = useApiQuery(() => settingsService.getAppearance(), [])
-  const [form] = Form.useForm()
-  const save = async () => {
-    const values = await form.validateFields()
-    try { await settingsService.updateAppearance(values); message.success('Đã lưu giao diện') } catch { message.error('Không lưu được') }
-  }
-  return (
-    <Card style={{ maxWidth: 520 }}>
-      <QueryState loading={query.loading} error={query.error}>
-        <Form form={form} layout="vertical" initialValues={query.data || { themeMode: 'light', primaryColor: '#0F766E' }}>
-          <Form.Item name="themeMode" label="Chế độ"><Segmented options={[{ label: 'Sáng', value: 'light' }, { label: 'Tối', value: 'dark' }]} /></Form.Item>
-          <Form.Item name="primaryColor" label="Màu thương hiệu"><Input type="color" style={{ width: 80, padding: 2 }} /></Form.Item>
-          <Button type="primary" onClick={save}>Lưu thay đổi</Button>
-        </Form>
-      </QueryState>
-    </Card>
-  )
-}
-
-function SiteInfoTab() {
-  const { message } = App.useApp()
-  const query = useApiQuery(() => settingsService.getSiteInfo(), [])
-  const [form] = Form.useForm()
-
-  useEffect(() => {
-    if (query.data) {
-      form.setFieldsValue(query.data)
-    }
-  }, [query.data, form])
-
-  const save = async () => {
-    const values = await form.validateFields()
-    try { await settingsService.updateSiteInfo(values); message.success('Đã lưu thông tin site') } catch { message.error('Không lưu được') }
-  }
-  const uploadProps = {
-    showUploadList: false,
-    customRequest: async ({ file, onSuccess, onError }) => {
-      try { const res = await settingsService.uploadAsset(file); form.setFieldValue('logoUrl', res?.url || res); message.success('Đã tải lên'); onSuccess?.(res) }
-      catch (e) { message.error('Tải lên thất bại'); onError?.(e) }
-    },
-  }
-  return (
-    <Card style={{ maxWidth: 520 }}>
-      <QueryState loading={query.loading} error={query.error}>
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="Tên website"><Input placeholder="LOSA247.VN" /></Form.Item>
-          <Form.Item name="slogan" label="Slogan"><Input /></Form.Item>
-          <Form.Item name="logoUrl" label="Logo (URL)"><Input placeholder="https://..." /></Form.Item>
-          <Upload {...uploadProps}><Button icon={<UploadOutlined />}>Tải logo lên</Button></Upload>
-          <div style={{ marginTop: 16 }}><Button type="primary" onClick={save}>Lưu thông tin</Button></div>
-        </Form>
-      </QueryState>
-    </Card>
-  )
-}
-
-function ApiConfigsTab() {
-  const { message } = App.useApp()
-  const query = useApiQuery(() => apiConfigsService.getConfigs(), [])
-  const configs = query.data || []
-  const providers = ['facebook', 'zalo', 'openai', 'anthropic', 'n8n']
-
-  const test = async (provider) => {
-    try { const res = await apiConfigsService.testConnection(provider); message.success(res?.message || `Kết nối ${provider} OK`) }
-    catch (e) { message.error(e?.error?.message || `Kết nối ${provider} thất bại`) }
-  }
-
-  return (
-    <QueryState loading={query.loading} error={query.error}>
-      <Row gutter={[16, 16]}>
-        {providers.map((p) => {
-          const cfg = configs.find((c) => c.provider === p) || {}
-          return <Col xs={24} md={12} key={p}><ApiConfigCard provider={p} config={cfg} onTest={() => test(p)} onSaved={query.refetch} /></Col>
-        })}
-      </Row>
-    </QueryState>
-  )
-}
-
-function ApiConfigCard({ provider, config, onTest, onSaved }) {
-  const { message } = App.useApp()
-  const [form] = Form.useForm()
-  const save = async () => {
-    const values = await form.validateFields()
-    try { await apiConfigsService.updateConfig(provider, values); message.success(`Đã lưu ${provider}`); onSaved?.() }
-    catch { message.error('Không lưu được cấu hình') }
-  }
-  return (
-    <Card title={provider.toUpperCase()} extra={<Button size="small" onClick={onTest}>Test kết nối</Button>}>
-      <Form form={form} layout="vertical" initialValues={{ apiKey: config.apiKey || '', isActive: config.isActive ?? false }}>
-        <Form.Item name="apiKey" label="API Key"><Input.Password placeholder="••••••" /></Form.Item>
-        <Form.Item name="isActive" label="Kích hoạt" valuePropName="checked"><Switch /></Form.Item>
-        <Button type="primary" size="small" onClick={save}>Lưu</Button>
-      </Form>
-    </Card>
-  )
+function AssetField({ form, field, label, upload }) {
+  const value = Form.useWatch(field, form)
+  return <div className="asset-field"><div className="asset-preview">{value ? <img src={value} alt={label} /> : <PictureOutlined />}</div><div className="asset-copy"><strong>{label}</strong><span>PNG, JPG, WebP hoặc SVG</span><Upload {...upload}><Button icon={<CloudUploadOutlined />}>{value ? 'Thay ảnh' : 'Tải ảnh lên'}</Button></Upload></div><Form.Item name={field} hidden><Input /></Form.Item></div>
 }
