@@ -5,6 +5,7 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
 router.use(authMiddleware('admin'));
 router.get('/search-suggestions', requirePermission('faqs.view'), faqsController.searchSuggestions);
+router.get('/stats', requirePermission('faqs.view'), faqsController.getStats);
 router.get('/', requirePermission('faqs.view'), faqsController.getFaqs);
 router.post('/', requirePermission('faqs.create'), faqsController.createFaq);
 router.patch('/reorder', requirePermission('faqs.update'), faqsController.reorderFaqs);

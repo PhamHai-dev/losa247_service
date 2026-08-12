@@ -18,9 +18,13 @@ export const pricingService = {
     return await axiosClient.delete(`/admin/pricing/plans/${id}`)
   },
 
+  getStats: async () => {
+    return await axiosClient.get('/admin/pricing/stats')
+  },
+
   // Comparisons
-  getComparisons: async () => {
-    return await axiosClient.get('/admin/pricing/comparisons')
+  getComparisons: async (params) => {
+    return await axiosClient.get('/admin/pricing/comparisons', { params })
   },
   getComparisonById: async (id) => {
     return await axiosClient.get(`/admin/pricing/comparisons/${id}`)

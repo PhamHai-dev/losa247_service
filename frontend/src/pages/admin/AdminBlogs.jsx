@@ -10,7 +10,8 @@ import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
   FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
-  EditOutlined, DeleteOutlined
+  EditOutlined, DeleteOutlined, SearchOutlined, FolderOpenOutlined, TagsOutlined, GlobalOutlined,
+  UserOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -67,143 +68,89 @@ function QueryState({ loading, error, empty, children }) {
 export function AdminBlogs() {
   const navigate = useNavigate()
   const [mainTab, setMainTab] = useState('blogs')
+  const actions = {
+    blogs: { label: 'Viết bài mới', run: () => navigate('/admin/blogs/editor') },
+    categories: { label: 'Thêm danh mục', run: () => window.dispatchEvent(new Event('openAddCategoryModal')) },
+  }
+  const action = actions[mainTab]
 
   return (
-    <>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#0f172a' }}>Quản lý bài viết</h1>
-          <p style={{ margin: 0, color: '#64748b' }}>Quản lý bài viết, danh mục và thẻ trên website</p>
-        </div>
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            if (mainTab === 'blogs') navigate('/admin/blogs/editor');
-            if (mainTab === 'categories') {
-              window.dispatchEvent(new Event('openAddCategoryModal'))
-            }
-          }}
-          style={{ background: '#0d9488', borderRadius: 8 }}
-        >
-          {mainTab === 'categories' ? 'Thêm danh mục mới' : 'Viết bài mới'}
-        </Button>
-      </div>
-
-      <Tabs
-        activeKey={mainTab}
-        onChange={setMainTab}
-        items={[
-          { key: 'blogs', label: 'Tất cả bài viết', children: <BlogsView /> },
-          { key: 'categories', label: 'Danh mục', children: <CategoriesView /> },
-          { key: 'tags', label: 'Thẻ', children: <BlogTagsTable /> }
-        ]}
-      />
-    </>
+    <section className="blogs-page">
+      <header className="blogs-page-header">
+        <div className="blogs-page-title"><span className="blogs-eyebrow">Trung tâm nội dung</span><h1>Quản lý bài viết</h1><p>Xuất bản nội dung, tổ chức danh mục và tối ưu thư viện thẻ.</p></div>
+        {action && <Button type="primary" size="large" icon={<PlusOutlined />} onClick={action.run}>{action.label}</Button>}
+      </header>
+      <Tabs className="blogs-primary-tabs" activeKey={mainTab} onChange={setMainTab} items={[
+        { key: 'blogs', label: <span className="blogs-tab-label"><FileTextOutlined />Bài viết</span>, children: <BlogsView /> },
+        { key: 'categories', label: <span className="blogs-tab-label"><FolderOpenOutlined />Danh mục</span>, children: <CategoriesView /> },
+        { key: 'tags', label: <span className="blogs-tab-label"><TagsOutlined />Thẻ nội dung</span>, children: <BlogTagsTable /> },
+      ]} />
+    </section>
   )
 }
-
 
 function BlogsView() {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('all')
+  const [status, setStatus] = useState('')
+  const [category, setCategory] = useState('')
+  const [source, setSource] = useState('')
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
-  const status = tab === 'all' ? undefined : tab
-
+  const categoriesQuery = useApiQuery(() => blogCategoriesService.getCategories(), [])
+  const categories = categoriesQuery.data?.items || []
   const query = useApiQuery(
-    () => blogsService.getBlogs({ status, search: debounced || undefined, page, limit: pageSize }),
-    [status, debounced, page]
+    () => blogsService.getBlogs({ status: status || undefined, category: category || undefined, source: source || undefined, search: debounced || undefined, page, limit: pageSize }),
+    [status, category, source, debounced, page]
   )
   const statsQuery = useApiQuery(() => blogsService.getStats(), [])
   const stats = statsQuery.data || { totalBlogs: 0, publishedBlogs: 0, pendingBlogs: 0, totalViews: 0 }
-
   const rows = query.data?.items || []
   const total = query.data?.pagination?.total || 0
-
-  const doAction = async (fn, msg) => {
-    try { await fn(); message.success(msg); query.refetch() } catch { message.error('Thao tác thất bại') }
-  }
-
+  const activeFilterCount = [status, category, source, debounced].filter(Boolean).length
+  const resetFilters = () => { setStatus(''); setCategory(''); setSource(''); onSearch(''); setPage(1) }
+  const doAction = async (fn, msg) => { try { await fn(); message.success(msg); query.refetch(); statsQuery.refetch() } catch { message.error('Thao tác thất bại') } }
+  const kpis = [
+    { label: 'Tổng bài viết', value: stats.totalBlogs, sub: 'Trong thư viện', icon: <FileTextOutlined />, color: '#0d9488', soft: '#e3f8f4' },
+    { label: 'Đã xuất bản', value: stats.publishedBlogs, sub: 'Đang hiển thị', icon: <CheckCircleOutlined />, color: '#16a34a', soft: '#e9f9ee' },
+    { label: 'Cần xử lý', value: stats.pendingBlogs, sub: 'Chờ duyệt & bản nháp', icon: <ClockCircleOutlined />, color: '#d97706', soft: '#fff7df' },
+    { label: 'Tổng lượt xem', value: Number(stats.totalViews || 0).toLocaleString('vi-VN'), sub: 'Mức độ tiếp cận', icon: <EyeOutlined />, color: '#0284c7', soft: '#e5f5fc' },
+  ]
+  const sourceOptions = [{ value: 'writer', label: 'Writer' }, { value: 'other', label: 'Khác' }]
   const columns = [
-    { title: 'Tiêu đề', dataIndex: 'title', key: 'title', render: (v) => <span className="cell-strong">{v}</span> },
-    { title: 'Danh mục', dataIndex: 'category', key: 'category', render: (c) => c?.name || '-' },
-    { title: 'Lượt xem', dataIndex: 'views', key: 'views', render: (v) => <Space><EyeOutlined style={{ color: '#94a3b8' }} /> {v?.toLocaleString('vi-VN') || 0}</Space> },
-    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (v) => <StatusTag map={BLOG_STATUS} value={v} /> },
-    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
-    {
-      title: 'Thao tác', key: 'action', width: 180, render: (_, r) => (
-        <Space>
-          <Button size="small" type="text" icon={<EyeOutlined style={{ color: '#0ea5e9' }} />} onClick={() => window.open(`/blog/${r.slug}`, '_blank')} />
-          {r.status === 'pending' && <Button size="small" type="text" icon={<CheckCircleOutlined style={{ color: '#10b981' }} />} onClick={() => doAction(() => blogsService.approve(r._id), 'Đã duyệt bài')} />}
-          {r.status === 'pending' && <Button size="small" type="text" danger icon={<CloseOutlined />} onClick={() => doAction(() => blogsService.reject(r._id), 'Đã từ chối')} />}
-          <Button size="small" type="text" icon={<EditOutlined style={{ color: '#0d9488' }} />} onClick={() => navigate('/admin/blogs/editor', { state: { blog: r } })} />
-          <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(r._id), 'Đã xoá')}>
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
-      ),
-    },
+    { title: 'Bài viết', dataIndex: 'title', key: 'title', width: 330, render: (title, row) => <div className="blogs-post-cell"><span className="blogs-post-thumb">{row.coverImageUrl ? <img src={row.coverImageUrl} alt="" /> : <FileTextOutlined />}</span><div className="blogs-post-copy"><strong title={title}>{title}</strong><span>{formatDate(row.createdAt)}</span></div></div> },
+    { title: 'Danh mục', dataIndex: 'category', key: 'category', width: 140, render: (item) => item ? <Tag className="blogs-category-chip">{item.name}</Tag> : <span>—</span> },
+    { title: 'Nguồn', dataIndex: 'source', key: 'source', width: 115, render: (value) => { const isWriter = value === 'writer' || value === 'manual'; return <span className="blogs-source">{isWriter ? <UserOutlined /> : <GlobalOutlined />}{isWriter ? 'Writer' : 'Khác'}</span> } },
+    { title: 'Tác giả', dataIndex: 'author', key: 'author', width: 150, render: (author) => <span className="blogs-source"><UserOutlined />{author?.name || '—'}</span> },
+    { title: 'Lượt xem', dataIndex: 'views', key: 'views', width: 105, render: (value) => <span className="blogs-source"><EyeOutlined />{Number(value || 0).toLocaleString('vi-VN')}</span> },
+    { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 125, render: (value) => <StatusTag map={BLOG_STATUS} value={value} /> },
+    { title: 'Thao tác', key: 'action', fixed: 'right', width: 165, render: (_, row) => <div className="blogs-row-actions">
+      <Button type="text" icon={<EyeOutlined />} aria-label={`Xem ${row.title}`} title="Xem bài viết" onClick={() => window.open(`/blog/${row.slug}`, '_blank')} />
+      {row.status === 'pending' && <Button type="text" icon={<CheckCircleOutlined />} aria-label={`Duyệt ${row.title}`} title="Duyệt bài" onClick={() => doAction(() => blogsService.approve(row._id), 'Đã duyệt bài')} />}
+      {row.status === 'pending' && <Button type="text" danger icon={<CloseOutlined />} aria-label={`Từ chối ${row.title}`} title="Từ chối" onClick={() => doAction(() => blogsService.reject(row._id), 'Đã từ chối')} />}
+      <Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.title}`} title="Chỉnh sửa" onClick={() => navigate('/admin/blogs/editor', { state: { blog: row } })} />
+      <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(row._id), 'Đã xoá')}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.title}`} title="Xóa" /></Popconfirm>
+    </div> },
   ]
 
-  return (
-    <>
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        <div className="kpi-card">
-          <div className="kpi-card-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}><FileTextOutlined /></div>
-          <div className="kpi-card-content">
-            <span className="label">Tổng bài viết</span>
-            <span className="value">{stats.totalBlogs}</span>
-            <span className="sub">Bài viết</span>
-          </div>
+  return <>
+    <div className="blogs-kpi-grid">{kpis.map((item) => <article className="blogs-kpi-card" key={item.label} style={{ '--kpi-color': item.color, '--kpi-soft': item.soft }}><span className="blogs-kpi-icon">{item.icon}</span><div className="blogs-kpi-copy"><span>{item.label}</span><strong>{item.value}</strong><small>{item.sub}</small></div></article>)}</div>
+    <div className="blogs-content-card">
+      <div className="blogs-list-heading"><div><strong>Thư viện bài viết</strong><span>{total} kết quả phù hợp</span></div>{activeFilterCount > 0 && <Tag color="cyan">{activeFilterCount} bộ lọc đang dùng</Tag>}</div>
+      <div className="blogs-filter-panel">
+        <div className="blogs-filter-grid">
+          <Input className="blogs-search" allowClear prefix={<SearchOutlined />} placeholder="Tìm kiếm theo tiêu đề bài viết..." value={search} onChange={(event) => { onSearch(event.target.value); setPage(1) }} />
+          <Select allowClear placeholder="Danh mục" value={category || undefined} onChange={(value) => { setCategory(value || ''); setPage(1) }} options={categories.map((item) => ({ value: item._id, label: item.name }))} />
+          <Select allowClear placeholder="Nguồn bài viết" value={source || undefined} onChange={(value) => { setSource(value || ''); setPage(1) }} options={sourceOptions} />
+          <Select allowClear placeholder="Trạng thái" value={status || undefined} onChange={(value) => { setStatus(value || ''); setPage(1) }} options={Object.entries(BLOG_STATUS).map(([value, item]) => ({ value, label: item.label }))} />
+          <Button icon={<ReloadOutlined />} onClick={resetFilters}>Đặt lại</Button>
         </div>
-        <div className="kpi-card">
-          <div className="kpi-card-icon" style={{ background: '#dcfce7', color: '#16a34a' }}><CheckCircleOutlined /></div>
-          <div className="kpi-card-content">
-            <span className="label">Đã đăng</span>
-            <span className="value">{stats.publishedBlogs}</span>
-            <span className="sub">Bài viết</span>
-          </div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-card-icon" style={{ background: '#fef3c7', color: '#d97706' }}><ClockCircleOutlined /></div>
-          <div className="kpi-card-content">
-            <span className="label">Chờ duyệt</span>
-            <span className="value">{stats.pendingBlogs}</span>
-            <span className="sub">Bài viết</span>
-          </div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-card-icon" style={{ background: '#f1f5f9', color: '#475569' }}><EyeOutlined /></div>
-          <div className="kpi-card-content">
-            <span className="label">Tổng lượt xem</span>
-            <span className="value">{stats.totalViews.toLocaleString('vi-VN')}</span>
-            <span className="sub">Lượt xem</span>
-          </div>
-        </div>
+        {activeFilterCount > 0 && <div className="blogs-active-filters"><span>Đang lọc:</span>{debounced && <Tag closable onClose={() => onSearch('')}>“{debounced}”</Tag>}{category && <Tag closable onClose={() => setCategory('')}>{categories.find((item) => item._id === category)?.name}</Tag>}{source && <Tag closable onClose={() => setSource('')}>{sourceOptions.find((item) => item.value === source)?.label}</Tag>}{status && <Tag closable onClose={() => setStatus('')}>{BLOG_STATUS[status]?.label}</Tag>}</div>}
       </div>
-
-      <div className="admin-card" style={{ padding: 0 }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Segmented
-            options={[
-              { label: `Tất cả (${stats.totalBlogs})`, value: 'all' },
-              { label: `Chờ duyệt (${stats.pendingBlogs})`, value: 'pending' },
-              { label: `Đã đăng (${stats.publishedBlogs})`, value: 'published' }
-            ]}
-            value={tab}
-            onChange={(v) => { setTab(v); setPage(1) }}
-          />
-          <Input.Search allowClear placeholder="Tìm kiếm bài viết..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 260 }} />
-          <Button style={{ marginLeft: 'auto' }}>Bộ lọc</Button>
-        </div>
-        {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
-        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-          pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
-      </div>
-    </>
-  )
+      <div className="blogs-status-tabs"><Segmented value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={[{ value: '', label: `Tất cả (${stats.totalBlogs})` }, { value: 'draft', label: 'Bản nháp' }, { value: 'pending', label: 'Chờ duyệt' }, { value: 'published', label: `Đã đăng (${stats.publishedBlogs})` }, { value: 'rejected', label: 'Từ chối' }]} /></div>
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ margin:16 }} />}
+      <div className="blogs-table-wrap"><Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} scroll={{ x:1100 }} pagination={{ current:page, pageSize, total, onChange:setPage, showSizeChanger:false, showTotal:(count) => `${count} bài viết` }} /></div>
+    </div>
+  </>
 }
 
 function BlogTagsTable() {

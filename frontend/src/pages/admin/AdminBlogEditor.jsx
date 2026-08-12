@@ -146,9 +146,11 @@ export function AdminBlogEditor() {
           allowIndexing: editing.allowIndexing ?? true,
           showToc: editing.showToc ?? true,
           isFeatured: editing.isFeatured ?? false,
+          source: editing.source === 'writer' || editing.source === 'manual' ? 'writer' : 'other',
           publishedAt: editing.publishedAt ? dayjs(editing.publishedAt) : undefined,
         } : { 
           status: 'draft',
+          source: 'writer',
           allowComments: true,
           allowIndexing: true,
           showToc: true,
@@ -277,6 +279,13 @@ export function AdminBlogEditor() {
 
               <Form.Item name="tags" label="Tags">
                 <Select mode="multiple" placeholder="Chọn thẻ..." options={tagOptions} loading={tagsQuery.loading} />
+              </Form.Item>
+
+              <Form.Item name="source" label="Nguồn bài viết" rules={[{ required: true, message: 'Vui lòng chọn nguồn bài viết' }]}>
+                <Select placeholder="Chọn nguồn bài viết" options={[
+                  { value: 'writer', label: 'Writer' },
+                  { value: 'other', label: 'Khác' },
+                ]} />
               </Form.Item>
 
               <Form.Item name="coverImageUrl" hidden>

@@ -89,7 +89,7 @@ exports.getStats = async (req, res, next) => {
           _id: null,
           totalBlogs: { $sum: 1 },
           publishedBlogs: { $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] } },
-          pendingBlogs: { $sum: { $cond: [{ $in: ['$status', ['pending_review', 'draft']] }, 1, 0] } },
+          pendingBlogs: { $sum: { $cond: [{ $in: ['$status', ['pending', 'draft']] }, 1, 0] } },
           totalViews: { $sum: { $ifNull: ['$views', 0] } },
         }
       }
@@ -116,7 +116,8 @@ exports.getBlogs = async (req, res, next) => {
 
     const filter = {};
     if (status) filter.status = status;
-    if (source) filter.source = source;
+    if (source === 'writer') filter.source = { $in: ['writer', 'manual'] };
+    if (source === 'other') filter.source = { $in: ['other', 'facebook_crawl'] };
     if (category) filter.category = category;
     if (search) {
       filter.title = { $regex: search, $options: 'i' };
@@ -146,7 +147,6 @@ exports.createBlog = async (req, res, next) => {
     const blog = new Blog({
       ...data,
       slug,
-      source: 'manual',
       author: req.user._id,
       publishedAt: data.status === 'published' ? new Date() : null,
     });

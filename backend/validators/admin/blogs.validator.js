@@ -13,6 +13,7 @@ exports.createBlogSchema = z.object({
   coverImageUrl: z.string().optional(),
   category: z.string().optional(),
   status: z.enum(['draft', 'pending', 'published', 'rejected']).optional(),
+  source: z.enum(['writer', 'other'], { required_error: 'Vui lòng chọn nguồn bài viết' }),
   tags: z.array(z.string()).optional(),
   isFeatured: z.boolean().optional(),
   allowComments: z.boolean().optional(),

@@ -7,6 +7,7 @@ const { requirePermission } = require('../../middlewares/rbac.middleware');
 router.use(authMiddleware('admin'));
 
 router.get('/plans', requirePermission('pricing.view'), pricingController.getPlans);
+router.get('/stats', requirePermission('pricing.view'), pricingController.getStats);
 router.get('/plans/:id', requirePermission('pricing.view'), pricingController.getPlanById);
 router.post('/plans', requirePermission('pricing.create'), pricingController.createPlan);
 router.put('/plans/:id', requirePermission('pricing.update'), pricingController.updatePlan);

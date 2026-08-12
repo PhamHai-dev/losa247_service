@@ -55,8 +55,8 @@ const blogSchema = new mongoose.Schema(
     },
     source: {
       type: String,
-      enum: ['manual', 'facebook_crawl'],
-      default: 'manual',
+      enum: ['writer', 'other'],
+      default: 'writer',
     },
     publishedAt: {
       type: Date,
