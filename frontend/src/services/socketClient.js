@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client'
+import { getAccessToken } from './authSession'
 
 // Base URL cho socket: tách phần /api/v1 khỏi VITE_API_BASE_URL, hoặc dùng VITE_SOCKET_URL riêng.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
@@ -12,7 +13,8 @@ export function getSocket(namespace = '/chat') {
     sockets[namespace] = io(`${SOCKET_URL}${namespace}`, {
       autoConnect: false,
       transports: ['websocket'],
-      auth: (cb) => cb({ token: localStorage.getItem('losa_access_token') || null }),
+      auth: (cb) => cb({ token: getAccessToken() || null }),
+      withCredentials: true,
     })
   }
   return sockets[namespace]

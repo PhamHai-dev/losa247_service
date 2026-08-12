@@ -5,7 +5,7 @@ const { paginate, buildPaginationResponse } = require('../../helpers/format');
 const { normalizeRoleName } = require('../../constants/permissions');
 
 const fail = (res, status, code, message) => res.status(status).json({ success: false, error: { code, message } });
-const publicUserFields = '-passwordHash -refreshTokens -resetPasswordToken -resetPasswordExpires';
+const publicUserFields = '-passwordHash -refreshSessions -resetPasswordToken -resetPasswordExpires';
 const can = (req, permission) => req.auth?.permissions?.includes('*') || req.auth?.permissions?.includes(permission);
 
 exports.getUsers = async (req, res, next) => {
@@ -41,7 +41,7 @@ exports.createUser = async (req, res, next) => {
     const user = await User.create({ name, email, passwordHash: await bcrypt.hash(password, 10), role: roleName });
     const data = user.toObject();
     delete data.passwordHash;
-    delete data.refreshTokens;
+    delete data.refreshSessions;
     return res.status(201).json({ success: true, data });
   } catch (err) { return next(err); }
 };
@@ -67,11 +67,11 @@ exports.updateUser = async (req, res, next) => {
     const authorizationChanged = nextRole !== target.role || nextStatus !== target.status;
     target.role = nextRole;
     target.status = nextStatus;
-    if (authorizationChanged) target.refreshTokens = [];
+    if (authorizationChanged) target.refreshSessions = [];
     await target.save();
     const data = target.toObject();
     delete data.passwordHash;
-    delete data.refreshTokens;
+    delete data.refreshSessions;
     delete data.resetPasswordToken;
     delete data.resetPasswordExpires;
     return res.json({ success: true, data });

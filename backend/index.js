@@ -3,6 +3,7 @@ const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
@@ -16,11 +17,23 @@ const app = express();
 const server = http.createServer(app);
 
 // 3. Gắn các middlewares cơ bản
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cors());
-app.use(helmet());
-app.use(morgan('dev'));
+if (env.TRUST_PROXY) app.set('trust proxy', 1);
+const corsOptions = {
+  credentials: true,
+  origin(origin, callback) {
+    if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin không được CORS cho phép'));
+  },
+};
+app.use(cors(corsOptions));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(cookieParser());
+app.use(express.json({
+  limit: '1mb',
+  verify: (req, _res, buffer) => { if (req.originalUrl.startsWith('/api/v1/webhooks/')) req.rawBody = buffer.toString('utf8'); },
+}));
+app.use(express.urlencoded({ extended: true, limit: '256kb' }));
+app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // 4. Kết nối Database
 connectDB(); // Tạm comment lại nếu chưa có MONGO_URI thật

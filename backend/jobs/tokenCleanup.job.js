@@ -1,11 +1,15 @@
 const cron = require('node-cron');
+const User = require('../models/User.model');
 
 const initTokenCleanupJob = () => {
-  // Chạy vào 2h sáng mỗi Chủ Nhật
-  cron.schedule('0 2 * * 0', async () => {
-    console.log('[CRON] Đang dọn dẹp token cũ...');
-    // Nếu có sử dụng database để lưu JWT Blacklist/Whitelist thì thực hiện xoá tại đây
-    console.log('[CRON] Dọn dẹp hoàn tất.');
+  // Chạy hằng ngày lúc 02:00 và loại session đã hết hạn khỏi mọi tài khoản.
+  cron.schedule('0 2 * * *', async () => {
+    try {
+      const result = await User.updateMany({}, { $pull: { refreshSessions: { expiresAt: { $lte: new Date() } } } });
+      console.log(`[CRON] Đã dọn refresh session hết hạn trên ${result.modifiedCount} tài khoản.`);
+    } catch (error) {
+      console.error('[CRON] Không thể dọn refresh session:', error);
+    }
   });
 };
 

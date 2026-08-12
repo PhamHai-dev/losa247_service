@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-const env = require('../config/env');
+const { verifyToken } = require('../helpers/token');
 const User = require('../models/User.model');
 const Role = require('../models/Role.model');
 const { normalizeRoleName } = require('../constants/permissions');
@@ -7,14 +6,13 @@ const { normalizeRoleName } = require('../constants/permissions');
 const authMiddleware = (type = 'client') => async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !/^Bearer\s+\S+$/.test(authHeader)) {
       return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Không tìm thấy token' } });
     }
 
     let decoded;
     try {
-      const secret = type === 'admin' ? env.JWT_ADMIN_SECRET : env.JWT_CLIENT_SECRET;
-      decoded = jwt.verify(authHeader.slice(7), secret);
+      decoded = verifyToken(authHeader.replace(/^Bearer\s+/, ''), type, 'access');
     } catch {
       return res.status(401).json({ success: false, error: { code: 'INVALID_TOKEN', message: 'Token không hợp lệ hoặc đã hết hạn' } });
     }

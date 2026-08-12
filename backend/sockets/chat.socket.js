@@ -1,16 +1,15 @@
-const jwt = require('jsonwebtoken');
 const ChatSession = require('../models/ChatSession.model');
 const ChatMessage = require('../models/ChatMessage.model');
 const User = require('../models/User.model');
 const Role = require('../models/Role.model');
-const env = require('../config/env');
+const { verifyToken } = require('../helpers/token');
 const n8nHelper = require('../helpers/n8n');
 
 const authorizeAdmin = async (socket, permission) => {
-  const token = socket.handshake.auth?.token;
-  if (!token) return null;
+  const raw = socket.handshake.auth?.token;
+  if (!raw) return null;
   try {
-    const decoded = jwt.verify(token, env.JWT_ADMIN_SECRET);
+    const decoded = verifyToken(raw, 'admin', 'access');
     const user = await User.findById(decoded.id);
     if (!user || user.status !== 'active' || user.role === 'customer') return null;
     const role = await Role.findOne({ name: String(user.role).trim().toLowerCase() });

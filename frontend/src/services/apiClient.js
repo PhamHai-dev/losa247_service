@@ -1,4 +1,5 @@
 import { services, products, blogs, faqs, leads, orders, users, logs, chatSessions, kpis } from '../data/mockData'
+import { getAccessToken } from './authSession'
 
 // URL backend lấy từ .env frontend. Nếu chưa có, dùng cổng backend mặc định.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'
@@ -21,7 +22,7 @@ export const mockApi = {
 
 async function request(path, options = {}) {
   try {
-    const token = localStorage.getItem('losa_access_token')
+    const token = getAccessToken()
     const response = await fetch(`${API_BASE_URL}${path}`, {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },

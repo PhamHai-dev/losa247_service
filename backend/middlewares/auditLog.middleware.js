@@ -23,11 +23,15 @@ const auditLogMiddleware = async (req, res, next) => {
           const parts = req.baseUrl.split('/');
           const moduleName = parts.length > 0 ? parts[parts.length - 1].toUpperCase() : 'UNKNOWN';
           
-          let payload = { ...req.body };
-          
-          // Loại bỏ các thông tin nhạy cảm
-          if (payload.password) delete payload.password;
-          if (payload.newPassword) delete payload.newPassword;
+          const sensitiveKeys = /password|token|authorization|cookie|secret|api[-_]?key/i;
+          const redact = (value) => {
+            if (Array.isArray(value)) return value.map(redact);
+            if (value && typeof value === 'object') {
+              return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, sensitiveKeys.test(key) ? '[REDACTED]' : redact(item)]));
+            }
+            return value;
+          };
+          let payload = redact({ ...req.body });
 
           // Giới hạn kích thước payload (tránh lưu data base64 lớn hoặc quá nhiều thông tin)
           let payloadStr = JSON.stringify(payload);
@@ -39,7 +43,7 @@ const auditLogMiddleware = async (req, res, next) => {
             actor: req.user._id,
             action: actionMap[req.method] || req.method,
             module: moduleName,
-            ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+            ip: req.ip,
             payload: Object.keys(payload).length > 0 ? payload : undefined,
           });
           

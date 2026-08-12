@@ -1,14 +1,18 @@
 const socketIo = require('socket.io');
+const env = require('./env');
 
 let io;
 
 const initSocket = (server) => {
-  // 1. Khởi tạo Socket.io server với CORS
+  // Socket.IO chỉ chấp nhận các frontend origin đã cấu hình.
   io = socketIo(server, {
     cors: {
-      origin: '*', // Trong thực tế nên cấu hình domain cụ thể
+      origin: env.CORS_ORIGINS,
+      credentials: true,
       methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'],
+    maxHttpBufferSize: 1024 * 1024,
   });
 
   // 2. Log thông báo khởi tạo thành công

@@ -1,8 +1,7 @@
 const ChatSession = require('../../models/ChatSession.model');
 const ChatMessage = require('../../models/ChatMessage.model');
 
-const jwt = require('jsonwebtoken');
-const env = require('../../config/env');
+const { verifyToken } = require('../../helpers/token');
 const uploadHelper = require('../../helpers/upload');
 
 exports.startSession = async (req, res, next) => {
@@ -13,9 +12,11 @@ exports.startSession = async (req, res, next) => {
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       const token = req.headers.authorization.split(' ')[1];
       try {
-        const decoded = jwt.verify(token, env.JWT_CLIENT_SECRET);
+        const decoded = verifyToken(token, 'client', 'access');
         customerId = decoded.id;
-      } catch (e) { }
+      } catch {
+        // Khách chưa đăng nhập vẫn có thể bắt đầu phiên chat ẩn danh.
+      }
     }
 
     if (customerId) {

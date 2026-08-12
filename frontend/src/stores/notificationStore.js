@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import axiosClient from '../services/axiosClient';
 import { io } from 'socket.io-client';
+import { getAccessToken } from '../services/authSession';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -55,10 +56,8 @@ export const useNotificationStore = create((set, get) => ({
 
     const newSocket = io(`${SOCKET_URL}/notifications`, {
       transports: ['websocket'],
-    });
-
-    newSocket.on('connect', () => {
-      newSocket.emit('join_admin');
+      withCredentials: true,
+      auth: (callback) => callback({ token: getAccessToken() || null }),
     });
 
     newSocket.on('new_notification', (notif) => {
