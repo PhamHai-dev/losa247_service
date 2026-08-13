@@ -366,3 +366,11 @@ tr:hover td {
   color: #fff !important;
   font-weight: 600;
 }
+
+/* ===== Button hover dùng chung: nền xanh nhạt ===== */
+html body #root :is(button, .btn, .ant-btn, [role="button"]):hover:not(:disabled):not([aria-disabled="true"]):not(.home-insights-category) {
+  color: var(--blue-700) !important;
+  background: var(--blue-100) !important;
+  border-color: var(--blue-400) !important;
+  box-shadow: none !important;
+}

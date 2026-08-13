@@ -6,9 +6,11 @@ import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
 import '../../styles/admin/login.css'
 
-function AuthLayout({ title, subtitle, children }) {
+function AuthLayout({ title, subtitle, children, variant = '' }) {
+  const layoutClassName = `admin-login-layout${variant ? ` admin-login-layout--${variant}` : ''}`
+
   return (
-    <div className="admin-login-layout">
+    <div className={layoutClassName}>
       <div className="admin-login-bg-shape-1"></div>
       <div className="admin-login-bg-shape-2"></div>
       <div className="admin-login-dots-1"></div>
@@ -84,7 +86,7 @@ export function LoginPage() {
           <Link to="/quen-mat-khau" style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>Quên mật khẩu?</Link>
         </div>
 
-        <Button type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
+        <Button className="auth-login-submit" type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
           Đăng nhập
         </Button>
       </Form>
@@ -109,6 +111,7 @@ export function AdminLoginPage() {
 
   return (
     <AuthLayout
+      variant="admin"
       title="Đăng nhập hệ thống quản trị"
       subtitle="Quản lý và điều hành hệ thống LOSA247 một cách hiệu quả"
     >
@@ -139,7 +142,7 @@ export function AdminLoginPage() {
           <Link to="/quen-mat-khau" style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>Quên mật khẩu?</Link>
         </div>
 
-        <Button type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
+        <Button className="auth-login-submit" type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
           Đăng nhập Admin
         </Button>
       </Form>

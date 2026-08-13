@@ -1,17 +1,18 @@
 html:has(.admin-login-layout) {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .admin-login-layout {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   background-color: #f8fafc;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   font-family: inherit;
 }
 
@@ -67,7 +68,7 @@ html:has(.admin-login-layout) {
   z-index: 1;
   width: 100%;
   max-width: 520px;
-  padding: 20px;
+  padding: 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -97,6 +98,10 @@ html:has(.admin-login-layout) {
   margin: 0;
 }
 
+.admin-login-layout--admin .admin-login-content {
+  padding-top: 16px;
+}
+
 .admin-login-card {
   background: #ffffff;
   border-radius: 24px;
@@ -123,7 +128,7 @@ html:has(.admin-login-layout) {
 }
 
 /* Form Overrides */
-.admin-login-form .ant-form-item-label > label {
+.admin-login-form .ant-form-item-label>label {
   color: #334155;
   font-weight: 600;
   font-size: 14px;
@@ -137,27 +142,31 @@ html:has(.admin-login-layout) {
 
 .admin-login-form .ant-input-affix-wrapper:hover,
 .admin-login-form .ant-input-affix-wrapper-focused {
-  border-color: #0d9488;
-  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1);
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.12);
 }
 
-.admin-login-form .ant-btn-primary {
-  background-color: #0d9488;
-  border-color: #0d9488;
+.admin-login-layout .admin-login-form .auth-login-submit {
+  background-color: var(--blue-600) !important;
+  border-color: var(--blue-600) !important;
+  color: #ffffff !important;
   height: 48px;
   border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
-  box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.28);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
 }
 
-.admin-login-form .ant-btn-primary:hover {
-  background-color: #0f766e;
-  border-color: #0f766e;
+.admin-login-layout .admin-login-form .auth-login-submit:hover:not(:disabled),
+.admin-login-layout .admin-login-form .auth-login-submit:focus-visible {
+  background-color: var(--blue-100) !important;
+  border-color: var(--blue-400) !important;
+  color: var(--blue-700) !important;
+  box-shadow: none !important;
 }
 
 .admin-login-divider {
@@ -246,14 +255,17 @@ html:has(.admin-login-layout) {
 @media (max-width: 576px) {
   .admin-login-content {
     max-width: 90%;
-    padding: 16px;
+    padding: 24px 16px;
   }
+
   .admin-login-card {
     padding: 24px;
   }
+
   .admin-login-social-btns {
     grid-template-columns: 1fr;
   }
+
   .admin-login-title {
     font-size: 24px;
   }

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { FaFacebookMessenger, FaInstagram, FaTelegramPlane, FaWhatsapp } from 'react-icons/fa'
 import { SiZalo } from 'react-icons/si'
-import { Collapse, Empty, Skeleton } from 'antd'
+import { Empty } from 'antd'
 import { motion } from 'framer-motion'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { formatDate } from '../../utils/format'
@@ -141,12 +141,40 @@ export function HomePage() {
               <button id={`home-blog-category-${category._id}`} key={category._id} type="button" role="tab" aria-selected={activeBlogCategory === category._id} className={`home-insights-category ${activeBlogCategory === category._id ? 'active' : ''}`} onClick={() => setActiveBlogCategory(category._id)}>{category.name}</button>
             ))}
           </div>
-          {blogsQ.loading ? (
-            <div className="home-insights-layout home-insights-loading"><Skeleton active paragraph={{ rows: 6 }} /><div className="home-insights-side-grid">{[1, 2, 3, 4].map((item) => <div className="home-insights-skeleton-card" key={item}><Skeleton active paragraph={{ rows: 2 }} /></div>)}</div></div>
+          {blogsQ.loading && !blogsQ.data ? (
+            <div className="home-insights-layout home-insights-loading" aria-label="Đang tải bài viết" aria-busy="true">
+              <div className="home-featured-skeleton">
+                <div className="home-featured-skeleton-copy">
+                  <span className="insights-skeleton-line insights-skeleton-label" />
+                  <span className="insights-skeleton-line insights-skeleton-badge" />
+                  <span className="insights-skeleton-line insights-skeleton-title" />
+                  <span className="insights-skeleton-line insights-skeleton-title short" />
+                  <span className="insights-skeleton-line insights-skeleton-text" />
+                  <span className="insights-skeleton-line insights-skeleton-text short" />
+                </div>
+                <div className="insights-skeleton-image home-featured-skeleton-image" />
+              </div>
+              <div className="home-insights-side-grid">
+                {[1, 2, 3, 4].map((item) => (
+                  <div className="home-insights-skeleton-card" key={item}>
+                    <div className="home-side-skeleton-copy">
+                      <span className="insights-skeleton-line insights-skeleton-badge" />
+                      <span className="insights-skeleton-line insights-skeleton-side-title" />
+                      <span className="insights-skeleton-line insights-skeleton-side-title short" />
+                    </div>
+                    <div className="insights-skeleton-image home-side-skeleton-image" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : blogsQ.error ? (
             <div className="home-insights-empty"><p>Không thể tải bài viết lúc này.</p><button id="home-blog-retry-btn" type="button" onClick={blogsQ.refetch}>Thử lại</button></div>
           ) : !featuredBlog ? <Empty className="home-insights-empty" description="Danh mục này chưa có bài viết" /> : (
-            <motion.div key={activeBlogCategory || 'all'} className={`home-insights-layout ${sideBlogs.length ? '' : 'single'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <div
+              key={featuredBlog._id}
+              className={`home-insights-layout home-insights-content ${blogsQ.loading ? 'is-updating' : ''} ${sideBlogs.length ? '' : 'single'}`}
+              aria-busy={blogsQ.loading}
+            >
               <Link id="home-featured-blog-link" to={`/blog/${featuredBlog.slug || featuredBlog._id}`} className="home-featured-article">
                 <div className="home-featured-copy">
                   <span className="home-featured-label">Bài viết nổi bật</span>
@@ -164,7 +192,7 @@ export function HomePage() {
                   <div className="home-side-card-image"><img src={blog.coverImageUrl || BLOG_FALLBACK} alt={blog.title} /></div>
                 </Link>
               ))}</div>}
-            </motion.div>
+            </div>
           )}
         </div>
       </section>
@@ -205,3 +233,4 @@ export function HomePage() {
     </main>
   )
 }
+

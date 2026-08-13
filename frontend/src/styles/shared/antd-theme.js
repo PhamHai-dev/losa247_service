@@ -5,17 +5,17 @@
 
 export const antdTheme = {
   token: {
-    // === Primary: Xanh lá (Action, CTA) ===
-    colorPrimary: '#16A34A',          // green-600 default
-    colorPrimaryHover: '#22C55E',     // green-500 hover (nhạt hơn)
-    colorPrimaryActive: '#15803D',    // green-700 active/pressed (đậm hơn)
-    colorPrimaryBg: '#DCFCE7',        // green-100 nền nhạt
+    // === Primary / CTA: Sky Blue, đồng bộ .btn-primary trong global.css ===
+    colorPrimary: '#0284C7',          // --blue-600 default
+    colorPrimaryHover: '#0EA5E9',     // --blue-500 hover
+    colorPrimaryActive: '#075985',    // --blue-800 active/pressed
+    colorPrimaryBg: '#E0F2FE',        // --blue-100 nền nhạt
 
-    // === Secondary / Info: Xanh da trời ===
-    colorInfo: '#2563EB',             // blue-600 default
-    colorInfoHover: '#3B82F6',        // blue-500 hover (nhạt hơn)
-    colorInfoActive: '#1D4ED8',       // blue-800 active/pressed
-    colorInfoBg: '#DBEAFE',           // blue-100 nền nhạt
+    // === Secondary / Info: dùng chung Sky Blue scale ===
+    colorInfo: '#0284C7',             // --blue-600 default
+    colorInfoHover: '#0EA5E9',        // --blue-500 hover
+    colorInfoActive: '#075985',       // --blue-800 active/pressed
+    colorInfoBg: '#E0F2FE',           // --blue-100 nền nhạt
 
     // === Semantic status ===
     colorSuccess: '#16A34A',
