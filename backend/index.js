@@ -35,8 +35,10 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true, limit: '256kb' }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// 4. Kết nối Database
+// 4. Kết nối Database và Redis cache
 connectDB(); // Tạm comment lại nếu chưa có MONGO_URI thật
+const { getReadyClient } = require('./config/redis');
+void getReadyClient();
 
 // 5. Initialize Sockets
 const io = initSocket(server);

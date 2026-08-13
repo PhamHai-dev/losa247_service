@@ -2,6 +2,10 @@ require('dotenv').config();
 
 const isProduction = process.env.NODE_ENV === 'production';
 const parseBoolean = (value, fallback) => value == null ? fallback : value === 'true';
+const parseInteger = (value, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
@@ -23,6 +27,12 @@ const env = {
   SMTP_PORT: process.env.SMTP_PORT || 465,
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: parseInteger(process.env.REDIS_PORT, 6379),
+  REDIS_USERNAME: process.env.REDIS_USERNAME,
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_DB: parseInteger(process.env.REDIS_DB, 0),
+  REDIS_TLS: parseBoolean(process.env.REDIS_TLS, false),
 };
 
 const errors = [];

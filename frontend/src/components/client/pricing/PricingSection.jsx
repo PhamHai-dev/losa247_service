@@ -1,67 +1,53 @@
-import React, { useLayoutEffect } from 'react';
-import { Empty, Spin } from 'antd';
-import { useApiQuery } from '../../../hooks/useApiQuery';
-import { publicPricingService } from '../../../features/services/pricingService';
-import PricingCard from './PricingCard';
+import React, { useLayoutEffect } from 'react'
+import { Empty, Spin } from 'antd'
+import PricingCard from './PricingCard'
 
-const PricingSection = () => {
-  const plansQuery = useApiQuery(() => publicPricingService.getPlans(), []);
-
-  const plans = plansQuery.data?.items || [];
-  const activePlans = plans.filter(item => item.isActive).sort((a, b) => a.order - b.order);
+const PricingSection = ({ plans = [], loading = false, onConsult }) => {
+  const activePlans = plans.filter((item) => item.isActive !== false).sort((a, b) => a.order - b.order)
+  const gridRef = React.useRef(null)
 
   useLayoutEffect(() => {
-    if (plansQuery.loading || activePlans.length === 0) return;
+    if (loading || activePlans.length === 0) return
 
     const syncHeights = () => {
-      ['.saas-card-v2-header', '.saas-card-v2-desc'].forEach(selector => {
-        const elements = Array.from(document.querySelectorAll(selector));
-        if (!elements.length) return;
-        
-        // Reset minHeight to measure natural content
-        elements.forEach(el => el.style.minHeight = '0px');
-        
-        // Find max natural height
-        const maxHeight = Math.max(...elements.map(el => el.scrollHeight));
-        
-        // Apply max height
-        elements.forEach(el => el.style.minHeight = `${maxHeight}px`);
-      });
-    };
+      ['.saas-card-v2-header', '.saas-card-v2-desc'].forEach((selector) => {
+        const elements = Array.from(gridRef.current?.querySelectorAll(selector) || [])
+        if (!elements.length) return
 
-    // Run synchronously before the browser paints the screen
-    syncHeights();
+        elements.forEach((element) => { element.style.minHeight = '0px' })
+        const maxHeight = Math.max(...elements.map((element) => element.scrollHeight))
+        elements.forEach((element) => { element.style.minHeight = `${maxHeight}px` })
+      })
+    }
 
-    // Run robustly on window/container resize
-    let lastWidth = -1;
+    syncHeights()
+
+    let lastWidth = -1
     const observer = new ResizeObserver((entries) => {
-      const currentWidth = entries[0]?.contentRect.width;
+      const currentWidth = entries[0]?.contentRect.width
       if (currentWidth && currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        // Dùng requestAnimationFrame để không bị ResizeObserver loop error
-        window.requestAnimationFrame(syncHeights);
+        lastWidth = currentWidth
+        window.requestAnimationFrame(syncHeights)
       }
-    });
+    })
 
-    const grid = document.querySelector('.saas-pricing-grid-v2');
-    if (grid) observer.observe(grid);
-
-    return () => observer.disconnect();
-  }, [plansQuery.loading, activePlans.length]);
+    if (gridRef.current) observer.observe(gridRef.current)
+    return () => observer.disconnect()
+  }, [loading, activePlans.length])
 
   return (
-    <Spin spinning={plansQuery.loading}>
-      {!activePlans.length && !plansQuery.loading ? (
+    <Spin spinning={loading}>
+      {!activePlans.length && !loading ? (
         <Empty description="Chưa có gói dịch vụ" />
       ) : (
-        <div className="saas-pricing-grid-v2">
+        <div className="saas-pricing-grid-v2" ref={gridRef}>
           {activePlans.map((plan) => (
-            <PricingCard key={plan._id} plan={plan} />
+            <PricingCard key={plan._id} plan={plan} onConsult={onConsult} />
           ))}
         </div>
       )}
     </Spin>
-  );
-};
+  )
+}
 
-export default PricingSection;
+export default PricingSection

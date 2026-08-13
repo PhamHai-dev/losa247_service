@@ -4,8 +4,38 @@ import { ArrowRight, Bot, BrainCircuit, Building2, Camera, Check, CheckCircle2, 
 import { useApiQuery } from '../../hooks/useApiQuery';
 import { publicFaqsService } from '../../features/faqs/faqsService';
 import { ClientFaqSection } from '../../components/client/ClientFaqSection';
+import { IndustryWorkflowStudio } from '../../components/client/IndustryWorkflowStudio';
 import '../../styles/client/chatbot-solutions-modern.css';
 import '../../styles/client/industry-panel.css';
+
+const customerBrands = [
+    ['VM', 'Vinamilk', '#1686c7'],
+    ['VT', 'Viettel', '#e7343f'],
+    ['FPT', 'FPT', '#f47920'],
+    ['VG', 'Vingroup', '#d09b2c'],
+    ['TCB', 'Techcombank', '#e31d2b'],
+    ['HLC', 'Highlands Coffee', '#b51f2e'],
+    ['PNJ', 'PNJ', '#c69a2e'],
+    ['MWG', 'Thế Giới Di Động', '#f4b400']
+];
+
+function CustomerMarquee() {
+    const renderGroup = hidden => <div className="csp-customers__group" aria-hidden={hidden || undefined}>
+        {customerBrands.map(([mark, name, color]) => <div className="csp-customers__brand" style={{ '--brand-color': color }} key={name}>
+            <span>{mark}</span><strong>{name}</strong>
+        </div>)}
+    </div>;
+    return <section className="csp-customers" id="chatbot-customers" aria-label="Khách hàng của chúng tôi">
+        <div className="csp-shell">
+            <div className="csp-customers__band">
+                <div className="csp-customers__label"><i />KHÁCH HÀNG CỦA CHÚNG TÔI<i /></div>
+                <div className="csp-customers__marquee" role="region" aria-label="Danh sách khách hàng">
+                    <div className="csp-customers__track">{renderGroup(false)}{renderGroup(true)}</div>
+                </div>
+            </div>
+        </div>
+    </section>;
+}
 
 const businessBenefits = [
     [Globe2, 'Chăm sóc khách hàng đa kênh', 'Hợp nhất Website, Messenger, Zalo và các nền tảng nhắn tin phổ biến trong một luồng vận hành liền mạch.', 'Phản hồi nhanh · Không bỏ sót hội thoại'],
@@ -1279,7 +1309,7 @@ function CustomB2BJourney() {
 }
 
 export default function ChatbotSolutionsPage() {
-    const [cap, setCap] = useState('quote'), [industry, setIndustry] = useState('retail'), [faqOpen, setFaq] = useState(null); const q = useApiQuery(() => publicFaqsService.getList({ pageType: 'solutions', serviceDetail: 'chatbot' }), []); const fallback = [{ _id: 'accuracy', question: 'Chatbot AI trả lời sai thì xử lý thế nào?', answer: 'Losa giới hạn nguồn dữ liệu, thiết lập ngưỡng tin cậy và chuyển hội thoại cho nhân viên khi AI chưa đủ thông tin.' }, { _id: 'integration', question: 'Losa có kết nối CRM hoặc hệ thống riêng không?', answer: 'Có. Losa hỗ trợ đồng bộ CRM, dữ liệu sản phẩm và hệ thống nghiệp vụ thông qua API theo phạm vi triển khai.' }, { _id: 'launch', question: 'Mất bao lâu để triển khai chatbot?', answer: 'Thời gian phụ thuộc dữ liệu và mức độ tích hợp. Đội ngũ Losa sẽ khảo sát, chuẩn hóa và kiểm thử trước khi vận hành.' }]; const faqs = q.data?.items?.length ? q.data.items : fallback, active = caps.find(x => x.id === cap), usecase = industries.find(x => x.id === industry); useEffect(() => { document.title = 'Chatbot AI đa kênh cho doanh nghiệp | Losa'; let m = document.querySelector('meta[name="description"]'); if (!m) { m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m) } m.content = 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.' }, []); return <main className="csp-page">
+    const [cap, setCap] = useState('quote'), [industry, setIndustry] = useState('retail'), [faqOpen, setFaq] = useState(null); const q = useApiQuery(() => publicFaqsService.getList({ pageType: 'solutions', serviceDetail: 'chatbot' }), []); const fallback = [{ _id: 'accuracy', question: 'Chatbot AI trả lời sai thì xử lý thế nào?', answer: 'Losa giới hạn nguồn dữ liệu, thiết lập ngưỡng tin cậy và chuyển hội thoại cho nhân viên khi AI chưa đủ thông tin.' }, { _id: 'integration', question: 'Losa có kết nối CRM hoặc hệ thống riêng không?', answer: 'Có. Losa hỗ trợ đồng bộ CRM, dữ liệu sản phẩm và hệ thống nghiệp vụ thông qua API theo phạm vi triển khai.' }, { _id: 'launch', question: 'Mất bao lâu để triển khai chatbot?', answer: 'Thời gian phụ thuộc dữ liệu và mức độ tích hợp. Đội ngũ Losa sẽ khảo sát, chuẩn hóa và kiểm thử trước khi vận hành.' }]; const faqs = q.data?.items?.length ? q.data.items : fallback, active = caps.find(x => x.id === cap); useEffect(() => { document.title = 'Chatbot AI đa kênh cho doanh nghiệp | Losa'; let m = document.querySelector('meta[name="description"]'); if (!m) { m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m) } m.content = 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.' }, []); return <main className="csp-page">
         <section className="csp-hero" id="chatbot-hero"><div className="csp-shell csp-hero__grid"><div className="csp-hero__copy"><div className="csp-eyebrow"><Sparkles /> CHATBOT AI ĐA KÊNH CHO DOANH NGHIỆP</div><h1>Mỗi cuộc trò chuyện là một <span>cơ hội tăng trưởng</span></h1><p>Chatbot AI Losa hiểu nhu cầu, tư vấn sản phẩm, tạo báo giá, tính phí vận chuyển và chăm sóc khách hàng 24/7 — trên mọi kênh bạn đang kinh doanh.</p><div className="csp-hero__actions"><button id="chatbot-view-demo" className="csp-btn csp-btn--primary" onClick={() => document.getElementById('capabilities')?.scrollIntoView({ behavior: 'smooth' })}>Khám phá năng lực AI <ArrowRight /></button><Link id="chatbot-hero-consult" className="csp-btn csp-btn--outline" to="/dang-ky">Đăng ký tư vấn</Link></div><div className="csp-hero__proof"><span><Check /> Phản hồi 24/7</span><span><Check /> Chuyển người thật khi cần</span><span><Check /> Dữ liệu tập trung</span></div></div><HeroVisual /></div></section>
 
         <BusinessValueStory />
@@ -1312,9 +1342,10 @@ export default function ChatbotSolutionsPage() {
         <section className="csp-section csp-outcomes"><div className="csp-shell"><Heading eyebrow="TỪ TIN NHẮN ĐẾN CHUYỂN ĐỔI" title="Mỗi cuộc trò chuyện đều có thể tạo ra kết quả" text="Losa không chỉ trả lời. AI hiểu nhu cầu, thực hiện tác vụ và lưu tín hiệu để đội ngũ chốt đơn đúng lúc." /><div className="csp-conversion-engine"><div className="csp-conversion-engine__input"><div className="csp-conversion-engine__label"><MessageCircle /> TÍN HIỆU TỪ KHÁCH HÀNG</div><div className="csp-conversion-engine__bubble">“Bên mình cần 20 máy lọc không khí cho văn phòng, giao trong tuần này.”</div><div className="csp-conversion-engine__signals"><span><small>NHU CẦU</small>20 máy lọc không khí</span><span><small>THỜI GIAN</small>Giao trong tuần</span><span><small>ĐỐI TƯỢNG</small>Khách hàng doanh nghiệp</span><span><small>MỨC ĐỘ</small>Tiềm năng cao</span></div></div><div className="csp-conversion-engine__pipeline"><div className="csp-conversion-engine__line"><i /></div>{[[BrainCircuit, 'Hiểu nhu cầu', 'Nhận diện ý định và thông tin quan trọng'], [Filter, 'Phân loại cơ hội', 'Gán nhãn, chấm điểm và ưu tiên lead'], [ShoppingBag, 'Thực hiện tác vụ', 'Kiểm tra sản phẩm, tồn kho và tạo báo giá'], [Database, 'Đồng bộ dữ liệu', 'Cập nhật CRM và chuyển đúng đội ngũ']].map(([Icon, title, text], i) => <div className="csp-conversion-engine__stage" key={title}><b>0{i + 1}</b><span><Icon /></span><div><strong>{title}</strong><small>{text}</small></div></div>)}</div><div className="csp-conversion-engine__output"><span className="csp-conversion-engine__status"><i /> SẴN SÀNG XỬ LÝ</span><div className="csp-conversion-engine__output-icon"><UserRoundCheck /></div><small>KẾT QUẢ ĐẦU RA</small><h3>Một cơ hội bán hàng có đầy đủ ngữ cảnh</h3><p>Đội ngũ nhận đúng khách hàng, đúng nhu cầu và đúng thời điểm để tiếp tục tư vấn.</p><ul><li><CheckCircle2 /> Hồ sơ lead đã được chuẩn hóa</li><li><CheckCircle2 /> Báo giá sẵn sàng gửi</li><li><CheckCircle2 /> Nhân viên nhận trọn ngữ cảnh</li></ul></div></div><div className="csp-outcome-grid">{outcomes.map(x => { const Icon = x.icon; return <article key={x.title}><span className="csp-outcome-card__icon"><Icon /></span><div><small>{x.label}</small><h3>{x.title}</h3><p>{x.text}</p></div><ArrowRight /></article> })}</div></div></section>
         <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow="NĂNG LỰC CHATBOT AI LOSA" title="Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?" text="Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán." /><div className="csp-capability-layout"><CapabilityTabs items={caps} activeId={cap} onSelect={setCap} /><div className="csp-capability-panel" role="tabpanel"><div className="csp-capability-panel__copy"><div className="csp-eyebrow">{active.kicker}</div><h3>{active.title}</h3><p>{active.text}</p><ul>{active.bullets.map(x => <li key={x}><CheckCircle2 />{x}</li>)}</ul></div><Conversation mode={active.id} compact /></div></div></div></section>
         <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow="AI THIẾT KẾ THEO NGÀNH" title="Mỗi doanh nghiệp có một cách vận hành khác nhau" text="Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành." /><div className="csp-usecase-tabs" role="tablist" aria-label="Chọn ngành ứng dụng AI" onKeyDown={event => { const index = industries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = industries[(index + direction + industries.length) % industries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{industries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
-        {industry === 'retail' ? <CustomRetailJourney /> : industry === 'education' ? <CustomEducationJourney /> : industry === 'health' ? <CustomHealthJourney /> : industry === 'b2b' ? <CustomB2BJourney /> : <IndustryJourney item={usecase} />}
+        <IndustryWorkflowStudio industryId={industry} />
         </div></section>
         <section className="csp-section csp-rollout"><div className="csp-shell"><Heading eyebrow="TRIỂN KHAI CÓ LỘ TRÌNH" title="Từ bài toán thực tế đến chatbot sẵn sàng vận hành" /><div className="csp-rollout__track">{rollout.map(x => <article key={x[0]}><b>{x[0]}</b><h3>{x[1]}</h3><p>{x[2]}</p></article>)}</div></div></section>
+        <CustomerMarquee />
         <ClientFaqSection faqs={faqs} />
     </main>
 }

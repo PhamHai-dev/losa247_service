@@ -1,71 +1,50 @@
-import React from 'react';
-import { Rocket, BriefcaseBusiness, Building2, CheckCircle } from "lucide-react";
+import { Rocket, BriefcaseBusiness, Building2, CheckCircle2, ArrowRight } from 'lucide-react'
 
 const getIcon = (order) => {
-  if (order === 1) return <Rocket size={24} color="#16A34A" />;
-  if (order === 2) return <BriefcaseBusiness size={24} color="#16A34A" />;
-  return <Building2 size={24} color="#16A34A" />;
-};
+  if (order === 1) return <Rocket size={23} />
+  if (order === 2) return <BriefcaseBusiness size={23} />
+  return <Building2 size={23} />
+}
 
-const PricingCard = ({ plan }) => {
-  const features = plan.feature || plan.features || [];
-  const subtitles = plan.subtitle || [];
-  
+const PricingCard = ({ plan, onConsult }) => {
+  const features = plan.feature || plan.features || []
+  const subtitles = plan.subtitle || []
+  const isFeatured = Boolean(plan.badge)
+  const planId = String(plan._id || plan.order || plan.name).replace(/[^a-zA-Z0-9-_]/g, '-')
+
   return (
-    <div className="saas-card-v2">
-      {/* Top Section */}
+    <article className={`saas-card-v2 ${isFeatured ? 'is-featured' : ''}`}>
       <div className="saas-card-v2-top-section">
-        {/* Header */}
         <div className="saas-card-v2-header">
-          <div className="saas-card-v2-icon-wrap">
-            {getIcon(plan.order)}
-          </div>
-          <div className="saas-card-v2-title">
-            {plan.name}
-          </div>
-          {plan.badge && (
-            <div className="saas-card-v2-badge">
-              {plan.badge}
-            </div>
-          )}
+          <div className="saas-card-v2-icon-wrap">{getIcon(plan.order)}</div>
+          <div className="saas-card-v2-title">{plan.name}</div>
+          {plan.badge && <div className="saas-card-v2-badge">{plan.badge}</div>}
         </div>
 
-        {/* Price */}
         <div className="saas-card-v2-price-wrap">
-          <div className="saas-card-v2-price">
-            {plan.price || 'Liên hệ báo giá'}
-          </div>
+          <div className="saas-card-v2-price">{plan.price || 'Liên hệ báo giá'}</div>
         </div>
 
-        {/* Description */}
         <div className="saas-card-v2-desc">
-          {subtitles.map((desc, idx) => (
-            <p key={idx}>{desc}</p>
-          ))}
+          {subtitles.map((desc, index) => <p key={index}>{desc}</p>)}
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="saas-card-v2-divider"></div>
-
-      {/* Features */}
+      <div className="saas-card-v2-divider" />
+      <p className="saas-card-v2-feature-label">Gói dịch vụ bao gồm</p>
       <ul className="saas-card-v2-features">
-        {features.map((item, idx) => (
-          <li key={idx}>
-            <CheckCircle size={20} color="#16A34A" style={{ flexShrink: 0 }} />
-            <span>{item}</span>
-          </li>
+        {features.map((item, index) => (
+          <li key={index}><CheckCircle2 size={19} /><span>{item}</span></li>
         ))}
       </ul>
 
-      {/* Button */}
       <div className="saas-card-v2-btn-wrap">
-        <button className="saas-card-v2-btn">
-          {plan.buttonText || 'Tư vấn miễn phí'}
+        <button id={`pricing-card-consult-${planId}`} type="button" className="saas-card-v2-btn" onClick={onConsult} aria-label={`${plan.buttonText || 'Tư vấn miễn phí'} cho gói ${plan.name}`}>
+          {plan.buttonText || 'Tư vấn miễn phí'} <ArrowRight size={17} />
         </button>
       </div>
-    </div>
-  );
-};
+    </article>
+  )
+}
 
-export default PricingCard;
+export default PricingCard

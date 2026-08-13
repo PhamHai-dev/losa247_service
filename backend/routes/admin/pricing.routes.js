@@ -3,19 +3,24 @@ const router = express.Router();
 const pricingController = require('../../controllers/admin/pricing.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
+const cache = require('../../services/cacheService');
+
+const invalidatePlans = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingPlans()] }));
+const invalidateComparisons = cache.invalidateAfterSuccess(() => ({ keys: [cache.keys.pricingComparisons()] }));
+const invalidatePlanDelete = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingPlans()], keys: [cache.keys.pricingComparisons()] }));
 
 router.use(authMiddleware('admin'));
 
 router.get('/plans', requirePermission('pricing.view'), pricingController.getPlans);
 router.get('/stats', requirePermission('pricing.view'), pricingController.getStats);
 router.get('/plans/:id', requirePermission('pricing.view'), pricingController.getPlanById);
-router.post('/plans', requirePermission('pricing.create'), pricingController.createPlan);
-router.put('/plans/:id', requirePermission('pricing.update'), pricingController.updatePlan);
-router.delete('/plans/:id', requirePermission('pricing.delete'), pricingController.deletePlan);
+router.post('/plans', requirePermission('pricing.create'), invalidatePlans, pricingController.createPlan);
+router.put('/plans/:id', requirePermission('pricing.update'), invalidatePlans, pricingController.updatePlan);
+router.delete('/plans/:id', requirePermission('pricing.delete'), invalidatePlanDelete, pricingController.deletePlan);
 router.get('/comparisons', requirePermission('pricing.view'), pricingController.getComparisons);
 router.get('/comparisons/:id', requirePermission('pricing.view'), pricingController.getComparisonById);
-router.post('/comparisons', requirePermission('pricing.create'), pricingController.createComparison);
-router.put('/comparisons/:id', requirePermission('pricing.update'), pricingController.updateComparison);
-router.delete('/comparisons/:id', requirePermission('pricing.delete'), pricingController.deleteComparison);
+router.post('/comparisons', requirePermission('pricing.create'), invalidateComparisons, pricingController.createComparison);
+router.put('/comparisons/:id', requirePermission('pricing.update'), invalidateComparisons, pricingController.updateComparison);
+router.delete('/comparisons/:id', requirePermission('pricing.delete'), invalidateComparisons, pricingController.deleteComparison);
 
 module.exports = router;

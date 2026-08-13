@@ -5587,3 +5587,22 @@
 @media(max-width:760px){.csp-usecase-tabs{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto}.csp-industry-journey__intro{padding:22px;align-items:flex-start;flex-direction:column}.csp-industry-journey__intro>a{width:100%;justify-content:center}.csp-industry-story{padding:13px;display:flex;flex-direction:column}.csp-industry-scene{min-height:430px}.csp-industry-process{padding:18px}.csp-industry-result{min-height:auto;padding:70px 20px 24px}.csp-industry-result ul{display:flex}.csp-industry-journey{border-radius:22px}}
 @media(max-width:480px){.csp-industry-scene{min-height:390px}.csp-industry-scene__caption strong{font-size:16px}.csp-industry-signals{grid-template-columns:1fr 1fr}.csp-industry-pipeline__step{grid-template-columns:23px 38px 1fr 16px}.csp-industry-person>img{width:38px;height:38px;flex-basis:38px}}
 @media(prefers-reduced-motion:reduce){.csp-industry-journey,.csp-industry-scene>img,.csp-industry-scene__top i,.csp-industry-pipeline__line b,.csp-industry-pipeline__step.is-active>span,.csp-industry-pipeline__check,.csp-industry-result.is-ready .csp-industry-result__icon{animation:none!important;transition:none!important}}
+
+/* Customer marquee */
+.csp-customers{position:relative;z-index:3;margin:0;padding:58px 0 64px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f7faff 48%,#fff 100%)}
+.csp-customers:before{content:"";position:absolute;width:520px;height:220px;top:-145px;left:50%;border-radius:50%;background:rgba(89,108,244,.1);filter:blur(75px);transform:translateX(-50%);pointer-events:none}
+.csp-customers__band{position:relative;min-height:auto;padding:0;overflow:visible;background:transparent}
+.csp-customers__label{position:relative;display:flex;align-items:center;justify-content:center;gap:13px;color:#596cf4;font-size:11px;font-weight:850;letter-spacing:.13em;text-align:center}
+.csp-customers__label i{width:38px;height:1px;background:linear-gradient(90deg,transparent,#91a2ff)}
+.csp-customers__label i:last-child{background:linear-gradient(90deg,#91a2ff,transparent)}
+.csp-customers__marquee{position:relative;width:100%;margin-top:34px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.csp-customers__track{display:flex;width:max-content;animation:csp-customers-scroll 34s linear infinite;will-change:transform}
+.csp-customers__marquee:hover .csp-customers__track,.csp-customers__marquee:focus-within .csp-customers__track{animation-play-state:paused}
+.csp-customers__group{display:flex;align-items:center;flex-shrink:0;gap:58px;padding:0 29px}
+.csp-customers__brand{min-width:170px;height:58px;display:flex;align-items:center;justify-content:center;gap:11px;color:var(--brand-color);opacity:.84;transition:transform .25s ease,opacity .25s ease,text-shadow .25s ease}
+.csp-customers__brand:hover{opacity:1;transform:translateY(-3px);text-shadow:0 8px 24px color-mix(in srgb,var(--brand-color) 18%,transparent)}
+.csp-customers__brand>span{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;border:1px solid color-mix(in srgb,var(--brand-color) 35%,#dbe5f0);border-radius:12px;color:var(--brand-color);background:color-mix(in srgb,var(--brand-color) 8%,#fff);box-shadow:0 8px 20px color-mix(in srgb,var(--brand-color) 10%,transparent);font-size:10px;font-weight:900;letter-spacing:-.02em}
+.csp-customers__brand strong{white-space:nowrap;font-family:var(--font-heading,'Outfit',sans-serif);font-size:18px;font-weight:780;letter-spacing:-.025em}
+@keyframes csp-customers-scroll{to{transform:translateX(-50%)}}
+@media(max-width:760px){.csp-customers{padding:42px 0 46px}.csp-customers__label{gap:9px;font-size:9px}.csp-customers__label i{width:20px}.csp-customers__marquee{margin-top:27px;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}.csp-customers__group{gap:30px;padding:0 15px}.csp-customers__brand{min-width:142px;height:50px}.csp-customers__brand>span{width:36px;height:36px;flex-basis:36px;border-radius:10px}.csp-customers__brand strong{font-size:15px}.csp-customers__track{animation-duration:29s}}
+@media(prefers-reduced-motion:reduce){.csp-customers__marquee{overflow-x:auto;mask-image:none;-webkit-mask-image:none;scrollbar-width:thin}.csp-customers__track{animation:none!important}.csp-customers__group[aria-hidden="true"]{display:none}}
