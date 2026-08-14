@@ -18,10 +18,6 @@ const leadSchema = new mongoose.Schema(
       enum: ['form', 'chat', 'facebook', 'zalo', 'other'],
       required: true,
     },
-    serviceInterested: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Service',
-    },
     status: {
       type: String,
       enum: ['new', 'contacted', 'qualified', 'converted', 'lost'],
@@ -43,10 +39,6 @@ const leadSchema = new mongoose.Schema(
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-    },
-    convertedOrderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Order',
     },
   },
   {

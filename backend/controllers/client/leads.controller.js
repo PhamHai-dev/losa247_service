@@ -4,7 +4,7 @@ const { getIo } = require('../../config/socket');
 
 exports.createLead = async (req, res, next) => {
   try {
-    const { name, phone, email, description, serviceId } = req.body;
+    const { name, phone, email, description } = req.body;
     
     // Create lead
     const lead = new Lead({
@@ -12,7 +12,6 @@ exports.createLead = async (req, res, next) => {
       phone,
       email,
       source: 'form',
-      serviceInterested: serviceId || null,
       status: 'new',
       notes: description ? [{ content: description }] : []
     });

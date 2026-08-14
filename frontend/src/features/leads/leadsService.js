@@ -14,7 +14,6 @@ export const leadsService = {
   bulkDeleteLeads: (ids) => axiosClient.post('/admin/leads/bulk/delete', { ids }).then((res) => res?.data),
   sendBulkEmail: (ids, subject, content) => axiosClient.post('/admin/leads/bulk/email', { ids, subject, content }).then((res) => res?.data),
   addNote: (id, content) => axiosClient.post(`/admin/leads/${id}/notes`, { content }).then((res) => res?.data),
-  convertToOrder: (id, payload) => axiosClient.post(`/admin/leads/${id}/convert-to-order`, payload).then((res) => res?.data),
   exportLeads: (params) => axiosClient.get('/admin/leads/export', { params, responseType: 'blob' }),
 }
 

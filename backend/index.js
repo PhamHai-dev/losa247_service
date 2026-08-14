@@ -50,12 +50,9 @@ const adminAuthRoutes = require('./routes/admin/auth.routes');
 const clientAuthRoutes = require('./routes/client/auth.routes');
 const adminDashboardRoutes = require('./routes/admin/dashboard.routes');
 const adminLeadsRoutes = require('./routes/admin/leads.routes');
-const adminOrdersRoutes = require('./routes/admin/orders.routes');
-const adminCartsRoutes = require('./routes/admin/carts.routes');
 const adminBlogsRoutes = require('./routes/admin/blogs.routes');
 const adminFaqsRoutes = require('./routes/admin/faqs.routes');
 const adminPricingRoutes = require('./routes/admin/pricing.routes');
-const adminStoreProductsRoutes = require('./routes/admin/storeProducts.routes');
 const adminChatRoutes = require('./routes/admin/chat.routes');
 const adminSettingsRoutes = require('./routes/admin/settings.routes');
 const adminApiConfigsRoutes = require('./routes/admin/apiConfigs.routes');
@@ -63,12 +60,8 @@ const adminUsersRoutes = require('./routes/admin/users.routes');
 const adminRoleRoutes = require('./routes/admin/role.routes');
 const adminLogRoutes = require('./routes/admin/log.routes');
 const adminNotificationsRoutes = require('./routes/admin/notifications.routes');
-const clientOrdersRoutes = require('./routes/client/orders.routes');
-const clientCartsRoutes = require('./routes/client/cart.routes');
 const clientBlogsRoutes = require('./routes/client/blogs.routes');
 const clientFaqsRoutes = require('./routes/client/faqs.routes');
-const clientServicesRoutes = require('./routes/client/services.routes');
-const clientStoreProductsRoutes = require('./routes/client/storeProducts.routes');
 const clientChatRoutes = require('./routes/client/chat.routes');
 const clientSettingsRoutes = require('./routes/client/settings.routes');
 const clientLeadsRoutes = require('./routes/client/leads.routes');
@@ -81,12 +74,9 @@ app.use('/api/v1/admin/auth', adminAuthRoutes);
 // Apply audit log to these admin routes
 app.use('/api/v1/admin/dashboard', auditLogMiddleware, adminDashboardRoutes);
 app.use('/api/v1/admin/leads', auditLogMiddleware, adminLeadsRoutes);
-app.use('/api/v1/admin/orders', auditLogMiddleware, adminOrdersRoutes);
-app.use('/api/v1/admin/carts', auditLogMiddleware, adminCartsRoutes);
 app.use('/api/v1/admin/blogs', auditLogMiddleware, adminBlogsRoutes);
 app.use('/api/v1/admin/faqs', auditLogMiddleware, adminFaqsRoutes);
 app.use('/api/v1/admin/pricing', auditLogMiddleware, adminPricingRoutes);
-app.use('/api/v1/admin/store-products', auditLogMiddleware, adminStoreProductsRoutes);
 app.use('/api/v1/admin/chat', auditLogMiddleware, adminChatRoutes);
 app.use('/api/v1/admin/settings', auditLogMiddleware, adminSettingsRoutes);
 app.use('/api/v1/admin/api-configs', auditLogMiddleware, adminApiConfigsRoutes);
@@ -97,12 +87,8 @@ app.use('/api/v1/admin/notifications', auditLogMiddleware, adminNotificationsRou
 // Logs route doesn't need audit log itself
 app.use('/api/v1/admin/logs', adminLogRoutes);
 app.use('/api/v1/auth', clientAuthRoutes);
-app.use('/api/v1/orders', clientOrdersRoutes);
-app.use('/api/v1/cart', clientCartsRoutes);
 app.use('/api/v1/blogs', clientBlogsRoutes);
 app.use('/api/v1/faqs', clientFaqsRoutes);
-app.use('/api/v1/services', clientServicesRoutes);
-app.use('/api/v1/store-products', clientStoreProductsRoutes);
 app.use('/api/v1/chat', clientChatRoutes);
 app.use('/api/v1/settings', clientSettingsRoutes);
 app.use('/api/v1/leads', clientLeadsRoutes);
@@ -111,10 +97,8 @@ app.use('/api/v1/client/pricing', clientPricingRoutes);
 app.use('/api/v1/webhooks', webhooksRoutes);
 
 // 7. Khởi chạy Cron Jobs
-const initAbandonedCartJob = require('./jobs/abandonedCart.job');
 const initTokenCleanupJob = require('./jobs/tokenCleanup.job');
 
-initAbandonedCartJob();
 initTokenCleanupJob();
 
 app.get('/api/health', (req, res) => {

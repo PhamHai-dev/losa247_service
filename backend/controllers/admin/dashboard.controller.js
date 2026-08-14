@@ -1,5 +1,4 @@
 const Lead = require('../../models/Lead.model');
-const Service = require('../../models/Service.model');
 const Blog = require('../../models/Blog.model');
 const ChatSession = require('../../models/ChatSession.model');
 
@@ -12,13 +11,10 @@ exports.getKpis = async (req, res, next) => {
       createdAt: { $gte: startOfMonth },
     });
 
-    // 2. Total active Services
-    const totalServices = await Service.countDocuments({ status: 'visible' });
-
-    // 3. Total published Blogs
+    // 2. Total published Blogs
     const totalBlogs = await Blog.countDocuments({ status: 'published' });
 
-    // 4. Pending Tasks: New leads + Open chat sessions
+    // 3. Pending Tasks: New leads + Open chat sessions
     const unhandledLeadsCount = await Lead.countDocuments({ status: 'new' });
     const openChatsCount = await ChatSession.countDocuments({ status: 'open' });
     const pendingTasks = unhandledLeadsCount + openChatsCount;
@@ -27,7 +23,6 @@ exports.getKpis = async (req, res, next) => {
       success: true,
       data: {
         newLeads,
-        totalServices,
         totalBlogs,
         pendingTasks,
       },
@@ -103,8 +98,7 @@ exports.getRecentLeads = async (req, res, next) => {
     const recentLeads = await Lead.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('serviceInterested', 'name')
-      .select('name phone serviceInterested status createdAt');
+      .select('name phone status createdAt');
       
     res.json({
       success: true,

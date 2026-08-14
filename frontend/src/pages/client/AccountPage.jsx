@@ -1,5 +1,4 @@
 import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
-import { Reveal } from '../../components/ui/Reveal';
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -19,32 +18,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { formatCurrency, formatDate } from '../../utils/format'
 import { publicServicesService } from '../../features/services/servicesService'
-import { publicStoreProductsService } from '../../features/storeProducts/storeProductsService'
 import { publicBlogsService } from '../../features/blogs/blogsService'
 import { publicFaqsService } from '../../features/faqs/faqsService'
 import { publicPricingService } from '../../features/services/pricingService'
-import { cartService } from '../../features/cart/cartService'
-import { checkoutService } from '../../features/checkout/checkoutService'
 import { leadsService } from '../../features/leads/leadsService'
 import { useUIStore } from '../../stores/uiStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useDebounce } from '../../hooks/useDebounce'
-
-// Hook thêm sản phẩm/dịch vụ vào giỏ (yêu cầu đăng nhập client).
-function useAddToCart() {
-  const { message } = App.useApp()
-  const navigate = useNavigate()
-  const { authType } = useAuthStore()
-  return async (payload) => {
-    if (authType !== 'client') {
-      message.info('Vui lòng đăng nhập để thêm vào giỏ hàng')
-      navigate('/dang-nhap')
-      return
-    }
-    try { await cartService.addItem(payload); message.success('Đã thêm vào giỏ hàng') }
-    catch (e) { message.error(e?.error?.message || 'Không thêm được vào giỏ') }
-  }
-}
 
 // ---- Components -------------------------------------------------------------
 

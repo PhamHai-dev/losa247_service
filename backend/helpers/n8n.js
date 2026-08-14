@@ -53,14 +53,6 @@ const sendToN8n = async (event, payload) => {
   }
 };
 
-exports.triggerActivation = async (order) => {
-  return await sendToN8n('order_activated', { orderId: order._id, items: order.items, customer: order.customer });
-};
-
-exports.sendCartReminder = async (cartItem) => {
-  return await sendToN8n('cart_abandoned', { cartItemId: cartItem._id, customerInfo: cartItem.userId }); // Thực tế có thể populate thông tin user
-};
-
 exports.forwardChatMessage = async (sessionId, message) => {
   return await sendToN8n('chat_message', { sessionId, content: message.content, sender: message.sender });
 };

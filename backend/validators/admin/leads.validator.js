@@ -21,12 +21,6 @@ exports.addNoteSchema = z.object({
   content: z.string().min(1, 'Nội dung ghi chú không được để trống'),
 });
 
-exports.convertToOrderSchema = z.object({
-  serviceId: z.string().min(1, 'Thiếu thông tin dịch vụ'),
-  storeProductId: z.string().optional(),
-  price: z.number().min(0, 'Giá không hợp lệ'),
-  qty: z.number().min(1).default(1),
-});
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'ID không hợp lệ');
 const leadIds = z.array(objectId).min(1, 'Cần chọn ít nhất một Lead').max(500, 'Chỉ được thao tác tối đa 500 Lead/lần');

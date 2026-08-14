@@ -21,13 +21,10 @@ import { downloadBlob } from '../../utils/downloadBlob'
 import { ORDER_STATUS, LEAD_STATUS, BLOG_STATUS, CHAT_MODE, ORDER_STEPS } from '../../constants/statusConfig'
 import { dashboardService } from '../../features/dashboard/dashboardService'
 import { leadsService } from '../../features/leads/leadsService'
-import { ordersService } from '../../features/orders/ordersService'
-import { cartsAdminService } from '../../features/carts/cartsAdminService'
 import { blogsService, blogCategoriesService, blogTagsService } from '../../features/blogs/blogsService'
 import { faqsService } from '../../features/faqs/faqsService'
 import { servicesService } from '../../features/services/servicesService'
 import { pricingService } from '../../features/services/pricingService'
-import { storeProductsService } from '../../features/storeProducts/storeProductsService'
 import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
@@ -266,18 +263,9 @@ function LeadDetailDrawer({ id, open, onClose, onChanged }) {
       query.refetch()
     } catch { message.error('Không thêm được ghi chú') }
   }
-  const convert = async () => {
-    try {
-      await leadsService.convertToOrder(id)
-      message.success('Đã chuyển lead thành đơn hàng')
-      onChanged?.()
-      onClose()
-    } catch { message.error('Không chuyển được đơn hàng') }
-  }
 
   return (
-    <Drawer className="lead-detail-drawer" title="Chi tiết Lead" size={480} open={open} onClose={onClose}
-      extra={<Popconfirm title="Chuyển lead này thành đơn hàng?" onConfirm={convert}><Button type="primary" icon={<CheckCircleOutlined />}>Chuyển thành đơn</Button></Popconfirm>}>
+    <Drawer className="lead-detail-drawer" title="Chi tiết Lead" size={480} open={open} onClose={onClose}>
       <QueryState loading={query.loading} error={query.error} empty={!lead}>
         {lead && (
           <>

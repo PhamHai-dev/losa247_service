@@ -17,6 +17,5 @@ router.get('/:id', requirePermission('leads.view'), leadsController.getLeadById)
 router.patch('/:id', requireAnyPermission(['leads.update', 'leads.assign']), leadsController.updateLead);
 router.delete('/:id', requirePermission('leads.delete'), leadsController.deleteLead);
 router.post('/:id/notes', requirePermission('leads.update'), leadsController.addNote);
-router.post('/:id/convert-to-order', requirePermission('leads.update'), leadsController.convertToOrder);
 
 module.exports = router;

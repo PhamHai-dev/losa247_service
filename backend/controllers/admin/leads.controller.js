@@ -1,11 +1,9 @@
 const Lead = require('../../models/Lead.model');
-const Order = require('../../models/Order.model');
-const Service = require('../../models/Service.model');
 const XLSX = require('xlsx');
 const { paginate, buildPaginationResponse } = require('../../helpers/format');
 const { sendEmail } = require('../../helpers/email');
 const {
-  createLeadSchema, updateLeadSchema, addNoteSchema, convertToOrderSchema,
+  createLeadSchema, updateLeadSchema, addNoteSchema,
   bulkUpdateLeadSchema, bulkDeleteLeadSchema, bulkEmailLeadSchema,
 } = require('../../validators/admin/leads.validator');
 
@@ -80,7 +78,6 @@ exports.getLeads = async (req, res, next) => {
     const [data, total] = await Promise.all([
       Lead.find(filter)
         .populate('assignedTo', 'name email avatarUrl')
-        .populate('serviceInterested', 'name')
         .sort({ updatedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(l),
@@ -99,7 +96,6 @@ exports.getLeadById = async (req, res, next) => {
     // 1. Tìm lead
     const lead = await Lead.findById(req.params.id)
       .populate('assignedTo', 'name email avatarUrl')
-      .populate('serviceInterested', 'name')
       .populate('notes.createdBy', 'name');
 
     if (!lead) {
@@ -167,67 +163,6 @@ exports.addNote = async (req, res, next) => {
 
     // 4. Trả kết quả
     res.json({ success: true, data: lead });
-  } catch (err) {
-    if (err.name === 'ZodError') {
-      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors[0].message } });
-    }
-    next(err);
-  }
-};
-
-exports.convertToOrder = async (req, res, next) => {
-  try {
-    // 1. Validate data
-    const validatedData = convertToOrderSchema.parse(req.body);
-
-    // 2. Tìm lead
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) {
-      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Không tìm thấy lead' } });
-    }
-
-    if (lead.status === 'converted' && lead.convertedOrderId) {
-      return res.status(400).json({ success: false, error: { code: 'ALREADY_CONVERTED', message: 'Lead đã được chuyển thành đơn hàng' } });
-    }
-
-    // 3. Tìm service để lấy tên
-    const service = await Service.findById(validatedData.serviceId);
-    if (!service) {
-      return res.status(404).json({ success: false, error: { code: 'SERVICE_NOT_FOUND', message: 'Không tìm thấy dịch vụ' } });
-    }
-
-    // 4. Tạo mã đơn hàng random (ví dụ: ORD-123456)
-    const code = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-
-    // 5. Tạo đơn hàng mới
-    const order = new Order({
-      code,
-      customer: {
-        name: lead.name,
-        phone: lead.phone,
-        email: lead.email,
-      },
-      items: [
-        {
-          serviceId: service._id,
-          storeProductId: validatedData.storeProductId,
-          name: service.name,
-          price: validatedData.price,
-          qty: validatedData.qty,
-        }
-      ],
-      total: validatedData.price * validatedData.qty,
-      status: 'pending',
-    });
-    await order.save();
-
-    // 6. Cập nhật trạng thái lead
-    lead.status = 'converted';
-    lead.convertedOrderId = order._id;
-    await lead.save();
-
-    // 7. Trả kết quả
-    res.json({ success: true, data: order });
   } catch (err) {
     if (err.name === 'ZodError') {
       return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.errors[0].message } });

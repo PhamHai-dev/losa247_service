@@ -1,7 +1,7 @@
 import { Navigate, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Dropdown, Avatar, Badge, Popover, List, Typography, Button } from 'antd'
 import {
-  HomeOutlined, ThunderboltOutlined, ShoppingCartOutlined,
+  HomeOutlined, ThunderboltOutlined,
   FileTextOutlined, QuestionCircleOutlined, ShopOutlined,
   MessageOutlined, TeamOutlined, HistoryOutlined, SettingOutlined,
   BellOutlined, DoubleLeftOutlined, RightOutlined, CloseOutlined
@@ -24,7 +24,6 @@ const menuGroups = [
     items: [
       ['/admin/dashboard', 'Dashboard', <HomeOutlined />],
       ['/admin/leads', 'Lead', <ThunderboltOutlined />],
-      ['/admin/orders', 'Đơn hàng', <ShoppingCartOutlined />],
     ]
   },
   {
@@ -32,14 +31,7 @@ const menuGroups = [
     items: [
       ['/admin/blogs', 'Bài viết', <FileTextOutlined />],
       ['/admin/faqs', 'Hỏi đáp', <QuestionCircleOutlined />],
-      {
-        label: 'Dịch vụ & Gian hàng',
-        icon: <ShopOutlined />,
-        children: [
-          ['/admin/services', 'Gói dịch vụ'],
-          ['/admin/store', 'Gian hàng']
-        ]
-      },
+      ['/admin/services', 'Gói dịch vụ', <ShopOutlined />],
     ]
   },
   {
