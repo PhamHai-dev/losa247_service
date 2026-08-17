@@ -89,19 +89,19 @@ function SubMenuItem({ item, onNavigate }) {
 
 export function AdminLayout() {
   const navigate = useNavigate()
-  const { user, authType, logout } = useAuthStore()
+  const { user, authType, initialized, logout } = useAuthStore()
   const { notifications, unreadCount, fetchNotifications, markAsRead, initSocket, disconnectSocket } = useNotificationStore()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notifVisible, setNotifVisible] = useState(false)
 
   useEffect(() => {
-    if (authType === 'admin') {
+    if (initialized && authType === 'admin' && user) {
       fetchNotifications()
       initSocket()
     }
     return () => disconnectSocket()
-  }, [authType])
+  }, [initialized, authType, user])
 
   const handleLogout = async () => {
     await logout()

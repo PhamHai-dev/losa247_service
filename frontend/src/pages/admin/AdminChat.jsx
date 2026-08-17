@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import EmojiPicker from 'emoji-picker-react'
 import {
@@ -10,7 +10,7 @@ import { Editor } from '@tinymce/tinymce-react'
 import {
   DownloadOutlined, PlusOutlined, ReloadOutlined, SettingOutlined, UploadOutlined, LikeOutlined, DislikeOutlined, CloseOutlined,
   FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, EyeOutlined, SmileOutlined, PictureOutlined, PaperClipOutlined,
-  SearchOutlined, MessageOutlined, SendOutlined, UserOutlined
+  SearchOutlined, MessageOutlined, SendOutlined
 } from '@ant-design/icons'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts'
 import { useApiQuery } from '../../hooks/useApiQuery'
@@ -90,10 +90,10 @@ export function AdminChat() {
   const messagesQ = useApiQuery(() => chatService.getMessages(activeId), [activeId], { enabled: canView && !!activeId })
   const messages = messagesQ.data || []
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = chatScrollRef.current
-    if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
-  }, [messages])
+    if (container) container.scrollTop = container.scrollHeight
+  }, [activeId, messages])
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -185,7 +185,7 @@ export function AdminChat() {
               id="admin-chat-search"
               allowClear
               prefix={<SearchOutlined />}
-              placeholder="Tìm tên hoặc số điện thoại"
+              placeholder="Tìm tên hoặc email"
               value={search}
               onChange={(event) => onSearch(event.target.value)}
             />
@@ -205,12 +205,11 @@ export function AdminChat() {
                 onClick={() => setActiveId(session._id)}
               >
                 <div className="admin-chat-session__top">
-                  <strong>{session.customerName || 'Khách ẩn danh'}</strong>
+                  <div className="admin-chat-session__identity">
+                    <strong>{session.customerName || 'Khách ẩn danh'}</strong>
+                    <span>{session.customerEmail || 'Chưa có email'}</span>
+                  </div>
                   <StatusTag map={CHAT_MODE} value={session.mode} />
-                </div>
-                <div className="admin-chat-session__meta">
-                  <UserOutlined />
-                  <span>{session.customerPhone || 'Ẩn danh'}</span>
                 </div>
               </button>
             ))}
@@ -229,10 +228,8 @@ export function AdminChat() {
           <header className="admin-chat-conversation__header">
             <div>
               <div className="admin-chat-conversation__name">{active ? (active.customerName || 'Khách ẩn danh') : 'Chọn một hội thoại'}</div>
-              <div className="admin-chat-conversation__status">
-                <span className={`admin-chat-status-dot ${activeId ? 'is-online' : ''}`} />
-                {active ? `${active.customerPhone || 'Chưa có số điện thoại'} · ${CHAT_MODE[active.mode]?.label || active.mode}` : 'Danh sách hội thoại ở cột bên trái'}
-              </div>
+              {active && <div className="admin-chat-conversation__email">{active.customerEmail || 'Chưa có email'}</div>}
+              {!active && <div className="admin-chat-conversation__status">Danh sách hội thoại ở cột bên trái</div>}
             </div>
             {active && canAssign && (active.mode === 'bot'
               ? <Button id="admin-chat-takeover" type="primary" onClick={takeover}>Nhảy vào hội thoại</Button>

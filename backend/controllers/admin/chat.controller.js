@@ -5,8 +5,9 @@ const { paginate, buildPaginationResponse } = require('../../helpers/format');
 const { getIo } = require('../../config/socket');
 const { processChatReply } = require('../../services/chat/automationService');
 
-const mapSession = ({ assignedAdmin, assignedAdminId, ...session }) => ({
+const mapSession = ({ customer, assignedAdmin, assignedAdminId, ...session }) => ({
   ...toLegacyEntity(session),
+  customerEmail: customer?.email || null,
   assignedAdmin: assignedAdmin ? toLegacyUser(assignedAdmin) : assignedAdminId,
 });
 
@@ -19,7 +20,10 @@ exports.getSessions = async (req, res, next) => {
       ...(mode ? { mode } : {}),
       ...(search
         ? {
-          OR: [{ customerName: { contains: search } }, { customerPhone: { contains: search } }],
+          OR: [
+            { customerName: { contains: search } },
+            { customer: { email: { contains: search } } },
+          ],
         }
         : {}),
     };
@@ -28,6 +32,11 @@ exports.getSessions = async (req, res, next) => {
       prisma.chatSession.findMany({
         where,
         include: {
+          customer: {
+            select: {
+              email: true,
+            },
+          },
           assignedAdmin: {
             select: {
               id: true,
