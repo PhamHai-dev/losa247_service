@@ -18,7 +18,7 @@ function PageHeader({ title, extra }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
       <div>
-        <Title level={3} style={{ margin: 0 }}>{title}</Title>
+        <Title level={3} className="admin-page-title">{title}</Title>
       </div>
       <Space wrap>{extra}</Space>
     </div>
@@ -72,7 +72,7 @@ export function AdminDashboard() {
       />
       <Spin spinning={kpisQ.loading}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }}/></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }} /></Card></Col>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Dịch vụ hiện có" value={kpi.totalServices ?? 0} prefix="🛠️" /></Card></Col>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Bài viết xuất bản" value={kpi.totalBlogs ?? 0} prefix="📝" /></Card></Col>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Chờ xử lý (Lead/Chat)" value={kpi.pendingTasks ?? 0} prefix="💬" valueStyle={{ color: '#EF4444' }} /></Card></Col>
@@ -81,15 +81,15 @@ export function AdminDashboard() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={16}>
-          <Card 
-            title="Tăng trưởng Lead" 
+          <Card
+            title="Tăng trưởng Lead"
             extra={
-              <Segmented 
+              <Segmented
                 options={[
                   { label: '7 Ngày', value: '7d' },
                   { label: '30 Ngày', value: '30d' },
                   { label: 'Năm nay', value: '1y' }
-                ]} 
+                ]}
                 value={range}
                 onChange={setRange}
               />
@@ -149,40 +149,40 @@ export function AdminDashboard() {
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={12}>
           <Card title="Yêu cầu tư vấn mới nhất (Leads)">
-             <QueryState loading={recentLeadsQ.loading} error={recentLeadsQ.error} empty={!recentLeads.length}>
-                <Table
-                  dataSource={recentLeads}
-                  rowKey="_id"
-                  pagination={false}
-                  size="small"
-                  columns={[
-                    { title: 'Khách hàng', dataIndex: 'name', key: 'name', render: (text, record) => <><Text strong>{text}</Text><br/><Text type="secondary" style={{fontSize: 12}}>{record.phone}</Text></> },
-                    { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (val) => <StatusTag map={LEAD_STATUS} value={val} /> },
-                    { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (val) => <Text type="secondary" style={{fontSize: 12}}>{formatDate(val)}</Text> },
-                  ]}
-                />
-             </QueryState>
+            <QueryState loading={recentLeadsQ.loading} error={recentLeadsQ.error} empty={!recentLeads.length}>
+              <Table
+                dataSource={recentLeads}
+                rowKey="_id"
+                pagination={false}
+                size="small"
+                columns={[
+                  { title: 'Khách hàng', dataIndex: 'name', key: 'name', render: (text, record) => <><Text strong>{text}</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>{record.phone}</Text></> },
+                  { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (val) => <StatusTag map={LEAD_STATUS} value={val} /> },
+                  { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(val)}</Text> },
+                ]}
+              />
+            </QueryState>
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title="Bài viết được quan tâm nhất">
-             <QueryState loading={popularContentQ.loading} error={popularContentQ.error} empty={!popularContent.length}>
-                <List
-                  dataSource={popularContent}
-                  renderItem={(item, index) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<Tag color={index < 3 ? "volcano" : "default"}>#{index + 1}</Tag>}
-                        title={<a href={`/admin/blogs/edit/${item._id}`} target="_blank" rel="noreferrer">{item.title}</a>}
-                        description={<Text type="secondary" style={{fontSize: 12}}>{formatDate(item.createdAt)}</Text>}
-                      />
-                      <Space>
-                        <Tag icon={<span role="img" aria-label="eye">👁️</span>} color="blue">{item.views || 0} views</Tag>
-                      </Space>
-                    </List.Item>
-                  )}
-                />
-             </QueryState>
+            <QueryState loading={popularContentQ.loading} error={popularContentQ.error} empty={!popularContent.length}>
+              <List
+                dataSource={popularContent}
+                renderItem={(item, index) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={<Tag color={index < 3 ? "volcano" : "default"}>#{index + 1}</Tag>}
+                      title={<a href={`/admin/blogs/edit/${item._id}`} target="_blank" rel="noreferrer">{item.title}</a>}
+                      description={<Text type="secondary" style={{ fontSize: 12 }}>{formatDate(item.createdAt)}</Text>}
+                    />
+                    <Space>
+                      <Tag icon={<span role="img" aria-label="eye">👁️</span>} color="blue">{item.views || 0} views</Tag>
+                    </Space>
+                  </List.Item>
+                )}
+              />
+            </QueryState>
           </Card>
         </Col>
       </Row>

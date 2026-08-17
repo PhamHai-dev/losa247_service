@@ -74,7 +74,7 @@ export function AdminBlogs() {
   return (
     <section className="blogs-page">
       <header className="blogs-page-header">
-        <div className="blogs-page-title"><span className="blogs-eyebrow">Trung tâm nội dung</span><h1>Quản lý bài viết</h1><p>Xuất bản nội dung, tổ chức danh mục và tối ưu thư viện thẻ.</p></div>
+        <div className="blogs-page-title"><span className="blogs-eyebrow">Trung tâm nội dung</span><Title level={3} className="admin-page-title">Quản lý bài viết</Title><p>Xuất bản nội dung, tổ chức danh mục và tối ưu thư viện thẻ.</p></div>
         {action && <Button type="primary" size="large" icon={<PlusOutlined />} onClick={action.run}>{action.label}</Button>}
       </header>
       <Tabs className="blogs-primary-tabs" activeKey={mainTab} onChange={setMainTab} items={[

@@ -1,5 +1,6 @@
 /* Admin styles entry point */
 @import './layout.css';
+@import './page-header.css';
 @import './users.css';
 @import './login.css';
 @import './settings.css';

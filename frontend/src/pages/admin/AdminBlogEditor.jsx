@@ -38,7 +38,7 @@ function PageHeader({ title, extra }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
       <div>
-        <Title level={3} style={{ margin: 0 }}>{title}</Title>
+        <Title level={3} className="admin-page-title">{title}</Title>
       </div>
       <Space wrap>{extra}</Space>
     </div>

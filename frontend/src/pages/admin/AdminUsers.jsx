@@ -44,7 +44,7 @@ export function AdminUsers() {
       <header className="users-page-header">
         <div>
           <span className="users-section-label"><TeamOutlined /> Quản trị truy cập</span>
-          <Title level={3}>Người dùng & phân quyền</Title>
+          <Title level={3} className="admin-page-title">Người dùng & phân quyền</Title>
           <Text>Quản lý tài khoản, vai trò và quyền truy cập trong toàn bộ hệ thống.</Text>
         </div>
       </header>

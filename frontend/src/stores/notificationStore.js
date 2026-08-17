@@ -3,7 +3,8 @@ import axiosClient from '../services/axiosClient';
 import { io } from 'socket.io-client';
 import { getAccessToken } from '../services/authSession';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || API_BASE_URL.replace(/\/api\/v1\/?$/, '');
 
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
@@ -14,10 +15,10 @@ export const useNotificationStore = create((set, get) => ({
   fetchNotifications: async () => {
     set({ loading: true });
     try {
-      const res = await axiosClient.get('/admin/notifications');
+      const payload = await axiosClient.get('/admin/notifications');
       set({
-        notifications: res.data || [],
-        unreadCount: res.unreadCount || 0,
+        notifications: payload.data || [],
+        unreadCount: payload.unreadCount || 0,
         loading: false,
       });
     } catch (error) {

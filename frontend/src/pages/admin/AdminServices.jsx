@@ -22,7 +22,7 @@ export function AdminServices() {
 
   return <main className="services-page">
     <header className="services-page-header">
-      <div><span className="services-eyebrow"><GiftOutlined /> Trung tâm sản phẩm</span><Title level={3}>Quản lý gói dịch vụ</Title><Text>Thiết lập bảng giá, quyền lợi và nội dung so sánh hiển thị trên website.</Text></div>
+      <div><span className="services-eyebrow"><GiftOutlined /> Trung tâm sản phẩm</span><Title level={3} className="admin-page-title">Quản lý gói dịch vụ</Title><Text>Thiết lập bảng giá, quyền lợi và nội dung so sánh hiển thị trên website.</Text></div>
       <Button id="services-header-add" type="primary" size="large" icon={<PlusOutlined />} onClick={() => window.dispatchEvent(new Event(addEvent))}>
         {activeTab === 'plans' ? 'Thêm gói dịch vụ' : 'Thêm dòng so sánh'}
       </Button>

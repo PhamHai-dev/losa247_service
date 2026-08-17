@@ -25,7 +25,7 @@ export function AdminNotifications() {
   return (
     <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0 }}>Tất cả thông báo</Title>
+        <Title level={3} className="admin-page-title">Tất cả thông báo</Title>
         <Button onClick={() => markAsRead('all')}>Đánh dấu tất cả đã đọc</Button>
       </div>
 

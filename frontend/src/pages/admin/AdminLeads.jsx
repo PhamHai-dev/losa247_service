@@ -202,7 +202,7 @@ export function AdminLeads() {
 
   return <section className="leads-page">
     <header className="leads-page-header">
-      <div className="leads-page-title"><span className="leads-eyebrow"><i />Khách hàng tiềm năng</span><h1>Quản lý Lead</h1><p>Quản lý, phân công và chăm sóc khách hàng tiềm năng tập trung.</p></div>
+      <div className="leads-page-title"><span className="leads-eyebrow"><i />Khách hàng tiềm năng</span><Title level={3} className="admin-page-title">Quản lý Lead</Title><p>Quản lý, phân công và chăm sóc khách hàng tiềm năng tập trung.</p></div>
       <div className="leads-header-actions">{canExport && <Button icon={<DownloadOutlined />} onClick={handleExport}>Xuất Excel</Button>}{canCreate && <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Thêm Lead</Button>}</div>
     </header>
 

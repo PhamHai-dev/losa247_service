@@ -104,7 +104,7 @@ export function AdminFaqs() {
 
   return <main className="faqs-page">
     <header className="faqs-page-header">
-      <div><span className="faqs-eyebrow"><MessageOutlined /> Trung tâm nội dung</span><Title level={3}>Quản lý Hỏi đáp</Title><Text>Xây dựng kho câu trả lời rõ ràng, đúng ngữ cảnh cho khách hàng trên website.</Text></div>
+      <div><span className="faqs-eyebrow"><MessageOutlined /> Trung tâm nội dung</span><Title level={3} className="admin-page-title">Quản lý Hỏi đáp</Title><Text>Xây dựng kho câu trả lời rõ ràng, đúng ngữ cảnh cho khách hàng trên website.</Text></div>
       <Button id="faqs-header-add" type="primary" size="large" icon={<PlusOutlined />} onClick={() => openDrawer()}>Tạo câu hỏi</Button>
     </header>
 

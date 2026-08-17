@@ -168,7 +168,7 @@ export function AdminChat() {
       <header className="admin-chat-page__header">
         <div>
           <span className="admin-chat-page__eyebrow">Hỗ trợ khách hàng</span>
-          <Title level={2}>Trung tâm Chat</Title>
+          <Title level={3} className="admin-page-title">Trung tâm Chat</Title>
           <Text type="secondary">Theo dõi và phản hồi hội thoại theo thời gian thực</Text>
         </div>
         <Button id="admin-chat-refresh" icon={<ReloadOutlined />} onClick={sessionsQ.refetch}>Làm mới</Button>

@@ -1,0 +1,17 @@
+.admin-page-title.ant-typography {
+  margin: 5px 0 4px !important;
+  color: #102033 !important;
+  font-family: 'Google Sans Flex', system-ui, sans-serif !important;
+  font-size: 28px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  font-stretch: normal !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.035em !important;
+}
+
+@media (max-width: 760px) {
+  .admin-page-title.ant-typography {
+    font-size: 24px !important;
+  }
+}

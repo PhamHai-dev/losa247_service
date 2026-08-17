@@ -38,7 +38,7 @@ function PageHeader({ title, extra }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' }}>
       <div>
-        <Title level={3} style={{ margin: 0 }}>{title}</Title>
+        <Title level={3} className="admin-page-title">{title}</Title>
       </div>
       <Space wrap>{extra}</Space>
     </div>
@@ -65,7 +65,7 @@ export function AdminLogs() {
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
   const [openPayload, setOpenPayload] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
-  
+
   const query = useApiQuery(
     () => logsService.getLogs({ page, limit: pageSize, search: debounced || undefined }),
     [page, debounced],
@@ -84,9 +84,9 @@ export function AdminLogs() {
   const columns = [
     { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v, true) },
     { title: 'Người thực hiện', dataIndex: ['actor', 'name'], key: 'actor', render: (v, r) => v || r.actor || '—' },
-    { 
-      title: 'Hành động', 
-      dataIndex: 'action', 
+    {
+      title: 'Hành động',
+      dataIndex: 'action',
       key: 'action',
       render: (v) => {
         let color = 'default'
@@ -117,7 +117,7 @@ export function AdminLogs() {
         </Space>} />
       <Table rowKey={(r) => r._id || r.id || Math.random()} loading={query.loading} columns={columns} dataSource={rows}
         pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
-        
+
       <Drawer
         title="Chi tiết Log"
         placement="right"
@@ -134,7 +134,7 @@ export function AdminLogs() {
               <Descriptions.Item label="Module">{selectedLog.module}</Descriptions.Item>
               <Descriptions.Item label="IP">{selectedLog.ip}</Descriptions.Item>
             </Descriptions>
-            
+
             {selectedLog.payload ? (
               <Card size="small" title="Payload Data" style={{ marginTop: 16 }}>
                 <pre style={{ background: '#f8fafc', padding: 12, borderRadius: 8, overflowX: 'auto', margin: 0, fontSize: 13 }}>
