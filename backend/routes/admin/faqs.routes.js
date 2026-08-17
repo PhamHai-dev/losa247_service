@@ -1,0 +1,16 @@
+const express = require('express');
+const router = express.Router();
+const faqsController = require('../../controllers/admin/faqs.controller');
+const authMiddleware = require('../../middlewares/auth.middleware');
+const { requirePermission } = require('../../middlewares/rbac.middleware');
+const cache = require('../../services/cacheService');
+const invalidateFaqs = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.faqs()] }));
+router.use(authMiddleware('admin'));
+router.get('/search-suggestions', requirePermission('faqs.view'), faqsController.searchSuggestions);
+router.get('/stats', requirePermission('faqs.view'), faqsController.getStats);
+router.get('/', requirePermission('faqs.view'), faqsController.getFaqs);
+router.post('/', requirePermission('faqs.create'), invalidateFaqs, faqsController.createFaq);
+router.patch('/reorder', requirePermission('faqs.update'), invalidateFaqs, faqsController.reorderFaqs);
+router.put('/:id', requirePermission('faqs.update'), invalidateFaqs, faqsController.updateFaq);
+router.delete('/:id', requirePermission('faqs.delete'), invalidateFaqs, faqsController.deleteFaq);
+module.exports = router;

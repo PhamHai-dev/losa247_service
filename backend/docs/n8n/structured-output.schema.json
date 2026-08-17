@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://losa247.vn/schemas/chat-ai-output.v1.json",
+  "title": "LOSA247 Chat AI Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reply", "actions"],
+  "properties": {
+    "reply": { "type": "string", "minLength": 1, "maxLength": 20000 },
+    "summary": { "type": "string", "maxLength": 5000 },
+    "actions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "oneOf": [
+          { "type": "object", "additionalProperties": false, "required": ["type", "payload"], "properties": { "type": { "const": "lead.upsert" }, "payload": { "type": "object", "additionalProperties": false, "properties": { "name": { "type": "string", "maxLength": 255 }, "phone": { "type": "string", "maxLength": 32 }, "email": { "type": "string", "format": "email" }, "score": { "type": "integer", "minimum": 0, "maximum": 100 }, "temperature": { "enum": ["cold", "warm", "hot"] } } } } },
+          { "type": "object", "additionalProperties": false, "required": ["type", "payload"], "properties": { "type": { "const": "notification.create" }, "payload": { "type": "object", "additionalProperties": false, "required": ["title", "message"], "properties": { "title": { "type": "string", "maxLength": 255 }, "message": { "type": "string", "maxLength": 2000 }, "severity": { "enum": ["info", "warning", "urgent"] } } } } },
+          { "type": "object", "additionalProperties": false, "required": ["type", "payload"], "properties": { "type": { "const": "handoff.request" }, "payload": { "type": "object", "additionalProperties": false, "required": ["reason"], "properties": { "reason": { "type": "string", "maxLength": 500 } } } } }
+        ]
+      }
+    }
+  }
+}

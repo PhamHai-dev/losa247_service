@@ -1,0 +1,580 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  locked
+}
+
+enum RefreshAudience {
+  admin
+  client
+}
+
+enum LeadSource {
+  form
+  chat
+  facebook
+  zalo
+  other
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  lost
+}
+
+enum BlogStatus {
+  draft
+  pending
+  published
+  rejected
+}
+
+enum BlogSource {
+  writer
+  other
+}
+
+enum ChatMode {
+  bot
+  human
+}
+
+enum ChatStatus {
+  open
+  closed
+}
+
+enum ChatSender {
+  customer
+  bot
+  admin
+}
+
+enum ChatFeedback {
+  up
+  down
+}
+
+enum ChatAutomationStatus {
+  idle
+  debouncing
+  queued
+  processing
+  failed
+}
+
+enum ChatBatchStatus {
+  pending
+  queued
+  processing
+  completed
+  failed
+  ignored
+}
+
+enum OutboxStatus {
+  pending
+  dispatching
+  dispatched
+  failed
+}
+
+enum WebhookEventStatus {
+  processing
+  completed
+  failed
+}
+
+enum FaqPage {
+  home
+  solutions
+  pricing
+  blog
+}
+
+enum ServiceDetail {
+  chatbot
+  crm
+  marketing
+}
+
+enum NotificationType {
+  lead
+  alert
+  system
+}
+
+enum ApiProvider {
+  facebook
+  zalo
+  anthropic
+  openai
+  n8n
+}
+
+enum ThemeMode {
+  light
+  dark
+}
+
+model Role {
+  id          String   @id @db.VarChar(24)
+  name        String   @unique @db.VarChar(32)
+  permissions Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                   String           @id @db.VarChar(24)
+  name                 String           @db.VarChar(255)
+  email                String           @unique @db.VarChar(320)
+  phone                String?          @db.VarChar(32)
+  passwordHash         String           @map("password_hash") @db.VarChar(255)
+  roleName             String           @default("customer") @map("role") @db.VarChar(32)
+  status               UserStatus       @default(active)
+  avatarUrl            String?          @map("avatar_url") @db.VarChar(2048)
+  resetPasswordToken   String?          @map("reset_password_token") @db.VarChar(255)
+  resetPasswordExpires DateTime?        @map("reset_password_expires") @db.DateTime(3)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  role                 Role             @relation(fields: [roleName], references: [name], onDelete: Restrict, onUpdate: Cascade)
+  refreshSessions      RefreshSession[]
+  assignedLeads        Lead[]           @relation("LeadAssignee")
+  authoredBlogs        Blog[]           @relation("BlogAuthor")
+  customerChats        ChatSession[]    @relation("ChatCustomer")
+  assignedChats        ChatSession[]    @relation("ChatAdmin")
+  logs                 Log[]
+  notifications        Notification[]
+
+  @@index([roleName])
+  @@index([status, createdAt])
+  @@map("users")
+}
+
+model RefreshSession {
+  id        BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  userId    String          @map("user_id") @db.VarChar(24)
+  tokenHash String          @map("token_hash") @db.VarChar(255)
+  jti       String          @db.VarChar(255)
+  familyId  String          @map("family_id") @db.VarChar(255)
+  audience  RefreshAudience
+  expiresAt DateTime        @map("expires_at") @db.DateTime(3)
+  createdAt DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  userAgent String?         @map("user_agent") @db.VarChar(1024)
+  ip        String?         @db.VarChar(64)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, tokenHash])
+  @@index([expiresAt])
+  @@index([userId, familyId])
+  @@map("refresh_sessions")
+}
+
+model Lead {
+  id              String     @id @db.VarChar(24)
+  name            String?    @db.VarChar(255)
+  phone           String?    @db.VarChar(32)
+  email           String?    @db.VarChar(320)
+  phoneNormalized String?    @map("phone_normalized") @db.VarChar(32)
+  emailNormalized String?    @map("email_normalized") @db.VarChar(320)
+  source          LeadSource
+  status          LeadStatus @default(new)
+  notes           Json
+  customFields    Json?      @map("custom_fields")
+  assignedToId    String?    @map("assigned_to_id") @db.VarChar(24)
+  chatSessionId   String?    @map("chat_session_id") @db.VarChar(24)
+  sourceMessageId String?    @map("source_message_id") @db.VarChar(24)
+  score           Int?       @db.UnsignedTinyInt
+  temperature     String?    @db.VarChar(16)
+  detectedBy      String?    @map("detected_by") @db.VarChar(16)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.DateTime(3)
+  assignedTo      User?      @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([status, createdAt])
+  @@index([assignedToId])
+  @@index([source])
+  @@index([phone])
+  @@index([email])
+  @@index([phoneNormalized])
+  @@index([emailNormalized])
+  @@index([chatSessionId])
+  @@index([sourceMessageId])
+  @@map("leads")
+}
+
+model BlogCategory {
+  id        String   @id @db.VarChar(24)
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  blogs     Blog[]
+
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id          String          @id @db.VarChar(24)
+  name        String          @unique @db.VarChar(255)
+  slug        String          @unique @db.VarChar(255)
+  description String?         @db.Text
+  createdAt   DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+  blogs       BlogTagOnBlog[]
+
+  @@map("blog_tags")
+}
+
+model Blog {
+  id              String          @id @db.VarChar(24)
+  title           String          @db.VarChar(500)
+  slug            String          @unique @db.VarChar(255)
+  excerpt         String?         @db.Text
+  metaDescription String?         @map("meta_description") @db.Text
+  isFeatured      Boolean         @default(false) @map("is_featured")
+  allowComments   Boolean         @default(true) @map("allow_comments")
+  allowIndexing   Boolean         @default(true) @map("allow_indexing")
+  showToc         Boolean         @default(true) @map("show_toc")
+  content         String          @db.LongText
+  coverImageUrl   String?         @map("cover_image_url") @db.VarChar(2048)
+  categoryId      String?         @map("category_id") @db.VarChar(24)
+  status          BlogStatus      @default(draft)
+  source          BlogSource      @default(writer)
+  publishedAt     DateTime?       @map("published_at") @db.DateTime(3)
+  authorId        String?         @map("author_id") @db.VarChar(24)
+  views           Int             @default(0) @db.UnsignedInt
+  createdAt       DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+  category        BlogCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  author          User?           @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  tags            BlogTagOnBlog[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([authorId])
+  @@map("blogs")
+}
+
+model BlogTagOnBlog {
+  blogId String  @map("blog_id") @db.VarChar(24)
+  tagId  String  @map("tag_id") @db.VarChar(24)
+  blog   Blog    @relation(fields: [blogId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tag    BlogTag @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([blogId, tagId])
+  @@index([tagId])
+  @@map("blog_tag_relations")
+}
+
+model ChatSession {
+  id                    String               @id @db.VarChar(24)
+  customerName          String?              @map("customer_name") @db.VarChar(255)
+  customerPhone         String?              @map("customer_phone") @db.VarChar(32)
+  customerId            String?              @map("customer_id") @db.VarChar(24)
+  visitorId             String?              @map("visitor_id") @db.VarChar(64)
+  channel               String               @default("web") @db.VarChar(24)
+  mode                  ChatMode             @default(bot)
+  automationStatus      ChatAutomationStatus @default(idle) @map("automation_status")
+  version               Int                  @default(1) @db.UnsignedInt
+  status                ChatStatus           @default(open)
+  assignedAdminId       String?              @map("assigned_admin_id") @db.VarChar(24)
+  summary               String?              @db.LongText
+  context               Json?
+  lastMessageAt         DateTime             @default(now()) @map("last_message_at") @db.DateTime(3)
+  lastCustomerMessageAt DateTime?            @map("last_customer_message_at") @db.DateTime(3)
+  lastReplyAt           DateTime?            @map("last_reply_at") @db.DateTime(3)
+  handoffAt             DateTime?            @map("handoff_at") @db.DateTime(3)
+  botResumedAt          DateTime?            @map("bot_resumed_at") @db.DateTime(3)
+  closedAt              DateTime?            @map("closed_at") @db.DateTime(3)
+  createdAt             DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+  customer              User?                @relation("ChatCustomer", fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignedAdmin         User?                @relation("ChatAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  messages              ChatMessage[]
+  batches               ChatBatch[]
+  attachments           ChatAttachment[]
+  handoffs              ChatHandoff[]
+  outboxEvents          AutomationOutbox[]
+
+  @@index([status, lastMessageAt])
+  @@index([customerId, status])
+  @@index([visitorId, status])
+  @@index([assignedAdminId])
+  @@index([mode, automationStatus, updatedAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id              String           @id @db.VarChar(24)
+  sessionId       String           @map("session_id") @db.VarChar(24)
+  clientMessageId String?          @map("client_message_id") @db.VarChar(64)
+  batchId         String?          @map("batch_id") @db.VarChar(24)
+  sender          ChatSender
+  messageType     String           @default("text") @map("message_type") @db.VarChar(24)
+  content         String           @db.LongText
+  attachments     Json
+  replyToId       String?          @map("reply_to_id") @db.VarChar(24)
+  status          String           @default("sent") @db.VarChar(24)
+  metadata        Json?
+  processedAt     DateTime?        @map("processed_at") @db.DateTime(3)
+  feedback        ChatFeedback?
+  createdAt       DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  session         ChatSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  batch           ChatBatch?       @relation(fields: [batchId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  attachmentRows  ChatAttachment[]
+
+  @@unique([sessionId, clientMessageId])
+  @@index([sessionId, createdAt, id])
+  @@index([sessionId, batchId, sender, createdAt, id])
+  @@index([batchId, createdAt])
+  @@map("chat_messages")
+}
+
+model ChatBatch {
+  id             String          @id @db.VarChar(24)
+  sessionId      String          @map("session_id") @db.VarChar(24)
+  sessionVersion Int             @map("session_version") @db.UnsignedInt
+  eventId        String          @unique @map("event_id") @db.VarChar(64)
+  status         ChatBatchStatus @default(pending)
+  startedAt      DateTime?       @map("started_at") @db.DateTime(3)
+  completedAt    DateTime?       @map("completed_at") @db.DateTime(3)
+  failedAt       DateTime?       @map("failed_at") @db.DateTime(3)
+  lastError      String?         @map("last_error") @db.Text
+  createdAt      DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+  session        ChatSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  messages       ChatMessage[]
+
+  @@index([sessionId, status, createdAt])
+  @@index([status, updatedAt])
+  @@map("chat_batches")
+}
+
+model ChatAttachment {
+  id           String      @id @db.VarChar(24)
+  sessionId    String      @map("session_id") @db.VarChar(24)
+  messageId    String?     @map("message_id") @db.VarChar(24)
+  provider     String      @default("cloudinary") @db.VarChar(32)
+  publicId     String      @unique @map("public_id") @db.VarChar(500)
+  resourceType String      @default("image") @map("resource_type") @db.VarChar(32)
+  deliveryType String      @default("authenticated") @map("delivery_type") @db.VarChar(32)
+  format       String?     @db.VarChar(32)
+  originalName String?     @map("original_name") @db.VarChar(500)
+  mimeType     String      @map("mime_type") @db.VarChar(120)
+  size         BigInt      @db.UnsignedBigInt
+  sha256       String      @db.Char(64)
+  width        Int?        @db.UnsignedInt
+  height       Int?        @db.UnsignedInt
+  scanStatus   String      @default("pending") @map("scan_status") @db.VarChar(24)
+  visionStatus String      @default("pending") @map("vision_status") @db.VarChar(24)
+  visionResult Json?       @map("vision_result")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.DateTime(3)
+  session      ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  message      ChatMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@index([messageId])
+  @@index([sha256])
+  @@map("chat_attachments")
+}
+
+model ChatHandoff {
+  id          String      @id @db.VarChar(24)
+  sessionId   String      @map("session_id") @db.VarChar(24)
+  fromMode    ChatMode    @map("from_mode")
+  toMode      ChatMode    @map("to_mode")
+  fromVersion Int         @map("from_version") @db.UnsignedInt
+  toVersion   Int         @map("to_version") @db.UnsignedInt
+  reason      String      @db.VarChar(64)
+  actorType   String      @map("actor_type") @db.VarChar(24)
+  actorId     String?     @map("actor_id") @db.VarChar(24)
+  note        String?     @db.Text
+  metadata    Json?
+  endedAt     DateTime?   @map("ended_at") @db.DateTime(3)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([sessionId, createdAt])
+  @@map("chat_handoffs")
+}
+
+model AutomationOutbox {
+  id            String       @id @db.VarChar(24)
+  eventId       String       @unique @map("event_id") @db.VarChar(64)
+  eventType     String       @map("event_type") @db.VarChar(100)
+  aggregateType String       @map("aggregate_type") @db.VarChar(64)
+  aggregateId   String       @map("aggregate_id") @db.VarChar(64)
+  sessionId     String?      @map("session_id") @db.VarChar(24)
+  payload       Json
+  status        OutboxStatus @default(pending)
+  attempts      Int          @default(0) @db.UnsignedInt
+  availableAt   DateTime     @default(now()) @map("available_at") @db.DateTime(3)
+  lockedAt      DateTime?    @map("locked_at") @db.DateTime(3)
+  lockedBy      String?      @map("locked_by") @db.VarChar(100)
+  lastError     String?      @map("last_error") @db.Text
+  dispatchedAt  DateTime?    @map("dispatched_at") @db.DateTime(3)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.DateTime(3)
+  session       ChatSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([status, availableAt, createdAt])
+  @@index([sessionId, createdAt])
+  @@map("automation_outbox")
+}
+
+model WebhookInbox {
+  id            String             @id @db.VarChar(24)
+  eventId       String             @unique @map("event_id") @db.VarChar(64)
+  correlationId String?            @map("correlation_id") @db.VarChar(64)
+  direction     String             @db.VarChar(16)
+  command       String             @db.VarChar(100)
+  status        WebhookEventStatus @default(processing)
+  responseCode  Int?               @map("response_code")
+  responseBody  Json?              @map("response_body")
+  lastError     String?            @map("last_error") @db.Text
+  receivedAt    DateTime           @default(now()) @map("received_at") @db.DateTime(3)
+  processedAt   DateTime?          @map("processed_at") @db.DateTime(3)
+
+  @@index([correlationId])
+  @@index([status, receivedAt])
+  @@map("webhook_inbox")
+}
+
+model Faq {
+  id            String         @id @db.VarChar(24)
+  question      String         @db.VarChar(300)
+  answer        String         @db.Text
+  page          FaqPage        @default(home)
+  categoryId    String?        @map("category_id") @db.VarChar(24)
+  serviceDetail ServiceDetail? @map("service_detail")
+  order         Int            @default(0) @db.UnsignedInt
+  createdAt     DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([page, serviceDetail, order, createdAt])
+  @@map("faqs")
+}
+
+model PricingPlan {
+  id          String               @id @db.VarChar(24)
+  name        String               @db.VarChar(120)
+  priceAmount BigInt?              @map("price_amount")
+  priceLabel  String               @default("") @map("price_label") @db.VarChar(120)
+  subtitle    Json
+  badge       String               @default("") @db.VarChar(80)
+  buttonText  String               @default("") @map("button_text") @db.VarChar(80)
+  order       Int                  @default(0) @db.UnsignedInt
+  isActive    Boolean              @default(true) @map("is_active")
+  createdAt   DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+  features    PricingPlanFeature[]
+
+  @@index([isActive, order, createdAt])
+  @@index([name])
+  @@map("pricing_plans")
+}
+
+model PricingPlanFeature {
+  id        BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  planId    String      @map("plan_id") @db.VarChar(24)
+  content   String      @db.Text
+  sortOrder Int         @default(0) @map("sort_order") @db.UnsignedInt
+  plan      PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([planId, sortOrder])
+  @@map("pricing_plan_features")
+}
+
+model PricingComparison {
+  id        String   @id @db.VarChar(24)
+  title     String   @db.VarChar(160)
+  values    Json
+  order     Int      @default(0) @db.UnsignedInt
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@index([order, createdAt])
+  @@map("pricing_comparisons")
+}
+
+model Notification {
+  id          String           @id @db.VarChar(24)
+  title       String           @db.VarChar(500)
+  message     String           @db.Text
+  type        NotificationType @default(alert)
+  link        String           @default("") @db.VarChar(2048)
+  isRead      Boolean          @default(false) @map("is_read")
+  recipientId String?          @map("recipient_id") @db.VarChar(24)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  recipient   User?            @relation(fields: [recipientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([recipientId, isRead, createdAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Log {
+  id        String   @id @db.VarChar(24)
+  actorId   String?  @map("actor_id") @db.VarChar(24)
+  action    String   @db.VarChar(255)
+  module    String   @db.VarChar(255)
+  ip        String?  @db.VarChar(64)
+  payload   Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([module, createdAt])
+  @@map("logs")
+}
+
+model Settings {
+  id          String    @id @db.VarChar(24)
+  themeMode   ThemeMode @default(light) @map("theme_mode")
+  accentColor String    @default("#0284C7") @map("accent_color") @db.VarChar(32)
+  siteName    String?   @map("site_name") @db.VarChar(255)
+  slogan      String?   @db.VarChar(500)
+  logoUrl     String?   @map("logo_url") @db.VarChar(2048)
+  faviconUrl  String?   @map("favicon_url") @db.VarChar(2048)
+  hotline     String?   @db.VarChar(32)
+  email       String?   @db.VarChar(320)
+  address     String?   @db.VarChar(1000)
+  facebookUrl   String?   @map("facebook_url") @db.VarChar(2048)
+  zaloUrl       String?   @map("zalo_url") @db.VarChar(2048)
+  leadFormConfig Json?    @map("lead_form_config")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@map("settings")
+}
+
+model ApiConfig {
+  id        String      @id @db.VarChar(24)
+  provider  ApiProvider @unique
+  apiKey    String?     @map("api_key") @db.Text
+  extra     Json?
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@map("api_configs")
+}

@@ -1,0 +1,12 @@
+﻿import axiosClient from '../../services/axiosClient'
+export const adminLogin=(payload)=>axiosClient.post('/admin/auth/login',payload)
+export const adminGetMe=()=>axiosClient.get('/admin/auth/me')
+export const adminRefresh=()=>axiosClient.post('/admin/auth/refresh')
+export const adminLogout=()=>axiosClient.post('/admin/auth/logout')
+export const clientRegister=(payload)=>axiosClient.post('/auth/register',payload)
+export const clientLogin=(payload)=>axiosClient.post('/auth/login',payload)
+export const clientGetMe=()=>axiosClient.get('/auth/me')
+export const clientRefresh=()=>axiosClient.post('/auth/refresh')
+export const clientLogout=()=>axiosClient.post('/auth/logout')
+export const clientForgotPassword=(email)=>axiosClient.post('/auth/forgot-password',{email})
+export const clientResetPassword=(payload)=>axiosClient.post('/auth/reset-password',payload)
