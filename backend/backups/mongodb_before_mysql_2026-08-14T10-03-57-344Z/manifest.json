@@ -1,0 +1,23 @@
+{
+  "format": "MongoDB Extended JSON v2",
+  "createdAt": "2026-08-14T10:03:59.366Z",
+  "database": "losa247",
+  "counts": {
+    "apiconfigs": 5,
+    "blogs": 6,
+    "blogcategories": 4,
+    "blogtags": 3,
+    "chatmessages": 42,
+    "chatsessions": 21,
+    "faqs": 16,
+    "leads": 6,
+    "logs": 49,
+    "notifications": 1,
+    "pricingcomparisons": 10,
+    "pricingplans": 3,
+    "roles": 3,
+    "settings": 1,
+    "users": 9
+  },
+  "total": 179
+}
