@@ -153,10 +153,10 @@ function PricingComparisonsTable() {
   const remove = async (row) => { try { await pricingService.deleteComparison(row._id); message.success('Đã xóa dòng so sánh'); query.refetch() } catch (error) { message.error(errorMessage(error, 'Không xóa được dòng so sánh')) } }
   window.__openPricingComparison = openDrawer
   const columns = [
-    { title: 'Tiêu chí so sánh', dataIndex: 'title', key: 'title', fixed: 'left', width: 240, render: (value) => <span className="comparison-title"><FileDoneOutlined />{value}</span> },
+    { title: 'Tiêu chí so sánh', dataIndex: 'title', key: 'title', fixed: 'left', width: 160, render: (value) => <span className="comparison-title" title={value}><FileDoneOutlined />{value}</span> },
     ...plans.map((plan) => ({ title: <div className="comparison-plan-head"><strong>{plan.name}</strong><small>{plan.price}</small></div>, dataIndex: ['values', plan._id], key: plan._id, width: 180, align: 'center', render: (value) => typeof value === 'boolean' ? <span className={`comparison-boolean ${value ? 'yes' : 'no'}`}>{value ? <CheckOutlined /> : <CloseOutlined />}</span> : <span className="comparison-value">{value || '—'}</span> })),
     { title: 'Thứ tự', dataIndex: 'order', key: 'order', width: 90, align: 'center', render: (value) => <span className="service-order">{value}</span> },
-    { title: 'Thao tác', key: 'actions', fixed: 'right', width: 110, render: (_, row) => <div className="service-row-actions"><Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.title}`} onClick={() => openDrawer(row)} /><Popconfirm title="Xóa dòng so sánh?" onConfirm={() => remove(row)}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.title}`} /></Popconfirm></div> },
+    { title: 'Thao tác', key: 'actions', width: 110, render: (_, row) => <div className="service-row-actions"><Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.title}`} onClick={() => openDrawer(row)} /><Popconfirm title="Xóa dòng so sánh?" onConfirm={() => remove(row)}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.title}`} /></Popconfirm></div> },
   ]
   return <section className="services-panel comparison-panel">
     <div className="comparison-hero"><span><UnorderedListOutlined /></span><div><strong>Ma trận so sánh quyền lợi</strong><p>Quản lý từng tiêu chí và giá trị tương ứng giữa các gói dịch vụ.</p></div><div className="comparison-summary"><span><b>{plans.length}</b> gói dịch vụ</span><span><b>{rows.length}</b> dòng so sánh</span></div></div>

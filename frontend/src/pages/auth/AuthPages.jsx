@@ -44,9 +44,9 @@ export function LoginPage() {
   const navigate = useNavigate()
   const { loginClient, loading, error } = useAuthStore()
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async ({ acceptedTerms, ...credentials }) => {
     try {
-      await loginClient(values)
+      await loginClient(credentials)
       message.success('Đăng nhập khách hàng thành công')
       navigate('/tai-khoan')
     } catch (loginError) {
@@ -77,6 +77,19 @@ export function LoginPage() {
           style={{ marginBottom: 12 }}
         >
           <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
+        </Form.Item>
+
+        <Form.Item
+          name="acceptedTerms"
+          valuePropName="checked"
+          rules={[{
+            validator: (_, checked) => checked
+              ? Promise.resolve()
+              : Promise.reject(new Error('Vui lòng đồng ý với các điều khoản')),
+          }]}
+          style={{ marginBottom: 16 }}
+        >
+          <Checkbox id="client-login-terms-checkbox">Tôi đồng ý với các điều khoản</Checkbox>
         </Form.Item>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

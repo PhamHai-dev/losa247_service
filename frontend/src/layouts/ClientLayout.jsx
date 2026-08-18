@@ -290,7 +290,7 @@ export function ClientLayout() {
 
   const siteInfo = siteQuery.data || {}
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || 'https://amqkxxpqkoagqqephtgl.supabase.co/storage/v1/object/sign/web_losa/ChatGPT%20Image%2015_54_19%205%20thg%208,%202026.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV82M2FmMGExMS0yYjgxLTQ5YzYtODgyYy04ZTY0ZGU5NTE3OGMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ3ZWJfbG9zYS9DaGF0R1BUIEltYWdlIDE1XzU0XzE5IDUgdGhnIDgsIDIwMjYucG5nIiwic2NvcGUiOiJkb3dubG9hZCIsImlhdCI6MTc4NTkyMDExMCwiZXhwIjoxODE3NDU2MTEwfQ.3MzypgINjseGJ4-6ME76F9l7IMjzTRynvnrFo0j7b5M'
+  const logoUrl = siteInfo.logoUrl || 'https://drive.google.com/file/d/1MO8yHhrNn3ZloCaQ48d1ZC4TQkhgwYqP/view'
   const slogan = siteInfo.slogan || 'Tự động hóa chăm sóc 24/7'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
@@ -342,7 +342,6 @@ export function ClientLayout() {
         <nav className="client-nav container">
           <Link className="logo" to="/" style={{ display: 'flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
             <img src={logoUrl} alt="Logo" style={{ height: 80, objectFit: 'contain' }} />
-            <BrandText siteName={siteName} slogan={slogan} />
           </Link>
           <div className="menu">
             <NavLink to="/">Trang chủ</NavLink>
@@ -422,7 +421,7 @@ export function ClientLayout() {
                 <User size={18} /> Đăng nhập
               </NavLink>
             )}
-            <a className="btn btn-primary" onClick={openLeadModal} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', borderRadius: '8px', boxShadow: 'none' }}>
+            <a className="btn btn-primary header-trial-btn" onClick={openLeadModal} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px' }}>
               <Rocket size={16} /> Đăng ký trải nghiệm
             </a>
           </div>
@@ -486,7 +485,6 @@ export function ClientLayout() {
               <section className="footer-brand-card" aria-label="Giới thiệu Losa247">
                 <Link to="/" className="footer-brand-link">
                   <img src={logoUrl} alt="Logo Losa247" />
-                  <BrandText siteName={siteName} slogan={slogan} theme="dark" />
                 </Link>
                 <p className="footer-desc">Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và tăng trưởng bền vững.</p>
                 <div className="footer-brand-pills">
@@ -573,7 +571,7 @@ export function ClientLayout() {
         onClose={() => setMobileMenuOpen(false)}
         open={mobileMenuOpen}
         className="mobile-nav-drawer"
-        width={300}
+        width={250}
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
           <NavLink to="/" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Trang chủ</NavLink>
@@ -583,7 +581,7 @@ export function ClientLayout() {
               Giải pháp <ChevronDown size={16} style={{ transform: mobileSolutionsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
             </div>
             {mobileSolutionsOpen && (
-              <div style={{ backgroundColor: '#fff' }}>
+              <div className="mobile-nav-submenu-panel">
                 <NavLink to="/giai-phap/chatbot" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> Chatbot AI</NavLink>
                 <NavLink to="/giai-phap/crm" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> CRM</NavLink>
                 <NavLink to="/giai-phap/marketing" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> Marketing</NavLink>
@@ -596,7 +594,7 @@ export function ClientLayout() {
               Bảng giá <ChevronDown size={16} style={{ transform: mobilePricingOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
             </div>
             {mobilePricingOpen && (
-              <div style={{ backgroundColor: '#fff' }}>
+              <div className="mobile-nav-submenu-panel">
                 <NavLink to="/bang-gia" end className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> Bảng giá Chatbot</NavLink>
                 <NavLink to="/bang-gia/crm" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> Bảng giá CRM</NavLink>
                 <NavLink to="/bang-gia/marketing" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> Bảng giá Marketing</NavLink>

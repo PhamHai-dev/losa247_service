@@ -73,7 +73,7 @@ export function AdminDashboard() {
       <Spin spinning={kpisQ.loading}>
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }} /></Card></Col>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Dịch vụ hiện có" value={kpi.totalServices ?? 0} prefix="🛠️" /></Card></Col>
+          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead hoàn thành" value={kpi.completedLeads ?? 0} prefix="✅" valueStyle={{ color: '#16A34A' }} /></Card></Col>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Bài viết xuất bản" value={kpi.totalBlogs ?? 0} prefix="📝" /></Card></Col>
           <Col xs={24} sm={12} lg={6}><Card><Statistic title="Chờ xử lý (Lead/Chat)" value={kpi.pendingTasks ?? 0} prefix="💬" valueStyle={{ color: '#EF4444' }} /></Card></Col>
         </Row>

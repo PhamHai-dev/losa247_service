@@ -120,13 +120,15 @@ function BlogsView() {
     { title: 'Tác giả', dataIndex: 'author', key: 'author', width: 150, render: (author) => <span className="blogs-source"><UserOutlined />{author?.name || '—'}</span> },
     { title: 'Lượt xem', dataIndex: 'views', key: 'views', width: 105, render: (value) => <span className="blogs-source"><EyeOutlined />{Number(value || 0).toLocaleString('vi-VN')}</span> },
     { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 125, render: (value) => <StatusTag map={BLOG_STATUS} value={value} /> },
-    { title: 'Thao tác', key: 'action', fixed: 'right', width: 165, render: (_, row) => <div className="blogs-row-actions">
-      <Button type="text" icon={<EyeOutlined />} aria-label={`Xem ${row.title}`} title="Xem bài viết" onClick={() => window.open(`/blog/${row.slug}`, '_blank')} />
-      {row.status === 'pending' && <Button type="text" icon={<CheckCircleOutlined />} aria-label={`Duyệt ${row.title}`} title="Duyệt bài" onClick={() => doAction(() => blogsService.approve(row._id), 'Đã duyệt bài')} />}
-      {row.status === 'pending' && <Button type="text" danger icon={<CloseOutlined />} aria-label={`Từ chối ${row.title}`} title="Từ chối" onClick={() => doAction(() => blogsService.reject(row._id), 'Đã từ chối')} />}
-      <Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.title}`} title="Chỉnh sửa" onClick={() => navigate('/admin/blogs/editor', { state: { blog: row } })} />
-      <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(row._id), 'Đã xoá')}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.title}`} title="Xóa" /></Popconfirm>
-    </div> },
+    {
+      title: 'Thao tác', key: 'action', fixed: 'right', width: 165, render: (_, row) => <div className="blogs-row-actions">
+        <Button type="text" icon={<EyeOutlined />} aria-label={`Xem ${row.title}`} title="Xem bài viết" onClick={() => window.open(`/blog/${row.slug}`, '_blank')} />
+        {row.status === 'pending' && <Button type="text" icon={<CheckCircleOutlined />} aria-label={`Duyệt ${row.title}`} title="Duyệt bài" onClick={() => doAction(() => blogsService.approve(row._id), 'Đã duyệt bài')} />}
+        {row.status === 'pending' && <Button type="text" danger icon={<CloseOutlined />} aria-label={`Từ chối ${row.title}`} title="Từ chối" onClick={() => doAction(() => blogsService.reject(row._id), 'Đã từ chối')} />}
+        <Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.title}`} title="Chỉnh sửa" onClick={() => navigate('/admin/blogs/editor', { state: { blog: row } })} />
+        <Popconfirm title="Xoá bài viết?" onConfirm={() => doAction(() => blogsService.deleteBlog(row._id), 'Đã xoá')}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.title}`} title="Xóa" /></Popconfirm>
+      </div>
+    },
   ]
 
   return <>
@@ -144,8 +146,8 @@ function BlogsView() {
         {activeFilterCount > 0 && <div className="blogs-active-filters"><span>Đang lọc:</span>{debounced && <Tag closable onClose={() => onSearch('')}>“{debounced}”</Tag>}{category && <Tag closable onClose={() => setCategory('')}>{categories.find((item) => item._id === category)?.name}</Tag>}{source && <Tag closable onClose={() => setSource('')}>{sourceOptions.find((item) => item.value === source)?.label}</Tag>}{status && <Tag closable onClose={() => setStatus('')}>{BLOG_STATUS[status]?.label}</Tag>}</div>}
       </div>
       <div className="blogs-status-tabs"><Segmented value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={[{ value: '', label: `Tất cả (${stats.totalBlogs})` }, { value: 'draft', label: 'Bản nháp' }, { value: 'pending', label: 'Chờ duyệt' }, { value: 'published', label: `Đã đăng (${stats.publishedBlogs})` }, { value: 'rejected', label: 'Từ chối' }]} /></div>
-      {query.error && <Alert type="error" showIcon title={query.error} style={{ margin:16 }} />}
-      <div className="blogs-table-wrap"><Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} scroll={{ x:1100 }} pagination={{ current:page, pageSize, total, onChange:setPage, showSizeChanger:false, showTotal:(count) => `${count} bài viết` }} /></div>
+      {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
+      <div className="blogs-table-wrap"><Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} scroll={{ x: 1100 }} pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false, showTotal: (count) => `${count} bài viết` }} /></div>
     </div>
   </>
 }
@@ -198,30 +200,40 @@ function BlogTagsTable() {
   }
 
   const columns = [
-    { title: 'Tên thẻ', dataIndex: 'name', key: 'name', render: (val) => <><Tag icon={<SettingOutlined />} color="cyan">{val}</Tag></> },
-    { title: 'Slug', dataIndex: 'slug', key: 'slug' },
+    { title: 'Tên thẻ', dataIndex: 'name', key: 'name', width: 220, render: (val) => <Tag icon={<SettingOutlined />} color="cyan">{val}</Tag> },
+    { title: 'Slug', dataIndex: 'slug', key: 'slug', width: 220, ellipsis: true },
     { title: 'Bài viết', dataIndex: 'postCount', key: 'postCount', align: 'center', width: 100 },
-    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', render: (val) => formatDate(val) },
-    { title: 'Thao tác', key: 'actions', width: 120, render: (_, r) => (
-      <Space>
-        <Button size="small" type="text" icon={<SettingOutlined style={{color: '#0d9488'}} />} onClick={() => handleEdit(r)} />
-        <Popconfirm title="Xoá thẻ này?" onConfirm={() => handleDelete(r._id)}>
-          <Button size="small" type="text" danger icon={<CloseOutlined />} />
-        </Popconfirm>
-      </Space>
-    )}
+    { title: 'Ngày tạo', dataIndex: 'createdAt', key: 'createdAt', width: 170, render: (val) => formatDate(val) },
+    {
+      title: 'Thao tác', key: 'actions', width: 110, fixed: 'right', render: (_, r) => (
+        <Space>
+          <Button size="small" type="text" icon={<SettingOutlined style={{ color: '#0d9488' }} />} aria-label={`Sửa thẻ ${r.name}`} onClick={() => handleEdit(r)} />
+          <Popconfirm title="Xoá thẻ này?" onConfirm={() => handleDelete(r._id)}>
+            <Button size="small" type="text" danger icon={<CloseOutlined />} aria-label={`Xóa thẻ ${r.name}`} />
+          </Popconfirm>
+        </Space>
+      )
+    }
   ]
 
   return (
     <Row gutter={24}>
       <Col xs={24} lg={15}>
         <Card bodyStyle={{ padding: 0 }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16 }}>
+          <div className="blogs-tag-search" style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 16 }}>
             <Input.Search allowClear placeholder="Tìm kiếm thẻ..." value={search} onChange={(e) => onSearch(e.target.value)} style={{ maxWidth: 300 }} />
           </div>
           {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
-          <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows}
-            pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }} />
+          <div className="blogs-tag-table">
+            <Table
+              rowKey="_id"
+              loading={query.loading}
+              columns={columns}
+              dataSource={rows}
+              scroll={{ x: 820 }}
+              pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false }}
+            />
+          </div>
         </Card>
       </Col>
       <Col xs={24} lg={9}>
@@ -312,12 +324,12 @@ function CategoriesView() {
 
   const columns = [
     { title: '#', key: 'index', render: (_, __, i) => i + 1, width: 60 },
-    { title: 'TÊN DANH MỤC', dataIndex: 'name', key: 'name', render: (v) => <b>{v}</b> },
-    { title: 'SLUG', dataIndex: 'slug', key: 'slug', render: (v) => <span style={{ color: '#64748b' }}>{v}</span> },
-    { title: 'SỐ BÀI VIẾT', dataIndex: 'blogCount', key: 'blogCount', render: (v) => <b>{v || 0}</b> },
-    { title: 'NGÀY TẠO', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v) },
+    { title: 'TÊN DANH MỤC', dataIndex: 'name', key: 'name', width: 220, render: (v) => <b>{v}</b> },
+    { title: 'SLUG', dataIndex: 'slug', key: 'slug', width: 220, ellipsis: true, render: (v) => <span style={{ color: '#64748b' }}>{v}</span> },
+    { title: 'SỐ BÀI VIẾT', dataIndex: 'blogCount', key: 'blogCount', width: 130, align: 'center', render: (v) => <b>{v || 0}</b> },
+    { title: 'NGÀY TẠO', dataIndex: 'createdAt', key: 'createdAt', width: 170, render: (v) => formatDate(v) },
     {
-      title: 'THAO TÁC', key: 'action', render: (_, r) => (
+      title: 'THAO TÁC', key: 'action', width: 130, fixed: 'right', render: (_, r) => (
         <Space>
           <Button size="small" onClick={() => handleEdit(r)}>Sửa</Button>
           <Popconfirm title="Xoá danh mục này?" onConfirm={() => handleDelete(r._id)}>
@@ -349,8 +361,15 @@ function CategoriesView() {
         </div>
       </div>
 
-      <div className="admin-card" style={{ padding: 0 }}>
-        <Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} pagination={false} />
+      <div className="admin-card blogs-category-table" style={{ padding: 0 }}>
+        <Table
+          rowKey="_id"
+          loading={query.loading}
+          columns={columns}
+          dataSource={rows}
+          pagination={false}
+          scroll={{ x: 930 }}
+        />
       </div>
 
       <Modal

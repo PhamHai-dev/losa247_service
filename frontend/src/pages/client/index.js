@@ -5,3 +5,4 @@ export * from './AccountPage';
 export * from './BlogDetailPage';
 export * from './TagDetailPage';
 export * from './ChatbotSolutionsPage';
+export * from './NotFoundPage';

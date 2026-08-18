@@ -4,15 +4,16 @@ const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
 exports.getKpis = async (_req, res, next) => {
   try {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    const [newLeads, totalBlogs, unhandledLeadsCount, openChatsCount] = await Promise.all([
+    const [newLeads, completedLeads, totalBlogs, unhandledLeadsCount, openChatsCount] = await Promise.all([
       prisma.lead.count({ where: { createdAt: { gte: startOfMonth } } }),
+      prisma.lead.count({ where: { status: 'converted' } }),
       prisma.blog.count({ where: { status: 'published' } }),
       prisma.lead.count({ where: { status: 'new' } }),
       prisma.chatSession.count({ where: { status: 'open' } }),
     ]);
     return res.json({
       success: true,
-      data: { newLeads, totalBlogs, pendingTasks: unhandledLeadsCount + openChatsCount },
+      data: { newLeads, completedLeads, totalBlogs, pendingTasks: unhandledLeadsCount + openChatsCount },
     });
   } catch (err) {
     return next(err);

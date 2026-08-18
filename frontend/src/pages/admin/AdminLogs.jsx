@@ -82,12 +82,13 @@ export function AdminLogs() {
     catch { message.error('Backend chưa hỗ trợ logs export') }
   }
   const columns = [
-    { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (v) => formatDate(v, true) },
-    { title: 'Người thực hiện', dataIndex: ['actor', 'name'], key: 'actor', render: (v, r) => v || r.actor || '—' },
+    { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', width: 180, render: (v) => formatDate(v, true) },
+    { title: 'Người thực hiện', dataIndex: ['actor', 'name'], key: 'actor', width: 210, ellipsis: true, render: (v, r) => v || r.actor || '—' },
     {
       title: 'Hành động',
       dataIndex: 'action',
       key: 'action',
+      width: 130,
       render: (v) => {
         let color = 'default'
         if (v === 'CREATE') color = 'green'
@@ -96,11 +97,13 @@ export function AdminLogs() {
         return <Tag color={color}>{v}</Tag>
       }
     },
-    { title: 'Module', dataIndex: 'module', key: 'module' },
-    { title: 'IP', dataIndex: 'ip', key: 'ip' },
+    { title: 'Module', dataIndex: 'module', key: 'module', width: 160, ellipsis: true },
+    { title: 'IP', dataIndex: 'ip', key: 'ip', width: 150 },
     {
       title: 'Chi tiết',
       key: 'detail',
+      width: 90,
+      fixed: 'right',
       render: (_, r) => (
         <Button size="small" type="link" onClick={() => viewPayload(r)} disabled={!r.payload}>
           Xem
@@ -110,15 +113,27 @@ export function AdminLogs() {
   ]
   return (
     <>
-      <PageHeader title="Nhật ký hệ thống" extra={
-        <Space wrap>
-          <Input.Search allowClear placeholder="Tìm hành động / người" value={search} onChange={(e) => onSearch(e.target.value)} style={{ width: 240 }} />
-          <Button icon={<DownloadOutlined />} onClick={exportCsv}>Xuất CSV</Button>
-        </Space>} />
-      <Table rowKey={(r) => r._id || r.id || Math.random()} loading={query.loading} columns={columns} dataSource={rows}
-        pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage }} />
+      <div className="logs-page-header">
+        <PageHeader title="Nhật ký hệ thống" extra={
+          <Space wrap className="logs-header-actions">
+            <Input.Search allowClear placeholder="Tìm hành động / người" value={search} onChange={(e) => onSearch(e.target.value)} />
+            <Button icon={<DownloadOutlined />} onClick={exportCsv}>Xuất CSV</Button>
+          </Space>} />
+      </div>
+      <div className="logs-table-card">
+        <Table
+          className="logs-table"
+          rowKey={(r) => r._id || r.id}
+          loading={query.loading}
+          columns={columns}
+          dataSource={rows}
+          scroll={{ x: 920 }}
+          pagination={{ current: page, pageSize, total: query.data?.pagination?.total || 0, onChange: setPage, showSizeChanger: false }}
+        />
+      </div>
 
       <Drawer
+        className="logs-detail-drawer"
         title="Chi tiết Log"
         placement="right"
         width={500}

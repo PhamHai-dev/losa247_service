@@ -56,7 +56,6 @@ export function HomePage() {
               <span><CircleCheck size={17} /> Tùy chỉnh theo nghiệp vụ</span>
             </motion.div>
             <motion.div className="home-hero-actions" variants={fadeUp}>
-              <button id="home-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('ecosystem')?.scrollIntoView({ behavior: 'smooth' })}>Khám phá giải pháp <ArrowRight size={18} /></button>
               <button id="home-hero-consultation-btn" type="button" className="saas-btn home-hero-secondary" onClick={openLeadModal}>Đăng ký tư vấn miễn phí</button>
             </motion.div>
           </motion.div>

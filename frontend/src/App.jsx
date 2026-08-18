@@ -2,7 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useEffect, useLayoutEffect } from 'react'
 import { ClientLayout } from './layouts/ClientLayout'
 import { AdminLayout } from './layouts/AdminLayout'
-import { HomePage, BlogPage, BlogDetailPage, ServicesPage, AccountPage, TagDetailPage } from './pages/client'
+import { HomePage, BlogPage, BlogDetailPage, ServicesPage, AccountPage, TagDetailPage, NotFoundPage } from './pages/client'
 import BotcakeClone from './pages/client/ChatbotSolutionsPage'
 // import BroadcastMarketingPage from './pages/client/BroadcastMarketingPage'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLoginPage } from './pages/auth/AuthPages'
@@ -11,7 +11,18 @@ import { AdminDashboard, AdminLeads, AdminBlogs, AdminBlogEditor, AdminFaqs, Adm
 function ScrollToTop() {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+
+    root.style.scrollBehavior = 'auto';
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.body.scrollTop = 0;
+
+    const frameId = window.requestAnimationFrame(() => {
+      root.style.scrollBehavior = previousScrollBehavior;
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, [pathname]);
   return null;
 }
@@ -32,6 +43,7 @@ export default function App() {
           <Route path="bang-gia" element={<ServicesPage />} />
 
           <Route path="tai-khoan" element={<AccountPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route path="dang-nhap" element={<LoginPage />} />
         <Route path="dang-ky" element={<RegisterPage />} />

@@ -259,7 +259,7 @@ function PermissionsTab() {
   }
 
   const columns = [
-    { title: 'Phân quyền', dataIndex: 'label', key: 'label', width: 280, fixed: 'left', render: (label, row) => row.isModule
+    { title: 'Phân quyền', dataIndex: 'label', key: 'label', width: 200, fixed: 'left', render: (label, row) => row.isModule
       ? <span className="permission-module"><SafetyCertificateOutlined />{label}</span>
       : <span className="permission-action">{label}</span> },
     ...roles.map((role) => ({
@@ -267,7 +267,7 @@ function PermissionsTab() {
         {role.name === 'admin' && <Tag color="gold">Hệ thống</Tag>}
         {role.name !== 'admin' && canDelete && <Popconfirm title="Xóa vai trò này?" description="Chỉ xóa được khi chưa có người dùng." onConfirm={() => deleteRole(role)}><Button size="small" type="text" danger>Xóa</Button></Popconfirm>}
       </div>,
-      key: role._id, align: 'center', width: 170,
+      key: role._id, align: 'center', width: 130,
       render: (_, row) => row.isModule ? null : <Checkbox aria-label={`${role.name} - ${row.permission}`}
         checked={role.name === 'admin' || draftFor(role).includes(row.permission)} disabled={role.name === 'admin' || !canUpdate || saving}
         onChange={(event) => togglePerm(role, row.permission, event.target.checked)} />,
@@ -291,7 +291,7 @@ function PermissionsTab() {
           {canCreate && <Button id="roles-add-button" type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>Thêm vai trò</Button>}</Space>
       </div>
       <Table className="permissions-table" rowKey="key" pagination={false} columns={columns} dataSource={dataSource}
-        loading={rolesQuery.loading || catalogQuery.loading} scroll={{ x: Math.max(900, 280 + roles.length * 170) }} />
+        loading={rolesQuery.loading || catalogQuery.loading} scroll={{ x: Math.max(720, 200 + roles.length * 130) }} />
     </div>
     {canUpdate && <div className={`permissions-savebar ${dirtyCount ? 'is-visible' : ''}`}><div><strong>{dirtyCount ? `${dirtyCount} thay đổi chưa lưu` : 'Mọi thay đổi đã được lưu'}</strong><span>Kiểm tra kỹ trước khi cập nhật quyền truy cập.</span></div><Space><Button disabled={!dirtyRoles.length || saving} onClick={resetDraft}>Hủy thay đổi</Button><Button type="primary" loading={saving} disabled={!dirtyRoles.length} onClick={saveDraft}>Cập nhật quyền ({dirtyCount})</Button></Space></div>}
 
