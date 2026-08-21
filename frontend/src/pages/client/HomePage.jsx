@@ -204,9 +204,9 @@ export function HomePage() {
             <p>Những tình huống ứng dụng tiêu biểu cho thấy Losa có thể đồng hành cùng nhiều mô hình vận hành khác nhau.</p>
           </header>
           <div className="home-testimonial-grid">{[
-            { tag: 'Bán lẻ đa kênh', quote: 'Losa giúp đội ngũ gom hội thoại từ nhiều kênh về một nơi. Việc tư vấn ngoài giờ trở nên liền mạch và chúng tôi kiểm soát cơ hội bán hàng tốt hơn.', author: 'Nguyễn Minh Anh', position: 'Giám đốc vận hành', company: 'An Nhiên Retail', initials: 'MA' },
-            { tag: 'Dịch vụ chuyên nghiệp', quote: 'Quy trình tiếp nhận và phân loại khách hàng rõ ràng hơn trước. Nhân viên biết chính xác cần ưu tiên ai và quản lý dễ dàng theo dõi tiến độ xử lý.', author: 'Trần Quốc Huy', position: 'Trưởng phòng Kinh doanh', company: 'NovaLink Solutions', initials: 'QH' },
-            { tag: 'Chăm sóc khách hàng', quote: 'Các kịch bản nhắc lịch và chăm sóc sau dịch vụ giúp trải nghiệm khách hàng nhất quán hơn mà đội ngũ không phải tăng thêm khối lượng công việc thủ công.', author: 'Lê Thảo Nguyên', position: 'Nhà sáng lập', company: 'Mộc An Wellness', initials: 'TN' }
+            { tag: 'Bán lẻ đa kênh', quote: 'Losa giúp đội ngũ gom hội thoại từ nhiều kênh về một nơi. Việc tư vấn ngoài giờ trở nên liền mạch và chúng tôi kiểm soát cơ hội bán hàng tốt hơn.', author: 'Nguyễn Minh Anh', position: 'Giám đốc vận hành', company: 'An Nhiên Retail', initials: 'MA', avatar: '/images/home_1.webp' },
+            { tag: 'Dịch vụ chuyên nghiệp', quote: 'Quy trình tiếp nhận và phân loại khách hàng rõ ràng hơn trước. Nhân viên biết chính xác cần ưu tiên ai và quản lý dễ dàng theo dõi tiến độ xử lý.', author: 'Trần Quốc Huy', position: 'Trưởng phòng Kinh doanh', company: 'NovaLink Solutions', initials: 'QH', avatar: '/images/home_2.jpg' },
+            { tag: 'Chăm sóc khách hàng', quote: 'Các kịch bản nhắc lịch và chăm sóc sau dịch vụ giúp trải nghiệm khách hàng nhất quán hơn mà đội ngũ không phải tăng thêm khối lượng công việc thủ công.', author: 'Lê Thảo Nguyên', position: 'Nhà sáng lập', company: 'Mộc An Wellness', initials: 'TN', avatar: '/images/home_3.jpg' }
           ].map((item) => (
             <article className="home-testimonial-card" key={item.author}>
               <div className="home-testimonial-topline">
@@ -216,7 +216,11 @@ export function HomePage() {
               <span className="home-testimonial-quote-mark" aria-hidden="true">“</span>
               <blockquote>{item.quote}</blockquote>
               <footer className="home-testimonial-author">
-                <span className="home-testimonial-avatar">{item.initials}</span>
+                <span className="home-testimonial-avatar">
+                  {item.avatar && item.avatar !== '#'
+                    ? <img src={item.avatar} alt={`Ảnh đại diện của ${item.author}`} loading="lazy" />
+                    : item.initials}
+                </span>
                 <span className="home-testimonial-person">
                   <strong>{item.author}</strong>
                   <small>{item.position}</small>

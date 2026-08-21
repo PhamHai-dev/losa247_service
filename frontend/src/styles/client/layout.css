@@ -60,7 +60,6 @@ html {
   border-radius: 12px;
   color: #fff;
   background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
-  box-shadow: 0 8px 20px rgba(37, 99, 235, .2);
   transition: color .28s ease, background .28s ease, border-color .28s ease, box-shadow .28s ease, transform .28s cubic-bezier(.22, 1, .36, 1);
 }
 
@@ -68,7 +67,6 @@ html {
   color: #fff;
   background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
   border-color: rgba(255, 255, 255, .46);
-  box-shadow: 0 11px 24px rgba(37, 99, 235, .28);
   transform: translateY(-0.5px);
 }
 
@@ -193,7 +191,7 @@ html {
 .client-cta-section {
   position: relative;
   overflow: hidden;
-  padding: 40px 0 78px;
+  padding: 70px 0 78px;
   color: #fff;
   background:
     linear-gradient(rgba(56, 189, 248, .035) 1px, transparent 1px),
@@ -301,8 +299,8 @@ html {
   max-width: 680px;
   margin: 0 0 20px;
   color: #fff;
-  font-size: clamp(42px, 4.25vw, 62px);
-  font-weight: 600;
+  font-size: clamp(42px, 4.25vw, 50px);
+  font-weight: 500;
   line-height: 1.08;
   letter-spacing: -.048em;
 }
@@ -1797,9 +1795,6 @@ a.footer-contact-item:hover strong {
   font-size: 14px;
 }
 
-.category-pill:hover {
-  background: #f8fafc;
-}
 
 .category-pill.active {
   background: var(--green);
@@ -1807,10 +1802,6 @@ a.footer-contact-item:hover strong {
   border-color: var(--green);
 }
 
-.category-pill.active:hover {
-  background: #22c55e;
-  border-color: #22c55e;
-}
 
 .featured-section {
   display: grid;
@@ -1841,7 +1832,7 @@ a.footer-contact-item:hover strong {
 }
 
 .featured-label {
-  color: var(--orange);
+  color: #0369a1;
   font-weight: 600;
   font-size: 13px;
   text-transform: uppercase;
@@ -1850,8 +1841,8 @@ a.footer-contact-item:hover strong {
 }
 
 .featured-cat {
-  color: #166534;
-  background: #dcfce7;
+  color: #0369a1;
+  background: #e0f2fe;
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -1922,10 +1913,6 @@ a.footer-contact-item:hover strong {
   margin-top: 16px;
 }
 
-.featured-card.large .read-more-btn:hover {
-  background: #22c55e !important;
-  border-color: #22c55e !important;
-}
 
 .featured-side-list {
   display: flex;
@@ -2194,7 +2181,7 @@ a.footer-contact-item:hover strong {
 
 .view-all-cats {
   margin-top: 16px;
-  color: var(--orange);
+  color: #0369a1;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -3044,8 +3031,8 @@ a.footer-contact-item:hover strong {
 }
 
 .card-cat {
-  color: #166534;
-  background: #dcfce7;
+  color: #0369a1;
+  background: #e0f2fe;
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
@@ -5548,14 +5535,23 @@ a.price-card:hover {
 .home-testimonial-avatar {
   width: 46px;
   height: 46px;
+  flex: 0 0 46px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   border-radius: 50%;
   color: #fff;
   background: linear-gradient(135deg, #0284c7, #38bdf8);
-  box-shadow: 0 8px 18px rgba(14, 165, 233, .2);
   font-size: 12px;
   font-weight: 700;
+}
+
+.home-testimonial-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .home-testimonial-person {
@@ -5721,7 +5717,7 @@ a.price-card:hover {
   margin: 0 0 16px;
   color: #123b57;
   font-size: clamp(32px, 4vw, 48px);
-  font-weight: 650;
+  font-weight: 500;
   letter-spacing: -.035em;
 }
 
@@ -7075,36 +7071,30 @@ a.price-card:hover {
 
 /* ===== Unified client CTA palette =====
    All requested primary actions share the same idle and hover states. */
-:is(
-  .menu a.header-trial-btn,
+:is(.menu a.header-trial-btn,
   .mobile-menu .btn-primary,
   .client-hero__actions .saas-btn,
   .client-hero__actions .pricing-btn,
   .client-hero__actions .csp-btn,
   .home-faq-cta,
   .pricing-page .saas-card-v2-btn,
-  .newsletter-register-btn
-) {
+  .newsletter-register-btn) {
   border-color: var(--blue-600) !important;
   color: #fff !important;
   background: var(--blue-600) !important;
-  box-shadow: 0 8px 20px rgba(2, 132, 199, .22) !important;
   transition: color .28s ease, background-color .28s ease, border-color .28s ease, box-shadow .28s ease, transform .28s cubic-bezier(.22, 1, .36, 1) !important;
 }
 
-:is(
-  .menu a.header-trial-btn,
+:is(.menu a.header-trial-btn,
   .mobile-menu .btn-primary,
   .client-hero__actions .saas-btn,
   .client-hero__actions .pricing-btn,
   .client-hero__actions .csp-btn,
   .home-faq-cta,
   .pricing-page .saas-card-v2-btn,
-  .newsletter-register-btn
-):hover:not(:disabled):not([aria-disabled="true"]) {
+  .newsletter-register-btn):hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--blue-700) !important;
   color: #fff !important;
   background: var(--blue-700) !important;
-  box-shadow: 0 11px 24px rgba(3, 105, 161, .28) !important;
   transform: translateY(-0.5px) !important;
 }

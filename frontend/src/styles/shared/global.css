@@ -90,12 +90,10 @@ textarea {
 .btn-primary {
   color: white;
   background: var(--blue-600);
-  box-shadow: 0 8px 24px rgba(2, 132, 199, .28)
 }
 
 .btn-primary:hover {
   background: var(--blue-500);
-  box-shadow: 0 12px 30px rgba(14, 165, 233, .24)
 }
 
 .btn-primary:active {
@@ -361,4 +359,3 @@ tr:hover td {
   color: #fff !important;
   font-weight: 600;
 }
-
