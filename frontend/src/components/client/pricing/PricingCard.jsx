@@ -6,9 +6,23 @@ const getIcon = (order) => {
   return <Building2 size={23} />
 }
 
+const normalizeStringList = (value) => {
+  if (Array.isArray(value)) return value
+  if (typeof value !== 'string' || !value.trim()) return []
+
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed)) return parsed
+  } catch {
+    // Dữ liệu cũ có thể được lưu dưới dạng chuỗi nhiều dòng thay vì JSON.
+  }
+
+  return value.split(/\r?\n|;/).map((item) => item.trim()).filter(Boolean)
+}
+
 const PricingCard = ({ plan, onConsult }) => {
-  const features = plan.feature || plan.features || []
-  const subtitles = plan.subtitle || []
+  const features = normalizeStringList(plan.feature ?? plan.features)
+  const subtitles = normalizeStringList(plan.subtitle)
   const isFeatured = Boolean(plan.badge)
   const planId = String(plan._id || plan.order || plan.name).replace(/[^a-zA-Z0-9-_]/g, '-')
 

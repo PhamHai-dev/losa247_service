@@ -105,7 +105,7 @@ const initTokenCleanupJob = require('./jobs/tokenCleanup.job');
 
 initTokenCleanupJob();
 
-if (env.RUN_CHAT_WORKERS_IN_API && env.REDIS_HOST) {
+if (env.RUN_CHAT_WORKERS_IN_API && (env.REDIS_SOCKET_PATH || env.REDIS_HOST)) {
   require('./jobs/outboxDispatcher.worker').start();
   require('./jobs/chatAutomation.worker').start();
   require('./jobs/deadLetter.worker').start();

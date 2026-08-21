@@ -16,6 +16,22 @@ const mapPlan = (row) => {
     feature: (features || []).map((item) => item.content),
   });
 };
+const parseComparisonValues = (values) => {
+  if (values && typeof values === 'object' && !Array.isArray(values)) return values;
+  if (typeof values !== 'string' || !values.trim()) return {};
+  try {
+    const parsed = JSON.parse(values);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+const mapComparison = (row) =>
+  row && toLegacyEntity({ ...row, values: parseComparisonValues(row.values) });
+const serializeComparisonData = (data) => ({
+  ...data,
+  ...(data.values !== undefined ? { values: JSON.stringify(parseComparisonValues(data.values)) } : {}),
+});
 const mapSettings = (row) => ({
   _id: row.id,
   id: row.id,
@@ -162,11 +178,11 @@ const pricingRepository = {
       const comparisons = await tx.pricingComparison.findMany();
       await Promise.all(
         comparisons.map(({ id: comparisonId, values }) => {
-          const next = { ...(values || {}) };
+          const next = { ...parseComparisonValues(values) };
           delete next[id];
           return tx.pricingComparison.update({
             where: { id: comparisonId },
-            data: { values: next },
+            data: { values: JSON.stringify(next) },
           });
         }),
       );
@@ -184,22 +200,23 @@ const pricingRepository = {
   async listComparisons() {
     return (
       await prisma.pricingComparison.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })
-    ).map(toLegacyEntity);
+    ).map(mapComparison);
   },
   async findComparison(id) {
-    return toLegacyEntity(await prisma.pricingComparison.findUnique({ where: { id } }));
+    return mapComparison(await prisma.pricingComparison.findUnique({ where: { id } }));
   },
   async saveComparison(id, data) {
-    return toLegacyEntity(
+    const serializedData = serializeComparisonData(data);
+    return mapComparison(
       id
-        ? await prisma.pricingComparison.update({ where: { id }, data })
+        ? await prisma.pricingComparison.update({ where: { id }, data: serializedData })
         : await prisma.pricingComparison.create({
-            data: { id: createEntityId(), values: {}, ...data },
+            data: { id: createEntityId(), values: '{}', ...serializedData },
           }),
     );
   },
   async deleteComparison(id) {
-    return toLegacyEntity(await prisma.pricingComparison.delete({ where: { id } }));
+    return mapComparison(await prisma.pricingComparison.delete({ where: { id } }));
   },
 };
 

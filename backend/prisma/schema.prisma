@@ -505,7 +505,7 @@ model PricingPlanFeature {
 model PricingComparison {
   id        String   @id @db.VarChar(24)
   title     String   @db.VarChar(160)
-  values    Json
+  values    String   @db.LongText
   order     Int      @default(0) @db.UnsignedInt
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)

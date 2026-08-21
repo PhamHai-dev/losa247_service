@@ -7,8 +7,25 @@ let chatQueue;
 let deadLetterQueue;
 
 const getQueueConnection = () => {
-  if (!env.REDIS_HOST) return null;
-  if (!connection) connection = new IORedis({ host: env.REDIS_HOST, port: env.REDIS_PORT, username: env.REDIS_USERNAME || undefined, password: env.REDIS_PASSWORD || undefined, db: env.REDIS_DB, tls: env.REDIS_TLS ? { servername: env.REDIS_HOST } : undefined, maxRetriesPerRequest: null, enableReadyCheck: false });
+  if (!env.REDIS_SOCKET_PATH && !env.REDIS_HOST) return null;
+  if (!connection) {
+    const transport = env.REDIS_SOCKET_PATH
+      ? { path: env.REDIS_SOCKET_PATH }
+      : {
+          host: env.REDIS_HOST,
+          port: env.REDIS_PORT,
+          tls: env.REDIS_TLS ? { servername: env.REDIS_HOST } : undefined,
+        };
+
+    connection = new IORedis({
+      ...transport,
+      username: env.REDIS_USERNAME || undefined,
+      password: env.REDIS_PASSWORD || undefined,
+      db: env.REDIS_DB,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+    });
+  }
   return connection;
 };
 

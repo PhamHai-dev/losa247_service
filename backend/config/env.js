@@ -35,6 +35,7 @@ const env = {
   SMTP_PORT: process.env.SMTP_PORT || 465,
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+  REDIS_SOCKET_PATH: process.env.REDIS_SOCKET_PATH,
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: parseInteger(process.env.REDIS_PORT, 6379),
   REDIS_USERNAME: process.env.REDIS_USERNAME,
