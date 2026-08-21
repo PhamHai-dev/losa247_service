@@ -69,24 +69,23 @@ export function BlogPage() {
 
   return (
     <main className="blog-page-container">
-      <section className="blog-hero" aria-labelledby="blog-hero-title">
+      <section className="client-hero" aria-labelledby="blog-hero-title">
         <div className="blog-container-fluid">
-          <div className="blog-hero-inner">
-            <motion.div className="blog-hero-content" initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.12 } } }}>
-              <motion.span className="blog-hero-badge" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}><Star size={14} fill="currentColor" /> Góc kiến thức từ Losa</motion.span>
-              <motion.h1 id="blog-hero-title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></motion.h1>
-              <motion.p className="blog-hero-lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.</motion.p>
-              <motion.div className="blog-hero-proof" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+          <div className="client-hero__grid">
+            <motion.div className="client-hero__content" initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.12 } } }}>
+              <motion.span className="client-hero__badge" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}><Star size={14} fill="currentColor" /> Góc kiến thức từ Losa</motion.span>
+              <motion.h1 id="blog-hero-title" className="client-hero__title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></motion.h1>
+              <motion.p className="client-hero__lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.</motion.p>
+              <motion.div className="client-hero__proof" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
                 <span><CircleCheck size={17} /> Xu hướng mới nhất</span>
                 <span><CircleCheck size={17} /> Kiến thức ứng dụng</span>
                 <span><CircleCheck size={17} /> Case study thực tế</span>
               </motion.div>
-              <motion.div className="blog-hero-actions" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+              <motion.div className="client-hero__actions blog-hero-actions" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
                 <button id="blog-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('blog-categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Khám phá bài viết <ArrowRight size={18} /></button>
-                <button id="blog-hero-featured-btn" type="button" className="saas-btn blog-hero-secondary" onClick={() => document.getElementById('blog-articles')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Xem bài viết nổi bật</button>
               </motion.div>
             </motion.div>
-            <motion.div className="blog-hero-illustration" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+            <motion.div className="client-hero__visual blog-hero-illustration" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
               <div className="blog-hero-glow" />
               <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt="Kho kiến thức AI Marketing và AI Sales từ Losa" />
             </motion.div>

@@ -44,23 +44,23 @@ export function HomePage() {
 
   return (
     <main className="client-app-wrapper home-page">
-      <section className="home-hero" aria-labelledby="home-hero-title">
-        <div className="saas-container home-hero-grid">
-          <motion.div className="home-hero-content" initial="hidden" animate="visible" variants={stagger}>
-            <motion.span className="home-hero-badge" variants={fadeUp}><Star size={14} fill="currentColor" /> Được tin dùng bởi hơn 200 doanh nghiệp</motion.span>
-            <motion.h1 id="home-hero-title" variants={fadeUp}>Vận hành thông minh hơn với <span>hệ sinh thái Losa</span></motion.h1>
-            <motion.p className="home-hero-lead" variants={fadeUp}>Giải pháp chuyển đổi số giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và quản trị dữ liệu trên một nền tảng thống nhất.</motion.p>
-            <motion.div className="home-hero-proof" variants={fadeUp}>
+      <section className="client-hero" aria-labelledby="home-hero-title">
+        <div className="saas-container client-hero__grid">
+          <motion.div className="client-hero__content" initial="hidden" animate="visible" variants={stagger}>
+            <motion.span className="client-hero__badge" variants={fadeUp}><Star size={14} fill="currentColor" /> Được tin dùng bởi hơn 200 doanh nghiệp</motion.span>
+            <motion.h1 id="home-hero-title" className="client-hero__title" variants={fadeUp}>Vận hành thông minh hơn với <span>hệ sinh thái Losa</span></motion.h1>
+            <motion.p className="client-hero__lead" variants={fadeUp}>Giải pháp chuyển đổi số giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và quản trị dữ liệu trên một nền tảng thống nhất.</motion.p>
+            <motion.div className="client-hero__proof" variants={fadeUp}>
               <span><CircleCheck size={17} /> Tư vấn 24/7</span>
               <span><CircleCheck size={17} /> Kết nối đa kênh</span>
               <span><CircleCheck size={17} /> Tùy chỉnh theo nghiệp vụ</span>
             </motion.div>
-            <motion.div className="home-hero-actions" variants={fadeUp}>
+            <motion.div className="client-hero__actions" variants={fadeUp}>
               <button id="home-hero-consultation-btn" type="button" className="saas-btn home-hero-secondary" onClick={openLeadModal}>Đăng ký tư vấn miễn phí</button>
             </motion.div>
           </motion.div>
 
-          <motion.div className="home-hero-visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+          <motion.div className="client-hero__visual home-hero-visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
             <div className="home-hero-glow" />
             <img className="home-hero-main-image" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1786006189/Main_image_nttqte.png" alt="Hệ sinh thái giải pháp chuyển đổi số Losa" />
             <img className="home-hero-robot" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784878046/logo_bot_home_gmhrdk.png" alt="Trợ lý AI Losa" />

@@ -1,13 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 
 :root {
-  /* === Green Scale — Semantic Success / Online === */
-  --green-900: #14532D;
-  --green-700: #15803D;
-  --green-600: #16A34A;
-  --green-500: #22C55E;
-  --green-400: #4ADE80;
-  --green-100: #DCFCE7;
 
   /* === Sky Blue Scale — Brand / Action / Typography === */
   --blue-950: #082F49;
@@ -19,24 +12,25 @@
   --blue-400: #38BDF8;
   --blue-200: #BAE6FD;
   --blue-100: #E0F2FE;
-  --blue-50:  #F0F9FF;
+  --blue-50: #F0F9FF;
 
   /* === Brand aliases === */
-  --primary:  var(--blue-600);
+  --primary: var(--blue-600);
   --primary2: var(--blue-500);
-  --green:    var(--blue-600); /* backward-compatible brand alias */
+  --green: var(--blue-600);
+  /* backward-compatible brand alias */
 
   /* === Blue-tinted Neutrals === */
-  --navy:   var(--blue-950);
-  --navy2:  var(--blue-900);
-  --text:   #123B57;
-  --muted:  #55758B;
-  --bg:     #F4FAFE;
-  --card:   #ffffff;
-  --line:   #DCECF6;
+  --navy: var(--blue-950);
+  --navy2: var(--blue-900);
+  --text: #123B57;
+  --muted: #55758B;
+  --bg: #F4FAFE;
+  --card: #ffffff;
+  --line: #DCECF6;
 
   /* === Semantic Status === */
-  --red:    #EF4444;
+  --red: #EF4444;
   --yellow: #F59E0B;
   --orange: #F97316;
 
@@ -117,7 +111,8 @@ textarea {
 }
 
 .btn-secondary:hover {
-  background: var(--blue-500);         /* nhạt hơn 1 tông */
+  background: var(--blue-500);
+  /* nhạt hơn 1 tông */
   box-shadow: 0 12px 30px rgba(37, 99, 235, .22)
 }
 
@@ -366,11 +361,4 @@ tr:hover td {
   color: #fff !important;
   font-weight: 600;
 }
-
-/* ===== Button hover dùng chung: nền xanh nhạt ===== */
-html body #root :is(button, .btn, .ant-btn, [role="button"]):hover:not(:disabled):not([aria-disabled="true"]):not(.home-insights-category):not(.cta-submit-btn) {
-  color: var(--blue-700) !important;
-  background: var(--blue-100) !important;
-  border-color: var(--blue-400) !important;
-  box-shadow: none !important;
-}
+

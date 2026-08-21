@@ -213,7 +213,7 @@ export function RegisterPage() {
           <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" size="large" loading={loading} block>
+        <Button className="auth-login-submit" type="primary" htmlType="submit" size="large" loading={loading} block>
           Tạo tài khoản
         </Button>
       </Form>
