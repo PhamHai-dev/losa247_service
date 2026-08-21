@@ -5133,7 +5133,7 @@ a.price-card:hover {
 .home-featured-label {
   display: block;
   margin-bottom: 16px;
-  color: var(--orange);
+  color: #0369a1;
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -5148,8 +5148,8 @@ a.price-card:hover {
   margin-bottom: 12px;
   padding: 4px 12px;
   border-radius: 999px;
-  color: #166534;
-  background: #dcfce7;
+  color: #0369a1;
+  background: #e0f2fe;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
@@ -5472,12 +5472,6 @@ a.price-card:hover {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(56, 189, 248, .12), transparent 68%);
   pointer-events: none;
-}
-
-.home-testimonial-card:hover {
-  transform: translateY(-6px);
-  border-color: #bae6fd;
-  box-shadow: 0 22px 48px rgba(14, 116, 165, .12);
 }
 
 .home-testimonial-topline {
