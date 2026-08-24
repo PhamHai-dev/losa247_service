@@ -16,26 +16,29 @@ const heroFadeUp = {
 const heroStagger = { visible: { transition: { staggerChildren: .12 } } };
 
 const customerBrands = [
-    ['VM', 'Vinamilk', '#1686c7'],
-    ['VT', 'Viettel', '#e7343f'],
-    ['FPT', 'FPT', '#f47920'],
-    ['VG', 'Vingroup', '#d09b2c'],
-    ['TCB', 'Techcombank', '#e31d2b'],
-    ['HLC', 'Highlands Coffee', '#b51f2e'],
-    ['PNJ', 'PNJ', '#c69a2e'],
-    ['MWG', 'Thế Giới Di Động', '#f4b400']
+    { name: 'Vinamilk', image: '/images/solutions/solution_1_section4_icon.webp' },
+    { name: 'Viettel', image: '/images/solutions/solution_2_section4_icon.webp' },
+    { name: 'FPT', image: '/images/solutions/solution_3_section4_icon.webp' },
+    { name: 'Vingroup', image: '/images/solutions/solution_23_section4_icon.webp' },
+    { name: 'Techcombank', image: '/images/solutions/solution_24_section4_icon.webp' },
+    { name: 'Highlands Coffee', image: '/images/solutions/solution_27_section4_icon.png' },
+    { name: 'PNJ', image: '/images/solutions/solution_25_section4_icon.webp' },
+    { name: '', image: '/images/solutions/solution_26_section4_icon.webp' }
 ];
 
 function CustomerMarquee() {
     const renderGroup = hidden => <div className="csp-customers__group" aria-hidden={hidden || undefined}>
-        {customerBrands.map(([mark, name, color]) => <div className="csp-customers__brand" style={{ '--brand-color': color }} key={name}>
-            <span>{mark}</span><strong>{name}</strong>
+        {customerBrands.map((brand) => <div className="csp-customers__brand-img" key={brand.name}>
+            <img src={brand.image} alt={brand.name} loading="lazy" />
         </div>)}
     </div>;
     return <section className="csp-customers" id="chatbot-customers" aria-label="Khách hàng của chúng tôi">
         <div className="csp-shell">
             <div className="csp-customers__band">
-                <div className="csp-customers__label"><i />KHÁCH HÀNG CỦA CHÚNG TÔI<i /></div>
+                <Heading
+                    eyebrow="KHÁCH HÀNG CỦA CHÚNG TÔI"
+                    title="Hơn 8.000 doanh nghiệp đang sử dụng Losa"
+                />
                 <div className="csp-customers__marquee" role="region" aria-label="Danh sách khách hàng">
                     <div className="csp-customers__track">{renderGroup(false)}{renderGroup(true)}</div>
                 </div>
@@ -65,11 +68,17 @@ const industryMedia = {
     health: { image: '/images/industries/clinic-reception.webp', scene: 'Phòng khám & tiếp nhận lịch', person: 'Thu Hà', initials: 'TH', role: 'Khách đặt lịch', position: 'center 45%', tone: 'health' },
     b2b: { image: '/images/industries/b2b-workshop.webp', scene: 'Buổi tư vấn giải pháp B2B', person: 'Quang Minh', initials: 'QM', role: 'Đại diện doanh nghiệp', position: 'center 50%', tone: 'b2b' }
 };
-const rollout = [['01', 'Khảo sát', 'Xác định bài toán, kênh và mục tiêu.'], ['02', 'Chuẩn hóa dữ liệu', 'Tổ chức tri thức và quy tắc trả lời.'], ['03', 'Thiết kế workflow', 'Kết nối tác vụ và hệ thống cần thiết.'], ['04', 'Kiểm thử', 'Đánh giá câu trả lời và tình huống bàn giao.'], ['05', 'Vận hành', 'Theo dõi, đo lường và tối ưu liên tục.']];
+const rollout = [
+    { step: '01', title: 'Khảo sát', text: 'Xác định bài toán, kênh và mục tiêu.', image: '/images/solutions/solution_18_section3_khaosat.png', icon: Search },
+    { step: '02', title: 'Chuẩn hóa dữ liệu', text: 'Tổ chức tri thức và quy tắc trả lời.', image: '/images/solutions/solution_19_section3_chuanhoa.png', icon: Database },
+    { step: '03', title: 'Thiết kế workflow', text: 'Kết nối tác vụ và hệ thống cần thiết.', image: '/images/solutions/solution_20_section3_thietke.png', icon: Settings },
+    { step: '04', title: 'Kiểm thử', text: 'Đánh giá câu trả lời và tình huống bàn giao.', image: '/images/solutions/solution_21_section3_kiemthu.png', icon: ClipboardCheck },
+    { step: '05', title: 'Vận hành', text: 'Theo dõi, đo lường và tối ưu liên tục.', image: '/images/solutions/solution_22_section3_vanhanh.png', icon: Activity }
+];
 function Heading({ eyebrow, title, text, light = false }) { return <header className={`csp-heading${light ? ' csp-heading--light' : ''}`}><div className="csp-eyebrow">{eyebrow}</div><h2>{title}</h2>{text && <p>{text}</p>}</header> }
 function ChatHeader() { return <div className="csp-chat__top"><div className="csp-chat__avatar"><Bot /></div><div><strong>Losa AI Assistant</strong><span><i /> Đang hoạt động</span></div><span className="csp-chat__channel">AI</span></div> }
 function Composer() { return <div className="csp-chat__composer"><span>Nhập tin nhắn...</span><button aria-label="Gửi tin nhắn minh họa"><Send /></button></div> }
-function Conversation({ mode = 'quote', compact = false }) {const ref = useRef(null); useEffect(() => { const e = ref.current; if (!e) return; let a, b, c, stop = false; const clear = () => { clearTimeout(a); clearTimeout(b); clearTimeout(c) }, halt = () => { stop = true; clear() }, cycle = () => { if (stop || matchMedia('(prefers-reduced-motion: reduce)').matches || e.scrollHeight <= e.clientHeight) return; e.scrollTo({ top: 0, behavior: 'smooth' }); a = setTimeout(() => { if (stop) return; e.scrollTo({ top: e.scrollHeight, behavior: 'smooth' }); b = setTimeout(() => { if (stop) return; e.scrollTo({ top: 0, behavior: 'smooth' }); c = setTimeout(cycle, 2400) }, 4000) }, 2200) }; e.scrollTop = 0; const f = requestAnimationFrame(cycle); e.addEventListener('wheel', halt, { passive: true }); e.addEventListener('touchstart', halt, { passive: true }); return () => { cancelAnimationFrame(f); clear(); e.removeEventListener('wheel', halt); e.removeEventListener('touchstart', halt) } }, [mode]); if (mode === 'vision') return <div className="csp-chat csp-chat--compact"><ChatHeader /><div ref={ref} className="csp-chat__body"><div className="csp-vision-upload"><Image /><div><strong>product-a2.jpg</strong><small>Ảnh khách hàng vừa gửi</small></div></div><div className="csp-message csp-message--customer">Bạn xem giúp mình đây là mẫu máy nào?</div><div className="csp-message csp-message--ai"><Sparkles />Đây là máy lọc không khí A2, độ tin cậy 98%.</div><div className="csp-message csp-message--customer">Mẫu này còn màng lọc thay thế không?</div><div className="csp-action-card"><span><ScanLine /></span><div><b>Màng lọc HEPA H13 còn hàng</b><small>Đã đối chiếu mã A2 và tồn kho</small></div><CheckCircle2 /></div><div className="csp-message csp-message--ai"><Sparkles />Mình có thể gửi giá và hướng dẫn chọn đúng phiên bản.</div></div><Composer /></div>; const list = chats[mode] || chats.quote, [title, note, Icon] = actions[mode] || actions.quote; return <div className={`csp-chat${compact ? ' csp-chat--compact' : ''}`}><ChatHeader /><div ref={ref} className="csp-chat__body">{list.map(([sender, text], i) => <div key={i} className={`csp-message csp-message--${sender}`}>{sender === 'ai' && <Sparkles />}{text}</div>)}<div className="csp-action-card"><span><Icon /></span><div><b>{title}</b><small>{note}</small></div><CheckCircle2 /></div></div><Composer /></div> }
+function Conversation({ mode = 'quote', compact = false }) { const ref = useRef(null); useEffect(() => { const e = ref.current; if (!e) return; let a, b, c, stop = false; const clear = () => { clearTimeout(a); clearTimeout(b); clearTimeout(c) }, halt = () => { stop = true; clear() }, cycle = () => { if (stop || matchMedia('(prefers-reduced-motion: reduce)').matches || e.scrollHeight <= e.clientHeight) return; e.scrollTo({ top: 0, behavior: 'smooth' }); a = setTimeout(() => { if (stop) return; e.scrollTo({ top: e.scrollHeight, behavior: 'smooth' }); b = setTimeout(() => { if (stop) return; e.scrollTo({ top: 0, behavior: 'smooth' }); c = setTimeout(cycle, 2400) }, 4000) }, 2200) }; e.scrollTop = 0; const f = requestAnimationFrame(cycle); e.addEventListener('wheel', halt, { passive: true }); e.addEventListener('touchstart', halt, { passive: true }); return () => { cancelAnimationFrame(f); clear(); e.removeEventListener('wheel', halt); e.removeEventListener('touchstart', halt) } }, [mode]); if (mode === 'vision') return <div className="csp-chat csp-chat--compact"><ChatHeader /><div ref={ref} className="csp-chat__body"><div className="csp-vision-upload"><Image /><div><strong>product-a2.jpg</strong><small>Ảnh khách hàng vừa gửi</small></div></div><div className="csp-message csp-message--customer">Bạn xem giúp mình đây là mẫu máy nào?</div><div className="csp-message csp-message--ai"><Sparkles />Đây là máy lọc không khí A2, độ tin cậy 98%.</div><div className="csp-message csp-message--customer">Mẫu này còn màng lọc thay thế không?</div><div className="csp-action-card"><span><ScanLine /></span><div><b>Màng lọc HEPA H13 còn hàng</b><small>Đã đối chiếu mã A2 và tồn kho</small></div><CheckCircle2 /></div><div className="csp-message csp-message--ai"><Sparkles />Mình có thể gửi giá và hướng dẫn chọn đúng phiên bản.</div></div><Composer /></div>; const list = chats[mode] || chats.quote, [title, note, Icon] = actions[mode] || actions.quote; return <div className={`csp-chat${compact ? ' csp-chat--compact' : ''}`}><ChatHeader /><div ref={ref} className="csp-chat__body">{list.map(([sender, text], i) => <div key={i} className={`csp-message csp-message--${sender}`}>{sender === 'ai' && <Sparkles />}{text}</div>)}<div className="csp-action-card"><span><Icon /></span><div><b>{title}</b><small>{note}</small></div><CheckCircle2 /></div></div><Composer /></div> }
 function HeroVisual() {
     const channels = [
         [Globe2, 'Website'],
@@ -116,8 +125,12 @@ function BusinessValueStory() {
         return () => observer.disconnect();
     }, []);
 
-    const active = businessBenefits[activeStory];
-    const ActiveIcon = active[0];
+    const storyImages = [
+        '/images/solutions/solution_3_section1.png',
+        '/images/solutions/solution_4_section1.jpg',
+        '/images/solutions/solution_5_section1.png'
+    ];
+
     return <section className="csp-section csp-business-story" id="business-value">
         <div className="csp-shell">
             <header className="csp-business-story__heading">
@@ -140,17 +153,15 @@ function BusinessValueStory() {
                     </article>)}
                 </div>
                 <div className="csp-business-story__sticky">
-                    <div className={`csp-story-visual csp-story-visual--${activeStory + 1}`}>
-                        <div className="csp-story-visual__top"><span><Sparkles /> LOSA AI JOURNEY</span><small><i /> Đang vận hành</small></div>
-                        <div className="csp-story-visual__stage" key={activeStory}>
-                            <div className="csp-story-visual__orbit" />
-                            <div className="csp-story-visual__core"><ActiveIcon /><strong>{activeStory === 0 ? 'Omnichannel' : activeStory === 1 ? 'Campaign' : 'AI Remarketing'}</strong><small>{active[3]}</small></div>
-                            {activeStory === 0 && <><span className="csp-story-node node-a"><Globe2 /> Website</span><span className="csp-story-node node-b"><MessageCircle /> Messenger</span><span className="csp-story-node node-c"><Send /> Zalo</span></>}
-                            {activeStory === 1 && <><span className="csp-story-node node-a"><Filter /> Phân nhóm</span><span className="csp-story-node node-b"><Send /> Gửi chiến dịch</span><span className="csp-story-node node-c"><UserRoundCheck /> Lead mới</span></>}
-                            {activeStory === 2 && <><span className="csp-story-node node-a"><Database /> Dữ liệu</span><span className="csp-story-node node-b"><BrainCircuit /> Cá nhân hóa</span><span className="csp-story-node node-c"><ShoppingBag /> Chuyển đổi</span></>}
-                        </div>
-                        <div className="csp-story-visual__progress">{businessBenefits.map((_, i) => <button id={`business-story-step-${i + 1}`} aria-label={`Xem giá trị ${i + 1}`} className={activeStory === i ? 'is-active' : ''} onClick={() => { setActiveStory(i); storyRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} key={i}><i /></button>)}</div>
-                    </div>
+                    <figure className="csp-business-story__image-frame">
+                        <img
+                            key={storyImages[activeStory]}
+                            className="csp-business-story__image"
+                            src={storyImages[activeStory]}
+                            alt={`Minh họa ${businessBenefits[activeStory][1]}`}
+                            loading="lazy"
+                        />
+                    </figure>
                 </div>
             </div>
         </div>
@@ -545,23 +556,23 @@ function CustomEducationJourney() {
                             <div className="cip-product-card">
                                 <div className="cip-img-placeholder">Ảnh minh họa</div>
                                 <h5>Python Cơ bản cho người mới</h5>
-                                <p className="price" style={{fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0}}>12 buổi</p>
+                                <p className="price" style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0 }}>12 buổi</p>
                                 <p className="price">2.490.000đ</p>
                             </div>
                             <div className="cip-product-card">
                                 <div className="cip-img-placeholder">Ảnh minh họa</div>
                                 <h5>Thiết kế Web HTML, CSS</h5>
-                                <p className="price" style={{fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0}}>10 buổi</p>
+                                <p className="price" style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0 }}>10 buổi</p>
                                 <p className="price">1.990.000đ</p>
                             </div>
                             <div className="cip-product-card">
                                 <div className="cip-img-placeholder">Ảnh minh họa</div>
                                 <h5>AI & Machine Learning cơ bản</h5>
-                                <p className="price" style={{fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0}}>15 buổi</p>
+                                <p className="price" style={{ fontSize: '10px', color: '#64748b', fontWeight: 'normal', margin: 0 }}>15 buổi</p>
                                 <p className="price">3.490.000đ</p>
                             </div>
                         </div>
-                        
+
                         {/* Tags */}
                         <div className="cip-tags-grid">
                             <div className="cip-tag-item">
@@ -596,7 +607,7 @@ function CustomEducationJourney() {
                     <div className="cip-col-content cip-engine-demo">
                         <div className="cip-engine-top">
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>INPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>INPUT</span>
                                 <span className="cip-data-item">Nhu cầu học tập</span>
                                 <span className="cip-data-item">Thông tin cá nhân</span>
                                 <span className="cip-data-item">Thời gian học</span>
@@ -613,7 +624,7 @@ function CustomEducationJourney() {
                             </div>
                             <ArrowRight className="text-indigo-400" size={20} />
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>OUTPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>OUTPUT</span>
                                 <span className="cip-data-item">Gợi ý khóa học</span>
                                 <span className="cip-data-item">Lịch học phù hợp</span>
                                 <span className="cip-data-item">Giảng viên phù hợp</span>
@@ -802,7 +813,7 @@ function CustomHealthJourney() {
                             <span className="dot"></span>
                             <span className="dot"></span>
                             <span className="dot"></span>
-                            <span style={{marginLeft: '4px'}}>AI đang tổng hợp thông tin...</span>
+                            <span style={{ marginLeft: '4px' }}>AI đang tổng hợp thông tin...</span>
                         </div>
                         <div className="cip-msg cip-msg-ai cip-final-reply">Tôi đã tìm thấy lịch khám phù hợp. Thông tin này nhằm hỗ trợ phân luồng, không thay thế chẩn đoán của bác sĩ.</div>
 
@@ -812,7 +823,7 @@ function CustomHealthJourney() {
                             <button className="cip-chat-action-btn"><Stethoscope size={14} /> Hỏi bác sĩ online</button>
                             <button className="cip-chat-action-btn"><FileHeart size={14} /> Xem kết quả cũ</button>
                         </div>
-                        
+
                         {/* Tags */}
                         <div className="cip-tags-grid">
                             <div className="cip-tag-item">
@@ -855,7 +866,7 @@ function CustomHealthJourney() {
                     <div className="cip-col-content cip-engine-demo">
                         <div className="cip-engine-top">
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>INPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>INPUT</span>
                                 <span className="cip-data-item">Triệu chứng</span>
                                 <span className="cip-data-item">Tiền sử bệnh</span>
                                 <span className="cip-data-item">Thông tin cá nhân</span>
@@ -867,12 +878,12 @@ function CustomHealthJourney() {
                                 <div className="cip-brain-icon">
                                     <BrainCircuit size={32} />
                                 </div>
-                                <span style={{color: '#f97316', marginTop: '4px', fontSize: '12px'}}>AI ENGINE</span>
+                                <span style={{ color: '#f97316', marginTop: '4px', fontSize: '12px' }}>AI ENGINE</span>
                                 <p>Phân tích & xử lý</p>
                             </div>
                             <ArrowRight className="text-orange-400" size={20} />
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>OUTPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>OUTPUT</span>
                                 <span className="cip-data-item">Gợi ý chuyên khoa</span>
                                 <span className="cip-data-item">Ưu tiên mức độ</span>
                                 <span className="cip-data-item">Đặt lịch phù hợp</span>
@@ -884,11 +895,11 @@ function CustomHealthJourney() {
                         <div>
                             <div className="cip-section-title">GỌI API / KẾT NỐI</div>
                             <div className="cip-icon-row">
-                                <div className="cip-icon-box"><Hospital size={20} /><span>HIS<br/>Bệnh viện</span></div>
-                                <div className="cip-icon-box"><ClipboardPlus size={20} /><span>EMR<br/>Hồ sơ bệnh án</span></div>
-                                <div className="cip-icon-box"><Image size={20} /><span>PACS<br/>Hình ảnh</span></div>
-                                <div className="cip-icon-box"><FlaskConical size={20} /><span>LIS<br/>Xét nghiệm</span></div>
-                                <div className="cip-icon-box"><Video size={20} /><span>Telehealth<br/>Khám online</span></div>
+                                <div className="cip-icon-box"><Hospital size={20} /><span>HIS<br />Bệnh viện</span></div>
+                                <div className="cip-icon-box"><ClipboardPlus size={20} /><span>EMR<br />Hồ sơ bệnh án</span></div>
+                                <div className="cip-icon-box"><Image size={20} /><span>PACS<br />Hình ảnh</span></div>
+                                <div className="cip-icon-box"><FlaskConical size={20} /><span>LIS<br />Xét nghiệm</span></div>
+                                <div className="cip-icon-box"><Video size={20} /><span>Telehealth<br />Khám online</span></div>
                             </div>
                         </div>
 
@@ -926,7 +937,7 @@ function CustomHealthJourney() {
                         <div className="cip-order-table">
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Chuyên khoa</span>
-                                <span className="cip-order-value" style={{fontWeight: 700}}>Thần kinh</span>
+                                <span className="cip-order-value" style={{ fontWeight: 700 }}>Thần kinh</span>
                             </div>
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Bác sĩ</span>
@@ -944,9 +955,9 @@ function CustomHealthJourney() {
                                 <span className="cip-order-label">Mã đặt lịch</span>
                                 <span className="cip-order-value">#LS247-YN250522-001</span>
                             </div>
-                            <div className="cip-order-row" style={{borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '4px'}}>
+                            <div className="cip-order-row" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '4px' }}>
                                 <span className="cip-order-label">Ghi chú</span>
-                                <span className="cip-order-value" style={{color: '#3b82f6'}}>Mang theo CCCD & BHYT (nếu có)</span>
+                                <span className="cip-order-value" style={{ color: '#3b82f6' }}>Mang theo CCCD & BHYT (nếu có)</span>
                             </div>
                         </div>
 
@@ -1051,7 +1062,7 @@ function CustomB2BJourney() {
                             <div className="cip-user-avatar">
                                 <img src="" alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                             </div>
-                            Mình muốn đặt khách sạn ở Đà Nẵng.<br/>2 đêm, 2 người lớn, view biển.
+                            Mình muốn đặt khách sạn ở Đà Nẵng.<br />2 đêm, 2 người lớn, view biển.
                         </div>
                         <div className="cip-msg cip-msg-ai">Dạ, Losa247 gợi ý một số khách sạn phù hợp ngân sách và nhu cầu của Anh/Chị nhé!</div>
 
@@ -1062,21 +1073,21 @@ function CustomB2BJourney() {
                                 <h5>Mường Thanh Luxury Đà Nẵng</h5>
                                 <span className="cip-stars">★★★★★</span>
                                 <p className="price">Từ 1.250.000đ/đêm</p>
-                                <p style={{fontSize: '10px', color: '#64748b', marginTop: '2px'}}>View biển, ăn sáng</p>
+                                <p style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>View biển, ăn sáng</p>
                             </div>
                             <div className="cip-product-card">
                                 <div className="cip-img-placeholder">Ảnh minh họa</div>
                                 <h5>Sala Danang Beach Hotel</h5>
                                 <span className="cip-stars">★★★★★</span>
                                 <p className="price">Từ 1.850.000đ/đêm</p>
-                                <p style={{fontSize: '10px', color: '#64748b', marginTop: '2px'}}>Hồ bơi vô cực, gần biển</p>
+                                <p style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>Hồ bơi vô cực, gần biển</p>
                             </div>
                             <div className="cip-product-card">
                                 <div className="cip-img-placeholder">Ảnh minh họa</div>
                                 <h5>Furama Resort Đà Nẵng</h5>
                                 <span className="cip-stars">★★★★★</span>
                                 <p className="price">Từ 3.200.000đ/đêm</p>
-                                <p style={{fontSize: '10px', color: '#64748b', marginTop: '2px'}}>Resort 5 sao, bãi biển riêng</p>
+                                <p style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>Resort 5 sao, bãi biển riêng</p>
                             </div>
                         </div>
 
@@ -1086,32 +1097,32 @@ function CustomB2BJourney() {
                             <button className="cip-chat-action-btn"><ArrowLeftRight size={14} /> So sánh giá & tiện ích</button>
                             <button className="cip-chat-action-btn"><Map size={14} /> Gợi ý lịch trình</button>
                         </div>
-                        
+
                         {/* Tags */}
                         <div className="cip-tags-grid">
                             <div className="cip-tag-item">
                                 <small>ĐỊA ĐIỂM</small>
-                                <span><MapPin size={10} style={{display:'inline', marginRight:'2px'}}/> Đà Nẵng</span>
+                                <span><MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} /> Đà Nẵng</span>
                             </div>
                             <div className="cip-tag-item">
                                 <small>THỜI GIAN</small>
-                                <span><Calendar size={10} style={{display:'inline', marginRight:'2px'}}/> 2 đêm (20/05 - 22/05)</span>
+                                <span><Calendar size={10} style={{ display: 'inline', marginRight: '2px' }} /> 2 đêm (20/05 - 22/05)</span>
                             </div>
                             <div className="cip-tag-item">
                                 <small>KHÁCH</small>
-                                <span><Users size={10} style={{display:'inline', marginRight:'2px'}}/> 2 người lớn</span>
+                                <span><Users size={10} style={{ display: 'inline', marginRight: '2px' }} /> 2 người lớn</span>
                             </div>
                             <div className="cip-tag-item">
                                 <small>NGÂN SÁCH</small>
-                                <span><Wallet size={10} style={{display:'inline', marginRight:'2px'}}/> ~2.000.000đ/đêm</span>
+                                <span><Wallet size={10} style={{ display: 'inline', marginRight: '2px' }} /> ~2.000.000đ/đêm</span>
                             </div>
                             <div className="cip-tag-item">
                                 <small>LOẠI PHÒNG</small>
-                                <span><Bed size={10} style={{display:'inline', marginRight:'2px'}}/> Deluxe / Ocean View</span>
+                                <span><Bed size={10} style={{ display: 'inline', marginRight: '2px' }} /> Deluxe / Ocean View</span>
                             </div>
                             <div className="cip-tag-item">
                                 <small>ƯU TIÊN</small>
-                                <span><Check size={10} style={{display:'inline', marginRight:'2px'}}/> Gần biển, ăn sáng</span>
+                                <span><Check size={10} style={{ display: 'inline', marginRight: '2px' }} /> Gần biển, ăn sáng</span>
                             </div>
                         </div>
                     </div>
@@ -1129,7 +1140,7 @@ function CustomB2BJourney() {
                     <div className="cip-col-content cip-engine-demo">
                         <div className="cip-engine-top">
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>INPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>INPUT</span>
                                 <span className="cip-data-item">Điểm đến, thời gian</span>
                                 <span className="cip-data-item">Số lượng khách</span>
                                 <span className="cip-data-item">Loại phòng yêu cầu</span>
@@ -1141,12 +1152,12 @@ function CustomB2BJourney() {
                                 <div className="cip-brain-icon">
                                     <BrainCircuit size={32} />
                                 </div>
-                                <span style={{color: '#f97316', marginTop: '4px', fontSize: '12px'}}>AI ENGINE</span>
+                                <span style={{ color: '#f97316', marginTop: '4px', fontSize: '12px' }}>AI ENGINE</span>
                                 <p>Phân tích & xử lý</p>
                             </div>
                             <ArrowRight className="text-orange-400" size={20} />
                             <div className="cip-data-list">
-                                <span className="cip-section-title" style={{marginBottom: '4px'}}>OUTPUT</span>
+                                <span className="cip-section-title" style={{ marginBottom: '4px' }}>OUTPUT</span>
                                 <span className="cip-data-item">Tìm kiếm đối tác</span>
                                 <span className="cip-data-item">So sánh giá & phòng</span>
                                 <span className="cip-data-item">Kiểm tra tình trạng</span>
@@ -1158,36 +1169,36 @@ function CustomB2BJourney() {
                         <div>
                             <div className="cip-section-title">KẾT NỐI ĐỐI TÁC</div>
                             <div className="cip-logos-row">
-                                <span style={{color: '#e11d48'}}>agoda</span>
-                                <span style={{color: '#003580'}}>Booking.com</span>
-                                <span style={{color: '#0000a0'}}>Expedia</span>
-                                <span style={{color: '#1ba0e2'}}>traveloka</span>
-                                <span style={{color: '#0f294d'}}>Trip.com</span>
-                                <span>Hotel Direct<br/><small style={{fontSize:'8px',fontWeight:400}}>(đối tác)</small></span>
+                                <span style={{ color: '#e11d48' }}>agoda</span>
+                                <span style={{ color: '#003580' }}>Booking.com</span>
+                                <span style={{ color: '#0000a0' }}>Expedia</span>
+                                <span style={{ color: '#1ba0e2' }}>traveloka</span>
+                                <span style={{ color: '#0f294d' }}>Trip.com</span>
+                                <span>Hotel Direct<br /><small style={{ fontSize: '8px', fontWeight: 400 }}>(đối tác)</small></span>
                             </div>
                         </div>
 
                         <div>
                             <div className="cip-section-title">QUY TRÌNH TỰ ĐỘNG</div>
                             <div className="cip-process-row">
-                                <div className="cip-process-box"><Search size={16} /><span>Tìm kiếm<br/>khách sạn</span></div>
-                                <div className="cip-process-box"><ArrowLeftRight size={16} /><span>So sánh giá<br/>& tiện ích</span></div>
-                                <div className="cip-process-box"><Bed size={16} /><span>Kiểm tra<br/>phòng trống</span></div>
-                                <div className="cip-process-box"><Clock3 size={16} /><span>Giữ phòng<br/>tạm thời</span></div>
-                                <div className="cip-process-box"><ShieldCheck size={16} /><span>Xác nhận &<br/>đặt phòng</span></div>
-                                <div className="cip-process-box"><Ticket size={16} /><span>Gửi voucher<br/>cho khách</span></div>
+                                <div className="cip-process-box"><Search size={16} /><span>Tìm kiếm<br />khách sạn</span></div>
+                                <div className="cip-process-box"><ArrowLeftRight size={16} /><span>So sánh giá<br />& tiện ích</span></div>
+                                <div className="cip-process-box"><Bed size={16} /><span>Kiểm tra<br />phòng trống</span></div>
+                                <div className="cip-process-box"><Clock3 size={16} /><span>Giữ phòng<br />tạm thời</span></div>
+                                <div className="cip-process-box"><ShieldCheck size={16} /><span>Xác nhận &<br />đặt phòng</span></div>
+                                <div className="cip-process-box"><Ticket size={16} /><span>Gửi voucher<br />cho khách</span></div>
                             </div>
                         </div>
 
                         <div>
                             <div className="cip-section-title">CÔNG CỤ & NGUỒN LỰC</div>
                             <div className="cip-icon-row">
-                                <div className="cip-icon-box"><Building2 size={20} /><span>Hotel API<br/>Connector</span></div>
-                                <div className="cip-icon-box"><Settings size={20} /><span>Channel<br/>Manager</span></div>
-                                <div className="cip-icon-box"><CreditCard size={20} /><span>Payment<br/>Gateway</span></div>
-                                <div className="cip-icon-box"><Users size={20} /><span>CRM<br/>Khách hàng</span></div>
-                                <div className="cip-icon-box"><BarChart size={20} /><span>Báo cáo &<br/>Thống kê</span></div>
-                                <div className="cip-icon-box"><Headset size={20} /><span>Hỗ trợ 24/7<br/>AI & Human</span></div>
+                                <div className="cip-icon-box"><Building2 size={20} /><span>Hotel API<br />Connector</span></div>
+                                <div className="cip-icon-box"><Settings size={20} /><span>Channel<br />Manager</span></div>
+                                <div className="cip-icon-box"><CreditCard size={20} /><span>Payment<br />Gateway</span></div>
+                                <div className="cip-icon-box"><Users size={20} /><span>CRM<br />Khách hàng</span></div>
+                                <div className="cip-icon-box"><BarChart size={20} /><span>Báo cáo &<br />Thống kê</span></div>
+                                <div className="cip-icon-box"><Headset size={20} /><span>Hỗ trợ 24/7<br />AI & Human</span></div>
                             </div>
                         </div>
                     </div>
@@ -1223,7 +1234,7 @@ function CustomB2BJourney() {
                         <div className="cip-order-table">
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Mã đặt phòng</span>
-                                <span className="cip-order-value" style={{fontWeight: 700}}>#LS247-BOOK-250522-001</span>
+                                <span className="cip-order-value" style={{ fontWeight: 700 }}>#LS247-BOOK-250522-001</span>
                             </div>
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Nhận phòng</span>
@@ -1247,7 +1258,7 @@ function CustomB2BJourney() {
                             </div>
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Trạng thái</span>
-                                <span className="cip-order-value" style={{color: '#16a34a', fontWeight: 600}}>Đã xác nhận</span>
+                                <span className="cip-order-value" style={{ color: '#16a34a', fontWeight: 600 }}>Đã xác nhận</span>
                             </div>
                             <div className="cip-order-row">
                                 <span className="cip-order-label">Thanh toán</span>
@@ -1316,7 +1327,7 @@ function CustomB2BJourney() {
 }
 
 export default function ChatbotSolutionsPage() {
-    const [cap, setCap] = useState('quote'), [industry, setIndustry] = useState('retail'), [faqOpen, setFaq] = useState(null); const q = useApiQuery(() => publicFaqsService.getList({ pageType: 'solutions', serviceDetail: 'chatbot' }), []); const fallback = [{ _id: 'accuracy', question: 'Chatbot AI trả lời sai thì xử lý thế nào?', answer: 'Losa giới hạn nguồn dữ liệu, thiết lập ngưỡng tin cậy và chuyển hội thoại cho nhân viên khi AI chưa đủ thông tin.' }, { _id: 'integration', question: 'Losa có kết nối CRM hoặc hệ thống riêng không?', answer: 'Có. Losa hỗ trợ đồng bộ CRM, dữ liệu sản phẩm và hệ thống nghiệp vụ thông qua API theo phạm vi triển khai.' }, { _id: 'launch', question: 'Mất bao lâu để triển khai chatbot?', answer: 'Thời gian phụ thuộc dữ liệu và mức độ tích hợp. Đội ngũ Losa sẽ khảo sát, chuẩn hóa và kiểm thử trước khi vận hành.' }]; const faqs = q.data?.items?.length ? q.data.items : fallback, active = caps.find(x => x.id === cap); useEffect(() => { document.title = 'Chatbot AI đa kênh cho doanh nghiệp | Losa'; let m = document.querySelector('meta[name="description"]'); if (!m) { m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m) } m.content = 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.' }, []); return <main className="csp-page">
+    const [cap, setCap] = useState('quote'), [industry, setIndustry] = useState('retail'), [rolloutActive, setRolloutActive] = useState(0), [faqOpen, setFaq] = useState(null); const q = useApiQuery(() => publicFaqsService.getList({ pageType: 'solutions', serviceDetail: 'chatbot' }), []); const fallback = [{ _id: 'accuracy', question: 'Chatbot AI trả lời sai thì xử lý thế nào?', answer: 'Losa giới hạn nguồn dữ liệu, thiết lập ngưỡng tin cậy và chuyển hội thoại cho nhân viên khi AI chưa đủ thông tin.' }, { _id: 'integration', question: 'Losa có kết nối CRM hoặc hệ thống riêng không?', answer: 'Có. Losa hỗ trợ đồng bộ CRM, dữ liệu sản phẩm và hệ thống nghiệp vụ thông qua API theo phạm vi triển khai.' }, { _id: 'launch', question: 'Mất bao lâu để triển khai chatbot?', answer: 'Thời gian phụ thuộc dữ liệu và mức độ tích hợp. Đội ngũ Losa sẽ khảo sát, chuẩn hóa và kiểm thử trước khi vận hành.' }]; const faqs = q.data?.items?.length ? q.data.items : fallback, active = caps.find(x => x.id === cap); useEffect(() => { document.title = 'Chatbot AI đa kênh cho doanh nghiệp | Losa'; let m = document.querySelector('meta[name="description"]'); if (!m) { m = document.createElement('meta'); m.name = 'description'; document.head.appendChild(m) } m.content = 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.' }, []); return <main className="csp-page">
         <section className="client-hero" id="chatbot-hero"><div className="csp-shell client-hero__grid"><motion.div className="client-hero__content" initial="hidden" animate="visible" variants={heroStagger}><motion.div className="client-hero__badge" variants={heroFadeUp}><Sparkles /> Chatbot AI đa kênh cho doanh nghiệp</motion.div><motion.h1 className="client-hero__title" variants={heroFadeUp}>Mỗi cuộc trò chuyện là một <span>cơ hội tăng trưởng</span></motion.h1><motion.p className="client-hero__lead" variants={heroFadeUp}>Chatbot AI Losa hiểu nhu cầu, tư vấn sản phẩm, tạo báo giá, tính phí vận chuyển và chăm sóc khách hàng 24/7 — trên mọi kênh bạn đang kinh doanh.</motion.p><motion.div className="client-hero__proof" variants={heroFadeUp}><span><Check /> Phản hồi 24/7</span><span><Check /> Chuyển người thật khi cần</span><span><Check /> Dữ liệu tập trung</span></motion.div><motion.div className="client-hero__actions" variants={heroFadeUp}><button id="chatbot-view-demo" className="csp-btn csp-btn--primary" onClick={() => document.getElementById('capabilities')?.scrollIntoView({ behavior: 'smooth' })}>Khám phá năng lực AI <ArrowRight /></button></motion.div></motion.div><motion.div className="client-hero__visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8 }}><HeroVisual /></motion.div></div></section>
 
         <BusinessValueStory />
@@ -1349,9 +1360,9 @@ export default function ChatbotSolutionsPage() {
         <section className="csp-section csp-outcomes"><div className="csp-shell"><Heading eyebrow="TỪ TIN NHẮN ĐẾN CHUYỂN ĐỔI" title="Mỗi cuộc trò chuyện đều có thể tạo ra kết quả" text="Losa không chỉ trả lời. AI hiểu nhu cầu, thực hiện tác vụ và lưu tín hiệu để đội ngũ chốt đơn đúng lúc." /><div className="csp-conversion-engine"><div className="csp-conversion-engine__input"><div className="csp-conversion-engine__label"><MessageCircle /> TÍN HIỆU TỪ KHÁCH HÀNG</div><div className="csp-conversion-engine__bubble">“Bên mình cần 20 máy lọc không khí cho văn phòng, giao trong tuần này.”</div><div className="csp-conversion-engine__signals"><span><small>NHU CẦU</small>20 máy lọc không khí</span><span><small>THỜI GIAN</small>Giao trong tuần</span><span><small>ĐỐI TƯỢNG</small>Khách hàng doanh nghiệp</span><span><small>MỨC ĐỘ</small>Tiềm năng cao</span></div></div><div className="csp-conversion-engine__pipeline"><div className="csp-conversion-engine__line"><i /></div>{[[BrainCircuit, 'Hiểu nhu cầu', 'Nhận diện ý định và thông tin quan trọng'], [Filter, 'Phân loại cơ hội', 'Gán nhãn, chấm điểm và ưu tiên lead'], [ShoppingBag, 'Thực hiện tác vụ', 'Kiểm tra sản phẩm, tồn kho và tạo báo giá'], [Database, 'Đồng bộ dữ liệu', 'Cập nhật CRM và chuyển đúng đội ngũ']].map(([Icon, title, text], i) => <div className="csp-conversion-engine__stage" key={title}><b>0{i + 1}</b><span><Icon /></span><div><strong>{title}</strong><small>{text}</small></div></div>)}</div><div className="csp-conversion-engine__output"><span className="csp-conversion-engine__status"><i /> SẴN SÀNG XỬ LÝ</span><div className="csp-conversion-engine__output-icon"><UserRoundCheck /></div><small>KẾT QUẢ ĐẦU RA</small><h3>Một cơ hội bán hàng có đầy đủ ngữ cảnh</h3><p>Đội ngũ nhận đúng khách hàng, đúng nhu cầu và đúng thời điểm để tiếp tục tư vấn.</p><ul><li><CheckCircle2 /> Hồ sơ lead đã được chuẩn hóa</li><li><CheckCircle2 /> Báo giá sẵn sàng gửi</li><li><CheckCircle2 /> Nhân viên nhận trọn ngữ cảnh</li></ul></div></div><div className="csp-outcome-grid">{outcomes.map(x => { const Icon = x.icon; return <article key={x.title}><span className="csp-outcome-card__icon"><Icon /></span><div><small>{x.label}</small><h3>{x.title}</h3><p>{x.text}</p></div><ArrowRight /></article> })}</div></div></section>
         <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow="NĂNG LỰC CHATBOT AI LOSA" title="Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?" text="Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán." /><div className="csp-capability-layout"><CapabilityTabs items={caps} activeId={cap} onSelect={setCap} /><div className="csp-capability-panel" role="tabpanel"><div className="csp-capability-panel__copy"><div className="csp-eyebrow">{active.kicker}</div><h3>{active.title}</h3><p>{active.text}</p><ul>{active.bullets.map(x => <li key={x}><CheckCircle2 />{x}</li>)}</ul></div><Conversation mode={active.id} compact /></div></div></div></section>
         <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow="AI THIẾT KẾ THEO NGÀNH" title="Mỗi doanh nghiệp có một cách vận hành khác nhau" text="Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành." /><div className="csp-usecase-tabs" role="tablist" aria-label="Chọn ngành ứng dụng AI" onKeyDown={event => { const index = industries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = industries[(index + direction + industries.length) % industries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{industries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
-        <IndustryWorkflowStudio industryId={industry} />
+            <IndustryWorkflowStudio industryId={industry} />
         </div></section>
-        <section className="csp-section csp-rollout"><div className="csp-shell"><Heading eyebrow="TRIỂN KHAI CÓ LỘ TRÌNH" title="Từ bài toán thực tế đến chatbot sẵn sàng vận hành" /><div className="csp-rollout__track">{rollout.map(x => <article key={x[0]}><b>{x[0]}</b><h3>{x[1]}</h3><p>{x[2]}</p></article>)}</div></div></section>
+        <section className="csp-section csp-rollout"><div className="csp-shell"><Heading eyebrow="TRIỂN KHAI CÓ LỘ TRÌNH" title="Từ bài toán thực tế đến chatbot sẵn sàng vận hành" /><div className="csp-rollout__track">{rollout.map((item, index) => { const Icon = item.icon, active = rolloutActive === index; return <article key={item.step} className={active ? 'is-active' : ''} style={{ '--rollout-image': `url(${item.image})` }} onMouseEnter={() => setRolloutActive(index)}><button type="button" aria-expanded={active} aria-label={`Bước ${item.step}: ${item.title}`} onClick={() => setRolloutActive(index)} onFocus={() => setRolloutActive(index)}><span className="csp-rollout__icon"><Icon /></span><span className="csp-rollout__content"><small>BƯỚC {item.step}</small><strong>{item.title}</strong><em>{item.text}</em></span></button></article> })}</div></div></section>
         <CustomerMarquee />
         <ClientFaqSection faqs={faqs} />
     </main>

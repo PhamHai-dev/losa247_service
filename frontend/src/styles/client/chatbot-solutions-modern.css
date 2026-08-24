@@ -52,16 +52,16 @@
     align-items: center;
     gap: 8px;
     color: var(--csp-blue);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.4;
     font-weight: 800;
-    letter-spacing: .1em;
+    letter-spacing: .12em;
     text-transform: uppercase
 }
 
 .csp-heading {
-    max-width: 780px;
-    margin: 0 auto 40px;
+    max-width: 760px;
+    margin: 0 auto 48px;
     text-align: center
 }
 
@@ -70,10 +70,10 @@
 .csp-control h2,
 .csp-faq h2,
 .csp-final-cta h2 {
-    margin: 14px 0 16px;
+    margin: 12px 0 0;
     color: var(--csp-navy);
-    font-size: 25px;
-    line-height: 1.12;
+    font-size: clamp(30px, 3.4vw, 46px);
+    line-height: 1.15;
     letter-spacing: -.035em;
     font-weight: 750
 }
@@ -82,10 +82,11 @@
 .csp-channels p,
 .csp-control p,
 .csp-faq p {
+    max-width: 680px;
+    margin: 16px auto 0;
     color: var(--csp-muted);
-    font-size: 17px;
-    line-height: 1.75;
-    margin-bottom: 0
+    font-size: 16px;
+    line-height: 1.75
 }
 
 .csp-heading--light h2 {
@@ -1857,55 +1858,176 @@
 }
 
 .csp-rollout {
-    background: #fff
+    background: linear-gradient(180deg, #fff 0%, #f7faff 100%)
 }
 
 .csp-rollout__track {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px
-}
-
-.csp-rollout__track:before {
-    content: "";
-    position: absolute;
-    left: 7%;
-    right: 7%;
-    top: 36px;
-    height: 1px;
-    background: #cad9ea
+    display: flex;
+    gap: 12px;
+    height: 450px;
+    padding: 7px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, .82);
+    overflow: hidden
 }
 
 .csp-rollout__track article {
     position: relative;
-    text-align: center
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 21px;
+    background: #102b50;
+    isolation: isolate;
+    transition: flex .55s cubic-bezier(.22, 1, .36, 1), transform .35s ease, box-shadow .35s ease
 }
 
-.csp-rollout__track b {
-    position: relative;
-    z-index: 1;
-    width: 72px;
-    height: 72px;
-    margin: auto;
+.csp-rollout__track article.is-active {
+    flex: 2.35 1 0;
+    transform: translateY(-2px);
+    box-shadow: 0 18px 38px rgba(9, 35, 72, .24)
+}
+
+.csp-rollout__track article::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background-image: var(--rollout-image), linear-gradient(145deg, #193e70, #071b35);
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.035);
+    transition: transform .7s cubic-bezier(.22, 1, .36, 1), filter .45s ease
+}
+
+.csp-rollout__track article:not(.is-active)::before {
+    filter: saturate(.78) brightness(.82)
+}
+
+.csp-rollout__track article.is-active::before {
+    transform: scale(1)
+}
+
+.csp-rollout__track article::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(3, 16, 35, .12) 18%, rgba(5, 24, 52, .45) 58%, rgba(4, 21, 46, .94) 100%)
+}
+
+.csp-rollout__track button {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    border: 0;
+    color: #fff;
+    background: transparent;
+    text-align: left;
+    cursor: pointer
+}
+
+.csp-rollout__track button:focus-visible {
+    outline: 3px solid #70b8ff;
+    outline-offset: -5px;
+    border-radius: 21px
+}
+
+.csp-rollout__icon,
+.csp-rollout__arrow {
+    position: absolute;
+    top: 18px;
     display: grid;
     place-items: center;
-    border: 7px solid #fff;
-    border-radius: 50%;
-    color: var(--csp-blue);
-    background: #eaf4ff;
-    font-size: 16px
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 14px;
+    background: rgba(18, 42, 77, .62);
+    backdrop-filter: blur(12px)
 }
 
-.csp-rollout__track h3 {
-    margin: 18px 0 8px;
-    font-size: 16px
+.csp-rollout__icon {
+    left: 18px
 }
 
-.csp-rollout__track p {
-    color: var(--csp-muted);
+.csp-rollout__arrow {
+    right: 18px;
+    opacity: 0;
+    transform: translate(-8px, 8px);
+    transition: opacity .3s ease, transform .3s ease
+}
+
+.csp-rollout__icon svg,
+.csp-rollout__arrow svg {
+    width: 21px;
+    height: 21px
+}
+
+.csp-rollout__arrow svg {
+    transform: rotate(-45deg)
+}
+
+.csp-rollout__track article.is-active .csp-rollout__arrow {
+    opacity: 1;
+    transform: translate(0, 0)
+}
+
+.csp-rollout__content {
+    position: absolute;
+    right: 20px;
+    bottom: 22px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0
+}
+
+.csp-rollout__content small {
+    margin-bottom: 7px;
+    color: #9fd0ff;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: .14em
+}
+
+.csp-rollout__content strong {
+    font-size: clamp(18px, 1.65vw, 25px);
+    line-height: 1.15;
+    white-space: nowrap
+}
+
+.csp-rollout__content em {
+    max-width: 390px;
+    max-height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    opacity: 0;
+    color: rgba(255, 255, 255, .8);
     font-size: 13px;
-    line-height: 1.6
+    font-style: normal;
+    line-height: 1.6;
+    transform: translateY(8px);
+    transition: max-height .4s ease, margin .4s ease, opacity .3s ease .08s, transform .4s ease
+}
+
+.csp-rollout__track article.is-active .csp-rollout__content em {
+    max-height: 50px;
+    margin-top: 10px;
+    opacity: 1;
+    transform: translateY(0)
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .csp-rollout__track article,
+    .csp-rollout__track article::before,
+    .csp-rollout__arrow,
+    .csp-rollout__content em {
+        transition: none
+    }
 }
 
 .csp-faq {
@@ -2117,12 +2239,12 @@
     }
 
     .csp-rollout__track {
-        grid-template-columns: repeat(3, 1fr);
-        row-gap: 25px
+        height: 390px;
+        gap: 9px
     }
 
-    .csp-rollout__track:before {
-        display: none
+    .csp-rollout__track article.is-active {
+        flex: 2 1 0
     }
 
     .csp-case__card {
@@ -2333,24 +2455,62 @@
     }
 
     .csp-rollout__track {
-        grid-template-columns: 1fr
+        height: auto;
+        padding: 6px;
+        flex-direction: column;
+        gap: 7px;
+        border-radius: 23px
     }
 
-    .csp-rollout__track article {
-        text-align: left;
-        display: grid;
-        grid-template-columns: 55px 1fr;
-        column-gap: 15px
+    .csp-rollout__track article,
+    .csp-rollout__track article.is-active {
+        flex: none;
+        width: 100%;
+        height: 96px;
+        transform: none;
+        border-radius: 17px
     }
 
-    .csp-rollout__track b {
-        grid-row: 1/3;
-        width: 55px;
-        height: 55px
+    .csp-rollout__track article.is-active {
+        height: 230px
     }
 
-    .csp-rollout__track h3 {
-        margin: 4px 0
+    .csp-rollout__track button {
+        padding: 16px
+    }
+
+    .csp-rollout__icon,
+    .csp-rollout__arrow {
+        top: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px
+    }
+
+    .csp-rollout__icon {
+        left: 14px
+    }
+
+    .csp-rollout__arrow {
+        right: 14px
+    }
+
+    .csp-rollout__content {
+        right: 16px;
+        bottom: 15px;
+        left: 68px
+    }
+
+    .csp-rollout__track article.is-active .csp-rollout__content {
+        left: 16px
+    }
+
+    .csp-rollout__content small {
+        display: none
+    }
+
+    .csp-rollout__content strong {
+        font-size: 18px
     }
 
     .csp-faq__layout {
@@ -4553,20 +4713,21 @@
 }
 
 .csp-impact__heading {
-    max-width: 950px;
+    max-width: 760px;
     margin: 0 auto 48px;
     text-align: center
 }
 
 .csp-impact__heading .csp-eyebrow {
+    margin-bottom: 12px;
     color: var(--csp-blue)
 }
 
 .csp-impact__heading h2 {
-    margin: 14px 0 16px;
-    color: var(--csp-navy);
-    font-size: 25px;
-    line-height: 1.12;
+    margin: 0;
+    color: #0b1831;
+    font-size: clamp(30px, 3.4vw, 46px);
+    line-height: 1.15;
     letter-spacing: -.035em
 }
 
@@ -4578,9 +4739,10 @@
 }
 
 .csp-impact__heading>p {
-    margin: 0;
-    color: #63748a;
-    font-size: 17px;
+    max-width: 680px;
+    margin: 16px auto 0;
+    color: #64748b;
+    font-size: 16px;
     line-height: 1.75
 }
 
@@ -5172,8 +5334,7 @@
     .csp-control h2,
     .csp-faq h2,
     .csp-final-cta h2,
-    .csp-benefits__copy h2,
-    .csp-impact__heading h2 {
+    .csp-benefits__copy h2 {
         font-size: 25px;
         line-height: 1.18
     }
@@ -5336,13 +5497,13 @@
         padding: 17px
     }
 
-    .csp-rollout__track article {
-        grid-template-columns: 47px 1fr
+    .csp-rollout__track article,
+    .csp-rollout__track article.is-active {
+        border-radius: 15px
     }
 
-    .csp-rollout__track b {
-        width: 47px;
-        height: 47px
+    .csp-rollout__track article.is-active {
+        height: 215px
     }
 
     .csp-faq__items article button {
@@ -5411,20 +5572,21 @@
 }
 
 .csp-business-story__heading {
-    max-width: 850px;
-    margin: 0 auto 58px;
+    max-width: 760px;
+    margin: 0 auto 48px;
     text-align: center
 }
 
 .csp-business-story__heading .csp-eyebrow {
-    justify-content: center
+    justify-content: center;
+    margin-bottom: 12px
 }
 
 .csp-business-story__heading h2 {
-    margin: 14px 0 16px;
-    color: #0a2540;
-    font-size: 25px;
-    line-height: 1.12;
+    margin: 0;
+    color: #0b1831;
+    font-size: clamp(30px, 3.4vw, 46px);
+    line-height: 1.15;
     letter-spacing: -.035em
 }
 
@@ -5433,23 +5595,22 @@
 }
 
 .csp-business-story__heading p {
-    max-width: 720px;
-    margin: 0 auto;
+    max-width: 680px;
+    margin: 16px auto 0;
     color: #64748b;
-    font-size: 17px;
-    line-height: 1.7
+    font-size: 16px;
+    line-height: 1.75
 }
 
 .csp-business-story__layout {
     display: grid;
     grid-template-columns: minmax(0, .88fr) minmax(480px, 1.12fr);
     gap: clamp(48px, 7vw, 110px);
-    align-items: start
+    align-items: stretch
 }
 
 .csp-business-story__chapters {
     position: relative;
-    height: 550px;
     display: grid;
     grid-template-rows: repeat(3, 1fr)
 }
@@ -5575,12 +5736,29 @@
 }
 
 .csp-business-story__sticky {
-    position: sticky;
-    top: 110px;
-    height: calc(100vh - 140px);
-    min-height: 560px;
+    position: relative;
+    top: auto;
+    min-height: 0;
+    padding-block: 32px;
     display: flex;
-    align-items: center
+    align-items: stretch
+}
+
+.csp-business-story__image-frame {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 26px;
+}
+
+.csp-business-story__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    object-position: center;
 }
 
 .csp-story-visual {
@@ -5839,14 +6017,6 @@
 @media(max-width:768px) {
     .csp-business-story__heading {
         margin-bottom: 32px
-    }
-
-    .csp-business-story__heading h2 {
-        font-size: 25px
-    }
-
-    .csp-business-story__heading p {
-        font-size: 14px
     }
 
     .csp-business-story__layout {
@@ -7087,46 +7257,21 @@
     padding: 0 29px
 }
 
-.csp-customers__brand {
-    min-width: 170px;
-    height: 58px;
+.csp-customers__brand-img {
+    width: 180px;
+    height: 86px;
+    flex: 0 0 180px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 11px;
-    color: var(--brand-color);
-    opacity: .84;
-    transition: transform .25s ease, opacity .25s ease, text-shadow .25s ease
+    padding: 8px 12px;
 }
 
-.csp-customers__brand:hover {
-    opacity: 1;
-    transform: translateY(-3px);
-    text-shadow: 0 8px 24px color-mix(in srgb, var(--brand-color) 18%, transparent)
-}
-
-.csp-customers__brand>span {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 42px;
-    border: 1px solid color-mix(in srgb, var(--brand-color) 35%, #dbe5f0);
-    border-radius: 12px;
-    color: var(--brand-color);
-    background: color-mix(in srgb, var(--brand-color) 8%, #fff);
-    box-shadow: 0 8px 20px color-mix(in srgb, var(--brand-color) 10%, transparent);
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: -.02em
-}
-
-.csp-customers__brand strong {
-    white-space: nowrap;
-    font-family: var(--font-heading, 'Outfit', sans-serif);
-    font-size: 18px;
-    font-weight: 780;
-    letter-spacing: -.025em
+.csp-customers__brand-img img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 @keyframes csp-customers-scroll {
@@ -7160,20 +7305,12 @@
         padding: 0 15px
     }
 
-    .csp-customers__brand {
-        min-width: 142px;
-        height: 50px
-    }
-
-    .csp-customers__brand>span {
-        width: 36px;
-        height: 36px;
-        flex-basis: 36px;
-        border-radius: 10px
-    }
-
-    .csp-customers__brand strong {
-        font-size: 15px
+    .csp-customers__brand-img {
+        width: 145px;
+        min-width: 145px;
+        height: 68px;
+        flex-basis: 145px;
+        padding: 6px 10px;
     }
 
     .csp-customers__track {

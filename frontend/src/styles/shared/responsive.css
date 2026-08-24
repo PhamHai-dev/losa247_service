@@ -343,7 +343,7 @@
   /* --- Chat Widget --- */
   .chat-widget {
     right: 12px !important;
-    bottom: 12px !important;
+    bottom: max(35px, calc(env(safe-area-inset-bottom) + 25px)) !important;
   }
 
   .chat-panel {
