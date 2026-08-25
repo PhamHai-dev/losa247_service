@@ -7,7 +7,7 @@ exports.getKpis = async (_req, res, next) => {
     const [newLeads, completedLeads, totalBlogs, unhandledLeadsCount, openChatsCount] = await Promise.all([
       prisma.lead.count({ where: { createdAt: { gte: startOfMonth } } }),
       prisma.lead.count({ where: { status: 'converted' } }),
-      prisma.blog.count({ where: { status: 'published' } }),
+      prisma.blog.count({ where: { translations: { some: { locale: 'vi', status: 'published' } } } }),
       prisma.lead.count({ where: { status: 'new' } }),
       prisma.chatSession.count({ where: { status: 'open' } }),
     ]);
@@ -77,12 +77,15 @@ exports.getRecentLeads = async (_req, res, next) => {
 exports.getPopularContent = async (_req, res, next) => {
   try {
     const rows = await prisma.blog.findMany({
-      where: { status: 'published' },
+      where: { translations: { some: { locale: 'vi', status: 'published' } } },
       orderBy: { views: 'desc' },
       take: 5,
-      select: { id: true, title: true, views: true, slug: true, createdAt: true },
+      select: {
+        id: true, views: true, createdAt: true,
+        translations: { where: { locale: 'vi', status: 'published' }, select: { title: true, slug: true }, take: 1 },
+      },
     });
-    return res.json({ success: true, data: rows.map(toLegacyEntity) });
+    return res.json({ success: true, data: rows.map(({ translations, ...row }) => ({ ...toLegacyEntity(row), ...toLegacyEntity(translations[0]) })) });
   } catch (err) {
     return next(err);
   }

@@ -2,13 +2,13 @@ import axiosClient from '../../services/axiosClient'
 
 export const settingsService = {
   getAppearance: () => axiosClient.get('/admin/settings/appearance').then((res) => res?.data),
-  getPublicAppearance: () => axiosClient.get('/settings/appearance').then((res) => res?.data),
+  getPublicAppearance: (locale = 'vi') => axiosClient.get('/settings/appearance', { params: { locale } }).then((res) => res?.data),
   updateAppearance: (payload) => axiosClient.put('/admin/settings/appearance', payload).then((res) => res?.data),
   getSiteInfo: () => axiosClient.get('/admin/settings/site-info').then((res) => res?.data),
-  getPublicSiteInfo: () => axiosClient.get('/settings/site-info').then((res) => res?.data),
+  getPublicSiteInfo: (locale = 'vi') => axiosClient.get('/settings/site-info', { params: { locale } }).then((res) => res?.data),
   updateSiteInfo: (payload) => axiosClient.put('/admin/settings/site-info', payload).then((res) => res?.data),
   getLeadForm: () => axiosClient.get('/admin/settings/lead-form').then((res) => res?.data),
-  getPublicLeadForm: () => axiosClient.get('/settings/lead-form').then((res) => res?.data),
+  getPublicLeadForm: (locale = 'vi') => axiosClient.get('/settings/lead-form', { params: { locale } }).then((res) => res?.data),
   updateLeadForm: (payload) => axiosClient.put('/admin/settings/lead-form', payload).then((res) => res?.data),
   // Upload asset dạng multipart: nhận File, trả url.
   uploadAsset: (file) => {

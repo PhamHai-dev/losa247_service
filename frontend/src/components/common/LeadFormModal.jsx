@@ -14,8 +14,9 @@ export function DynamicLeadFields({ config, prefix = 'lead' }) {
     if (field.type === 'textarea') control = <Input.TextArea id={`${prefix}-${field.key}`} rows={3} placeholder={field.placeholder} />;
     if (field.type === 'number') control = <InputNumber id={`${prefix}-${field.key}`} style={{ width: '100%' }} placeholder={field.placeholder} />;
     if (field.type === 'select') control = <Select id={`${prefix}-${field.key}`} placeholder={field.placeholder} options={(field.options || []).map((value) => ({ value, label: value }))} />;
-    if (field.type === 'checkbox') return <Form.Item key={field.id} name={field.key} valuePropName="checked" rules={rules}><Checkbox id={`${prefix}-${field.key}`}>{field.label}</Checkbox></Form.Item>;
-    return <Form.Item key={field.id} name={field.key} label={field.label} rules={rules}>{control}</Form.Item>;
+    const label = <>{field.label}{field.required && <span className="lead-required-mark">*</span>}</>;
+    if (field.type === 'checkbox') return <Form.Item key={field.id} name={field.key} valuePropName="checked" rules={rules}><Checkbox id={`${prefix}-${field.key}`}>{label}</Checkbox></Form.Item>;
+    return <Form.Item key={field.id} name={field.key} label={label} rules={rules}>{control}</Form.Item>;
   });
 }
 
@@ -27,12 +28,13 @@ export function FooterDynamicLeadFields({ config, prefix = 'footer-lead' }) {
     if (field.type === 'email') rules.push({ type: 'email', message: `${field.label} không hợp lệ` });
     const Icon = footerIcons[field.key] || (field.type === 'phone' ? Phone : field.type === 'email' ? Mail : field.type === 'textarea' ? MessageSquare : User);
     const wide = ['textarea', 'select', 'checkbox'].includes(field.type);
-    if (field.type === 'checkbox') return <Form.Item className="footer-field footer-field--wide footer-field--check" key={field.id} name={field.key} valuePropName="checked" rules={rules}><Checkbox id={`${prefix}-${field.key}`}>{field.label}{field.required && <span> *</span>}</Checkbox></Form.Item>;
+    const label = <>{field.label}{field.required && <span className="lead-required-mark">*</span>}</>;
+    if (field.type === 'checkbox') return <Form.Item className="footer-field footer-field--wide footer-field--check" key={field.id} name={field.key} valuePropName="checked" rules={rules}><Checkbox id={`${prefix}-${field.key}`}>{label}</Checkbox></Form.Item>;
     let control = <Input id={`${prefix}-${field.key}`} type={field.type === 'phone' ? 'tel' : 'text'} placeholder={field.placeholder} prefix={<Icon size={17} />} />;
     if (field.type === 'textarea') control = <Input.TextArea id={`${prefix}-${field.key}`} rows={3} placeholder={field.placeholder} />;
     if (field.type === 'number') control = <InputNumber id={`${prefix}-${field.key}`} placeholder={field.placeholder} prefix={<Icon size={17} />} />;
     if (field.type === 'select') control = <Select id={`${prefix}-${field.key}`} placeholder={field.placeholder} options={(field.options || []).map((value) => ({ value, label: value }))} />;
-    return <Form.Item className={`footer-field${wide ? ' footer-field--wide' : ''}`} key={field.id} name={field.key} label={field.label} rules={rules}>{control}</Form.Item>;
+    return <Form.Item className={`footer-field${wide ? ' footer-field--wide' : ''}`} key={field.id} name={field.key} label={label} rules={rules}>{control}</Form.Item>;
   })}</div>;
 }
 

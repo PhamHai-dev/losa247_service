@@ -5,9 +5,12 @@ import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertific
 import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
 import '../../styles/admin/login.css'
+import { useI18n } from '../../hooks/useI18n'
 
-function AuthLayout({ title, subtitle, children, variant = '' }) {
+function AuthLayout({ title, subtitle, children, variant = '', localized = false }) {
   const layoutClassName = `admin-login-layout${variant ? ` admin-login-layout--${variant}` : ''}`
+  const { locale } = useI18n()
+  const en = localized && locale === 'en'
 
   return (
     <div className={layoutClassName}>
@@ -28,10 +31,10 @@ function AuthLayout({ title, subtitle, children, variant = '' }) {
 
         <div className="admin-login-footer">
           <div className="admin-login-security">
-            <SafetyCertificateOutlined /> Bảo mật bởi LOSA247 Security
+            <SafetyCertificateOutlined /> {en ? 'Secured by LOSA247 Security' : 'Bảo mật bởi LOSA247 Security'}
           </div>
           <div className="admin-login-copyright">
-            © 2024 LOSA247. Tất cả quyền được bảo lưu.
+            {en ? '© 2024 LOSA247. All rights reserved.' : '© 2024 LOSA247. Tất cả quyền được bảo lưu.'}
           </div>
         </div>
       </div>
@@ -43,21 +46,24 @@ export function LoginPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const { loginClient, loading, error } = useAuthStore()
+  const { locale, t, localizedPath } = useI18n()
+  const en = locale === 'en'
 
   const handleSubmit = async ({ acceptedTerms, ...credentials }) => {
     try {
       await loginClient(credentials)
-      message.success('Đăng nhập khách hàng thành công')
-      navigate('/tai-khoan')
+      message.success(en ? 'Signed in successfully' : 'Đăng nhập khách hàng thành công')
+      navigate(localizedPath('/tai-khoan'))
     } catch (loginError) {
-      message.error(loginError?.error?.message || 'Đăng nhập thất bại')
+      message.error(loginError?.error?.message || (en ? 'Sign in failed' : 'Đăng nhập thất bại'))
     }
   }
 
   return (
     <AuthLayout
-      title="Đăng nhập khách hàng"
-      subtitle="Dashboard realtime, theo dõi đơn hàng và dịch vụ AI"
+      localized
+      title={t('auth.loginTitle')}
+      subtitle={en ? 'Real-time dashboard for orders and AI services' : 'Dashboard realtime, theo dõi đơn hàng và dịch vụ AI'}
     >
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 
@@ -71,9 +77,9 @@ export function LoginPage() {
         </Form.Item>
 
         <Form.Item
-          label="Mật khẩu"
+          label={t('auth.password')}
           name="password"
-          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Mật khẩu tối thiểu 6 ký tự' }]}
+          rules={[{ required: true, message: en ? 'Please enter your password' : 'Vui lòng nhập mật khẩu' }, { min: 6, message: en ? 'Password must be at least 6 characters' : 'Mật khẩu tối thiểu 6 ký tự' }]}
           style={{ marginBottom: 12 }}
         >
           <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
@@ -89,18 +95,18 @@ export function LoginPage() {
           }]}
           style={{ marginBottom: 16 }}
         >
-          <Checkbox id="client-login-terms-checkbox">Tôi đồng ý với các điều khoản</Checkbox>
+          <Checkbox id="client-login-terms-checkbox">{en ? 'I agree to the terms' : 'Tôi đồng ý với các điều khoản'}</Checkbox>
         </Form.Item>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 13 }}>
-            Chưa có tài khoản? <Link to="/dang-ky" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng ký</Link>
+            {en ? 'No account yet?' : 'Chưa có tài khoản?'} <Link to={localizedPath('/dang-ky')} style={{ color: '#0d9488', fontWeight: 500 }}>{en ? 'Register' : 'Đăng ký'}</Link>
           </div>
-          <Link to="/quen-mat-khau" style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>Quên mật khẩu?</Link>
+          <Link to={localizedPath('/quen-mat-khau')} style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>{t('auth.forgot')}</Link>
         </div>
 
         <Button className="auth-login-submit" type="primary" htmlType="submit" size="large" loading={loading} block icon={<LoginOutlined />}>
-          Đăng nhập
+          {t('auth.login')}
         </Button>
       </Form>
     </AuthLayout>
@@ -178,48 +184,51 @@ export function RegisterPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const { registerClient, loading, error } = useAuthStore()
+  const { locale, t, localizedPath } = useI18n()
+  const en = locale === 'en'
 
   const handleSubmit = async (values) => {
     try {
       await registerClient(values)
-      message.success('Đăng ký thành công, vui lòng đăng nhập')
-      navigate('/dang-nhap')
+      message.success(en ? 'Registration successful. Please sign in.' : 'Đăng ký thành công, vui lòng đăng nhập')
+      navigate(localizedPath('/dang-nhap'))
     } catch (registerError) {
-      message.error(registerError?.error?.message || 'Đăng ký thất bại')
+      message.error(registerError?.error?.message || (en ? 'Registration failed' : 'Đăng ký thất bại'))
     }
   }
 
   return (
     <AuthLayout
-      title="Tạo tài khoản khách hàng"
-      subtitle="Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent"
+      localized
+      title={t('auth.registerTitle')}
+      subtitle={en ? 'Track your orders and AI Sales Agent services' : 'Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent'}
     >
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 
       <Form className="admin-login-form" layout="vertical" onFinish={handleSubmit}>
-        <Form.Item label="Họ tên" name="name" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}> 
-          <Input size="large" prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Nguyễn Văn A" />
+        <Form.Item label={en ? 'Full name' : 'Họ tên'} name="name" rules={[{ required: true, message: en ? 'Please enter your full name' : 'Vui lòng nhập họ tên' }]}> 
+          <Input size="large" prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder={en ? 'John Smith' : 'Nguyễn Văn A'} />
         </Form.Item>
 
-        <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Vui lòng nhập email' }, { type: 'email' }]}> 
+        <Form.Item label="Email" name="email" rules={[{ required: true, message: en ? 'Please enter your email' : 'Vui lòng nhập email' }, { type: 'email', message: en ? 'Please enter a valid email address' : 'Email không hợp lệ' }]}> 
           <Input size="large" prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="customer@gmail.com" />
         </Form.Item>
 
-        <Form.Item label="Số điện thoại" name="phone">
+        <Form.Item label={en ? 'Phone number' : 'Số điện thoại'} name="phone">
           <Input size="large" prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="0901234567" />
         </Form.Item>
 
-        <Form.Item label="Mật khẩu" name="password" rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]} style={{ marginBottom: 24 }}> 
+        <Form.Item label={en ? 'Password' : 'Mật khẩu'} name="password" rules={[{ required: true, message: en ? 'Please enter your password' : 'Vui lòng nhập mật khẩu' }, { min: 6, message: en ? 'Password must contain at least 6 characters' : 'Tối thiểu 6 ký tự' }]} style={{ marginBottom: 24 }}> 
           <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
         </Form.Item>
 
         <Button className="auth-login-submit" type="primary" htmlType="submit" size="large" loading={loading} block>
-          Tạo tài khoản
+          {t('auth.register')}
         </Button>
       </Form>
 
       <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
-        Đã có tài khoản? <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng nhập</Link>
+        {en ? 'Already have an account?' : 'Đã có tài khoản?'} <Link to={localizedPath('/dang-nhap')} style={{ color: '#0d9488', fontWeight: 500 }}>{t('auth.login')}</Link>
       </div>
     </AuthLayout>
   )
@@ -230,6 +239,8 @@ export function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const { locale, t, localizedPath } = useI18n()
+  const en = locale === 'en'
 
   const handleSubmit = async ({ email }) => {
     setLoading(true)
@@ -247,8 +258,9 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Khôi phục quyền truy cập"
-      subtitle="Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn."
+      localized
+      title={t('auth.forgotTitle')}
+      subtitle={en ? 'Enter your registered email and we will send you a password reset link.' : 'Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn.'}
     >
       {sent ? (
         <Result
@@ -272,12 +284,12 @@ export function ForgotPasswordPage() {
             </Form.Item>
 
             <Button type="primary" htmlType="submit" size="large" loading={loading} block>
-              Gửi liên kết đặt lại
+              {en ? 'Send reset link' : 'Gửi liên kết đặt lại'}
             </Button>
           </Form>
 
           <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
-            Nhớ mật khẩu rồi? <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Đăng nhập</Link>
+            {en ? 'Remembered your password?' : 'Nhớ mật khẩu rồi?'} <Link to={localizedPath('/dang-nhap')} style={{ color: '#0d9488', fontWeight: 500 }}>{t('auth.login')}</Link>
           </div>
         </>
       )}
@@ -292,6 +304,8 @@ export function ResetPasswordPage() {
   const token = searchParams.get('token') || ''
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { locale, t, localizedPath } = useI18n()
+  const en = locale === 'en'
 
   const handleSubmit = async ({ newPassword }) => {
     setLoading(true)
@@ -309,8 +323,9 @@ export function ResetPasswordPage() {
 
   return (
     <AuthLayout
-      title="Đặt lại mật khẩu mới"
-      subtitle="Tạo mật khẩu mới an toàn để tiếp tục sử dụng dịch vụ."
+      localized
+      title={t('auth.resetTitle')}
+      subtitle={en ? 'Create a secure new password to continue using the service.' : 'Tạo mật khẩu mới an toàn để tiếp tục sử dụng dịch vụ.'}
     >
       {!token && <Alert type="warning" title="Thiếu mã đặt lại (token). Vui lòng mở liên kết từ email." showIcon style={{ marginBottom: 16 }} />}
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
@@ -343,12 +358,12 @@ export function ResetPasswordPage() {
         </Form.Item>
 
         <Button type="primary" htmlType="submit" size="large" loading={loading} block disabled={!token}>
-          Đặt lại mật khẩu
+          {en ? 'Reset password' : 'Đặt lại mật khẩu'}
         </Button>
       </Form>
 
       <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
-        <Link to="/dang-nhap" style={{ color: '#0d9488', fontWeight: 500 }}>Về đăng nhập</Link>
+        <Link to={localizedPath('/dang-nhap')} style={{ color: '#0d9488', fontWeight: 500 }}>{en ? 'Back to login' : 'Về đăng nhập'}</Link>
       </div>
     </AuthLayout>
   )

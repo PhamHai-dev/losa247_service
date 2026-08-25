@@ -1,8 +1,10 @@
 import React, { useLayoutEffect } from 'react'
 import { Empty, Spin } from 'antd'
 import PricingCard from './PricingCard'
+import { useI18n } from '../../../hooks/useI18n'
 
 const PricingSection = ({ plans = [], loading = false, onConsult }) => {
+  const { locale } = useI18n()
   const activePlans = plans.filter((item) => item.isActive !== false).sort((a, b) => a.order - b.order)
   const gridRef = React.useRef(null)
 
@@ -38,7 +40,7 @@ const PricingSection = ({ plans = [], loading = false, onConsult }) => {
   return (
     <Spin spinning={loading}>
       {!activePlans.length && !loading ? (
-        <Empty description="Chưa có gói dịch vụ" />
+        <Empty description={locale === 'en' ? 'No service plans available' : 'Chưa có gói dịch vụ'} />
       ) : (
         <div className="saas-pricing-grid-v2" ref={gridRef}>
           {activePlans.map((plan) => (

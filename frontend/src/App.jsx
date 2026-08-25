@@ -9,8 +9,10 @@ import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, AdminLo
 import { AdminDashboard, AdminLeads, AdminBlogs, AdminBlogEditor, AdminFaqs, AdminServices, AdminChat, AdminLogs, AdminUsers, AdminSettings, AdminNotifications } from './pages/admin'
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
   useLayoutEffect(() => {
+    if (state?.preserveScrollOnLocaleChange) return undefined;
+
     const root = document.documentElement;
     const previousScrollBehavior = root.style.scrollBehavior;
 
@@ -23,7 +25,7 @@ function ScrollToTop() {
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [pathname]);
+  }, [pathname, state?.preserveScrollOnLocaleChange]);
   return null;
 }
 
@@ -35,20 +37,31 @@ export default function App() {
       <Routes>
         <Route element={<ClientLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="en" element={<HomePage />} />
           <Route path="giai-phap/chatbot" element={<BotcakeClone />} />
+          <Route path="en/solutions/chatbot" element={<BotcakeClone />} />
           {/* <Route path="giai-phap/gui-tin-tiep-thi" element={<BroadcastMarketingPage />} /> */}
           <Route path="blog" element={<BlogPage />} />
           <Route path="blog/:id" element={<BlogDetailPage />} />
+          <Route path="en/blog" element={<BlogPage />} />
+          <Route path="en/blog/:id" element={<BlogDetailPage />} />
           <Route path="tag/:slug" element={<TagDetailPage />} />
+          <Route path="en/tag/:slug" element={<TagDetailPage />} />
           <Route path="bang-gia" element={<ServicesPage />} />
-
+          <Route path="en/pricing" element={<ServicesPage />} />
           <Route path="tai-khoan" element={<AccountPage />} />
+          <Route path="en/account" element={<AccountPage />} />
+          <Route path="en/*" element={<NotFoundPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route path="dang-nhap" element={<LoginPage />} />
+        <Route path="en/login" element={<LoginPage />} />
         <Route path="dang-ky" element={<RegisterPage />} />
+        <Route path="en/register" element={<RegisterPage />} />
         <Route path="quen-mat-khau" element={<ForgotPasswordPage />} />
+        <Route path="en/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="dat-lai-mat-khau" element={<ResetPasswordPage />} />
+        <Route path="en/reset-password" element={<ResetPasswordPage />} />
         <Route path="admin/dang-nhap" element={<AdminLoginPage />} />
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />

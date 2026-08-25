@@ -1,6 +1,6 @@
 import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   CircleCheck, Crown, Gem, Check, X, TrendingUp, Star, ChevronDown, ChevronUp,
   Calendar, Tag as LucideTag, Phone, Mail, MessageSquare, MapPin, BellDot, Camera, Mic, Send, ChevronLeft, MoreVertical, Signal, Wifi, BatteryFull,
@@ -26,14 +26,19 @@ import { useUIStore } from '../../stores/uiStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useDebounce } from '../../hooks/useDebounce'
 
+import { useI18n } from '../../hooks/useI18n'
+import { PageSeo } from '../../components/seo/PageSeo'
+
 // ---- Components -------------------------------------------------------------
 
 export function BlogDetailPage() {
+  const { locale, t, localizedPath } = useI18n()
   const { id } = useParams()
-  const query = useApiQuery(() => publicBlogsService.getBySlug(id), [id])
+  const blogPath = (slug) => localizedPath(`/blog/${slug}`)
+  const query = useApiQuery(() => publicBlogsService.getBySlug(id, locale), [id, locale])
   const blog = query.data
 
-  const relatedQuery = useApiQuery(() => id && blog && blog._id ? publicBlogsService.getRelated(id) : Promise.resolve([]), [id, blog?._id])
+  const relatedQuery = useApiQuery(() => id && blog?._id ? publicBlogsService.getRelated(id, locale) : Promise.resolve([]), [id, blog?._id, locale])
   const relatedBlogs = relatedQuery.data || []
 
   const contentRef = useRef(null)
@@ -43,12 +48,13 @@ export function BlogDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    const key = 'viewed_blog_' + id;
+    const key = `viewed_blog_${locale}_${id}`;
     if (!sessionStorage.getItem(key)) {
-      publicBlogsService.recordView(id).catch(() => { })
+      publicBlogsService.recordView(id, locale).catch(() => { })
       sessionStorage.setItem(key, '1')
     }
-  }, [id])
+  }, [id, locale])
+
 
   useEffect(() => {
     if (blog?.content && contentRef.current) {
@@ -98,8 +104,9 @@ export function BlogDetailPage() {
 
   return (
     <main className="section" style={{ background: '#F7F9FC', minHeight: '100vh', paddingBottom: 60 }}><div className="container">
+      {blog && <PageSeo title={blog.metaTitle || blog.title} description={blog.metaDescription || blog.excerpt} image={blog.coverImageUrl} isFallback={blog.isFallback} alternates={blog.alternates} />}
       <Spin spinning={query.loading}>
-        {!blog && !query.loading ? <Empty description="Không tìm thấy bài viết" /> : blog && (
+        {!blog && !query.loading ? <Empty description={t('blog.notFound')} /> : blog && (
           <div style={{
             paddingTop: '40px',
             width: '100%',
@@ -112,18 +119,18 @@ export function BlogDetailPage() {
                   background: '#fff', padding: 12, borderRadius: 12,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid var(--line)'
                 }}
-                title="Hiện nội dung chính"
+                title={locale === 'en' ? 'Show table of contents' : 'Hiện nội dung chính'}
               >
                 <MenuOutlined style={{ fontSize: 24, cursor: 'pointer', color: 'var(--primary)' }} onClick={() => setShowToc(true)} />
               </div>
             )}
 
             <div style={{ marginBottom: 32, maxWidth: (showToc && hasHeadings) ? 'calc(100% - 340px)' : '100%' }}>
-              {blog.category && <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 14 }}>{blog.category?.name || (typeof blog.category === 'string' ? 'Danh mục' : 'Danh mục')}</span>}
+              {blog.category && <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 14 }}>{blog.category?.name || (locale === 'en' ? 'Category' : 'Danh mục')}</span>}
               <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', margin: '16px 0', lineHeight: 1.3 }}>{blog.title}</h1>
               <div className="blog-meta">
                 <span><CalendarOutlined /> {formatDate(blog.publishedAt)}</span>
-                <span><EyeOutlined /> {blog.views || 0} lượt xem</span>
+                <span><EyeOutlined /> {blog.views || 0} {t('blog.views')}</span>
               </div>
             </div>
 
@@ -148,10 +155,10 @@ export function BlogDetailPage() {
 
                 {relatedBlogs.length > 0 && (
                   <div style={{ marginTop: 60 }}>
-                    <h3 style={{ marginBottom: 24, fontSize: 24 }}>Bài viết liên quan</h3>
+                    <h3 style={{ marginBottom: 24, fontSize: 24 }}>{t('blog.related')}</h3>
                     <div className="main-blog-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
                       {relatedBlogs.map(b => (
-                        <Link to={`/blog/${b.slug}`} key={b._id} className="blog-card">
+                        <Link to={blogPath(b.slug)} key={b._id} className="blog-card">
                           <img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} className="blog-card-img" />
                           <div className="blog-card-body">
                             {b.category && <span className="card-cat">{b.category.name}</span>}
@@ -187,13 +194,13 @@ export function BlogDetailPage() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                       <h3 style={{ margin: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <MenuOutlined /> Nội dung chính
+                        <MenuOutlined /> {t('blog.toc')}
                       </h3>
                       <span
                         style={{ color: 'var(--primary)', cursor: 'pointer', fontSize: 14 }}
                         onClick={() => setShowToc(false)}
                       >
-                        [Ẩn]
+                        [{t('blog.hide')}]
                       </span>
                     </div>
                     <div className="toc-list" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>

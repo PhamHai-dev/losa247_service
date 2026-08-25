@@ -11,10 +11,35 @@ import { useApiQuery } from '../hooks/useApiQuery'
 import { settingsService } from '../features/settings/settingsService'
 import { leadsService } from '../features/leads/leadsService'
 import LeadFormModal, { FooterDynamicLeadFields } from '../components/common/LeadFormModal'
+import { useI18n } from '../hooks/useI18n'
+
+function VietnamFlag({ className = '' }) {
+  return (
+    <svg className={className} width="28" height="20" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="22" height="16" rx="2" fill="#F93939" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M11.0021 9.952L8.81257 11.1253L9.23162 8.6432L7.46114 6.8864L9.90838 6.52373L11.0021 4.26666L12.0969 6.52373L14.543 6.8864L12.7726 8.6432L13.1916 11.1243L11.0021 9.952Z" fill="#FFDA2C" />
+    </svg>
+  )
+}
+
+function UnitedStatesFlag({ className = '' }) {
+  return (
+    <svg className={className} width="28" height="20" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clipPath="url(#us-flag-rounded-clip)">
+        <rect width="22" height="16" rx="2" fill="white" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M0 0H9.42857V7.46667H0V0Z" fill="#1A47B8" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M9.42857 0V1.06667H22V0H9.42857ZM9.42857 2.13333V3.2H22V2.13333H9.42857ZM9.42857 4.26667V5.33333H22V4.26667H9.42857ZM9.42857 6.4V7.46667H22V6.4H9.42857ZM0 8.53333V9.6H22V8.53333H0ZM0 10.6667V11.7333H22V10.6667H0ZM0 12.8V13.8667H22V12.8H0ZM0 14.9333V16H22V14.9333H0Z" fill="#F93939" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M1.04762 1.06668V2.13335H2.09524V1.06668H1.04762ZM3.14286 1.06668V2.13335H4.19048V1.06668H3.14286ZM5.2381 1.06668V2.13335H6.28571V1.06668H5.2381ZM7.33333 1.06668V2.13335H8.38095V1.06668H7.33333ZM6.28571 2.13335V3.20001H7.33333V2.13335H6.28571ZM4.19048 2.13335V3.20001H5.2381V2.13335H4.19048ZM2.09524 2.13335V3.20001H3.14286V2.13335H2.09524ZM1.04762 3.20001V4.26668H2.09524V3.20001H1.04762ZM3.14286 3.20001V4.26668H4.19048V3.20001H3.14286ZM5.2381 3.20001V4.26668H6.28571V3.20001H5.2381ZM7.33333 3.20001V4.26668H8.38095V3.20001H7.33333ZM1.04762 5.33335V6.40001H2.09524V5.33335H1.04762ZM3.14286 5.33335V6.40001H4.19048V5.33335H3.14286ZM5.2381 5.33335V6.40001H6.28571V5.33335H5.2381ZM7.33333 5.33335V6.40001H8.38095V5.33335H7.33333ZM6.28571 4.26668V5.33335H7.33333V4.26668H6.28571ZM4.19048 4.26668V5.33335H5.2381V4.26668H4.19048ZM2.09524 4.26668V5.33335H3.14286V4.26668H2.09524Z" fill="white" />
+      </g>
+      <defs><clipPath id="us-flag-rounded-clip"><rect width="22" height="16" rx="2" fill="white" /></clipPath></defs>
+    </svg>
+  )
+}
 
 // Widget chat nổi dùng chung toàn site (tạo session client + socket realtime).
 function ChatWidget({ user }) {
   const navigate = useNavigate()
+  const { locale, t, localizedPath } = useI18n()
   const [open, setOpen] = useState(false)
   const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -80,8 +105,8 @@ function ChatWidget({ user }) {
 
   const toggle = async () => {
     if (!user) {
-      message.info('Vui lòng đăng nhập để bắt đầu trò chuyện!')
-      navigate('/dang-nhap')
+      message.info(t('chat.loginRequired'))
+      navigate(localizedPath('/dang-nhap'))
       return
     }
     const next = !open
@@ -103,7 +128,7 @@ function ChatWidget({ user }) {
       if (data?.id && data?.url) setAttachments(prev => [...prev, data])
     } catch (err) {
       console.error('Lỗi tải file:', err)
-      message.error('Không thể tải ảnh lên. Vui lòng thử lại.')
+      message.error(t('chat.uploadError'))
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -160,7 +185,7 @@ function ChatWidget({ user }) {
                 <div className="chat-bot-avatar"><Bot size={16} color="#3B82F6" /></div>
                 <div className="bubble">
                   Hello
-                  <div className="chat-time">Vừa xong</div>
+                  <div className="chat-time">{locale === 'en' ? 'Just now' : 'Vừa xong'}</div>
                 </div>
               </div>
             )}
@@ -182,7 +207,7 @@ function ChatWidget({ user }) {
                     {m.attachments?.map((attachment, i) => (
                       <img key={i} src={typeof attachment === 'string' ? attachment : attachment.url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
                     ))}
-                    <div className="chat-time">Vừa xong</div>
+                    <div className="chat-time">{locale === 'en' ? 'Just now' : 'Vừa xong'}</div>
                   </div>
                 </div>
               )
@@ -214,10 +239,10 @@ function ChatWidget({ user }) {
               </div>
             )}
 
-            {uploading && <div style={{ fontSize: 12, color: '#3B82F6', marginBottom: 8, paddingLeft: 12 }}>Đang tải file lên...</div>}
+            {uploading && <div style={{ fontSize: 12, color: '#3B82F6', marginBottom: 8, paddingLeft: 12 }}>{t('chat.upload')}</div>}
 
             <div className="chat-input-wrapper">
-              <input placeholder="Nhập tin nhắn..." value={text} onChange={(e) => setText(e.target.value)}
+              <input placeholder={t('chat.placeholder')} value={text} onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') send() }} />
               <div className="chat-input-actions">
                 <Smile size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
@@ -255,42 +280,45 @@ export function ClientLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { authType, user, logout } = useAuthStore()
-  const siteQuery = useApiQuery(() => settingsService.getPublicSiteInfo(), [])
-  const appearanceQuery = useApiQuery(() => settingsService.getPublicAppearance(), [])
+  const { locale, t, localizedPath, switchLocale } = useI18n()
+  const siteQuery = useApiQuery(() => settingsService.getPublicSiteInfo(locale), [locale])
+  const appearanceQuery = useApiQuery(() => settingsService.getPublicAppearance(locale), [locale])
 
   const { openLeadModal } = useUIStore()
   const [forceCloseDropdown, setForceCloseDropdown] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileSolutionsOpen, setMobileSolutionsOpen] = useState(false)
   const [mobilePricingOpen, setMobilePricingOpen] = useState(false)
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
+  const languageMenuRef = useRef(null)
 
   // Footer dùng chung schema form động nhưng vẫn hiển thị trực tiếp.
   const [footerForm] = Form.useForm()
   const [ctaSubmitting, setCtaSubmitting] = useState(false)
-  const leadFormQuery = useApiQuery(() => settingsService.getPublicLeadForm(), [])
+  const leadFormQuery = useApiQuery(() => settingsService.getPublicLeadForm(locale), [locale])
 
   const handleCtaSubmit = async (values) => {
     setCtaSubmitting(true)
     try {
       await leadsService.createPublicLead({ formVersion: leadFormQuery.data?.version, values })
-      message.success('Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.')
+      message.success(t('forms.success'))
       footerForm.resetFields()
     } catch (error) {
-      message.error(error?.error?.message || 'Có lỗi xảy ra, vui lòng thử lại!')
+      message.error(error?.error?.message || t('errors.generic'))
     } finally { setCtaSubmitting(false) }
   }
 
-  const isSolutionsActive = location.pathname.startsWith('/giai-phap')
-  const isPricingActive = location.pathname.startsWith('/bang-gia')
+  const isSolutionsActive = location.pathname.startsWith('/giai-phap') || location.pathname.startsWith('/en/solutions')
+  const isPricingActive = location.pathname.startsWith('/bang-gia') || location.pathname.startsWith('/en/pricing')
 
   const handleLogout = async () => {
     await logout()
-    navigate('/')
+    navigate(localizedPath('/'))
   }
 
   const siteInfo = siteQuery.data || {}
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || 'https://drive.google.com/file/d/1MO8yHhrNn3ZloCaQ48d1ZC4TQkhgwYqP/view'
+  const logoUrl = siteInfo.logoUrl || 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1787021089/losa247/u1i4tjn1qcfkkg2q2mpv.png'
   const slogan = siteInfo.slogan || 'Tự động hóa chăm sóc 24/7'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
@@ -336,22 +364,42 @@ export function ClientLayout() {
     root.style.colorScheme = appearance.themeMode || 'light'
   }, [appearanceQuery.data])
 
+  useEffect(() => {
+    if (!languageMenuOpen) return undefined
+    const closeMenu = (event) => {
+      if (event.key === 'Escape' || (event.type === 'pointerdown' && !languageMenuRef.current?.contains(event.target))) {
+        setLanguageMenuOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', closeMenu)
+    document.addEventListener('keydown', closeMenu)
+    return () => {
+      document.removeEventListener('pointerdown', closeMenu)
+      document.removeEventListener('keydown', closeMenu)
+    }
+  }, [languageMenuOpen])
+
+  const selectLanguage = (code) => {
+    setLanguageMenuOpen(false)
+    if (code !== locale) switchLocale(code)
+  }
+
   return (
     <div className="client-app-wrapper">
       <header className="client-header">
         <nav className="client-nav container">
-          <Link className="logo" to="/" style={{ display: 'flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
+          <Link className="logo" to={localizedPath('/')} style={{ display: 'flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
             <img src={logoUrl} alt="Logo" style={{ height: 80, objectFit: 'contain' }} />
           </Link>
           <div className="menu">
-            <NavLink to="/">Trang chủ</NavLink>
+            <NavLink to={localizedPath('/')} end>{t('navigation.home')}</NavLink>
 
             <div className="dropdown-container" onMouseEnter={() => setForceCloseDropdown(false)}>
               <a href="#" className={`dropdown-trigger ${isSolutionsActive ? 'active' : ''}`} onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                Giải pháp <ChevronDown size={14} />
+                {t('navigation.solutions')} <ChevronDown size={14} />
               </a>
               <div className="dropdown-menu" style={{ display: forceCloseDropdown ? 'none' : '' }} onClick={() => setForceCloseDropdown(true)}>
-                <NavLink to="/giai-phap/chatbot" className="dropdown-item">
+                <NavLink to={localizedPath('/giai-phap/chatbot')} className="dropdown-item">
                   <div className="dropdown-icon" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}><Bot size={20} /></div>
                   <div className="dropdown-text">
                     <h4>Chatbot AI</h4>
@@ -379,50 +427,71 @@ export function ClientLayout() {
 
             <div className="dropdown-container" onMouseEnter={() => setForceCloseDropdown(false)}>
               <a href="#" className={`dropdown-trigger ${isPricingActive ? 'active' : ''}`} onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                Bảng giá <ChevronDown size={14} />
+                {locale === 'en' ? 'Pricing' : 'Bảng giá'} <ChevronDown size={14} />
               </a>
               <div className="dropdown-menu" style={{ display: forceCloseDropdown ? 'none' : '' }} onClick={() => setForceCloseDropdown(true)}>
-                <NavLink to="/bang-gia" end className="dropdown-item">
+                <NavLink to={localizedPath('/bang-gia')} end className="dropdown-item">
                   <div className="dropdown-icon" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}><Bot size={20} /></div>
                   <div className="dropdown-text">
-                    <h4>Bảng giá Chatbot</h4>
-                    <p>Các gói giải pháp tự động hóa 24/7</p>
+                    <h4>{locale === 'en' ? 'Chatbot Pricing' : 'Bảng giá Chatbot'}</h4>
+                    <p>{locale === 'en' ? '24/7 automation solution plans' : 'Các gói giải pháp tự động hóa 24/7'}</p>
                   </div>
                 </NavLink>
                 <div className="dropdown-divider"></div>
-                <NavLink to="/bang-gia/crm" className="dropdown-item">
+                <NavLink to={localizedPath('/bang-gia/crm')} className="dropdown-item">
                   <div className="dropdown-icon" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}><BarChart2 size={20} /></div>
                   <div className="dropdown-text">
-                    <h4>Bảng giá CRM</h4>
-                    <p>Gói quản lý khách hàng toàn diện</p>
+                    <h4>{locale === 'en' ? 'CRM Pricing' : 'Bảng giá CRM'}</h4>
+                    <p>{locale === 'en' ? 'Comprehensive customer management plans' : 'Gói quản lý khách hàng toàn diện'}</p>
                   </div>
                 </NavLink>
                 <div className="dropdown-divider"></div>
-                <NavLink to="/bang-gia/marketing" className="dropdown-item">
+                <NavLink to={localizedPath('/bang-gia/marketing')} className="dropdown-item">
                   <div className="dropdown-icon" style={{ backgroundColor: '#f0fdf4', color: '#22c55e' }}><Send size={20} /></div>
                   <div className="dropdown-text">
-                    <h4>Bảng giá Marketing</h4>
-                    <p>Các gói chiến dịch tiếp thị tự động</p>
+                    <h4>{locale === 'en' ? 'Marketing Pricing' : 'Bảng giá Marketing'}</h4>
+                    <p>{locale === 'en' ? 'Automated marketing campaign plans' : 'Các gói chiến dịch tiếp thị tự động'}</p>
                   </div>
                 </NavLink>
               </div>
             </div>
-            <NavLink to="/blog">Kiến thức</NavLink>
+            <NavLink to={localizedPath('/blog')}>{t('navigation.knowledge')}</NavLink>
 
           </div>
           <div className="menu" style={{ gap: '16px' }}>
+            <div className="language-picker" ref={languageMenuRef}>
+              <button
+                id="desktop-language-trigger"
+                type="button"
+                className="language-picker__trigger"
+                aria-label={t('navigation.language')}
+                aria-haspopup="menu"
+                aria-expanded={languageMenuOpen}
+                onClick={() => setLanguageMenuOpen((open) => !open)}
+              >
+                <span className="language-picker__flag" aria-hidden="true">{locale === 'en' ? <UnitedStatesFlag /> : <VietnamFlag />}</span>
+              </button>
+              <div className={`language-picker__menu ${languageMenuOpen ? 'is-open' : ''}`} role="menu" aria-hidden={!languageMenuOpen}>
+                <button id="desktop-language-vi" type="button" role="menuitemradio" aria-checked={locale === 'vi'} onClick={() => selectLanguage('vi')}>
+                  <VietnamFlag /><span>Tiếng Việt</span>
+                </button>
+                <button id="desktop-language-en" type="button" role="menuitemradio" aria-checked={locale === 'en'} onClick={() => selectLanguage('en')}>
+                  <UnitedStatesFlag /><span>English</span>
+                </button>
+              </div>
+            </div>
             {authType === 'client' ? (
               <>
-                <NavLink to="/tai-khoan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><User size={18} /> {user?.name || 'Tài khoản'}</NavLink>
-                <a onClick={handleLogout} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>Đăng xuất</a>
+                <NavLink to={localizedPath('/tai-khoan')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><User size={18} /> {user?.name || t('common.account')}</NavLink>
+                <a onClick={handleLogout} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>{t('common.logout')}</a>
               </>
             ) : (
-              <NavLink to="/dang-nhap" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#374151' }}>
-                <User size={18} /> Đăng nhập
+              <NavLink to={localizedPath('/dang-nhap')} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#374151' }}>
+                <User size={18} /> {t('navigation.login')}
               </NavLink>
             )}
             <a className="btn btn-primary header-trial-btn" onClick={openLeadModal} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px' }}>
-              <Rocket size={16} /> Đăng ký trải nghiệm
+              <Rocket size={16} /> {t('navigation.trial')}
             </a>
           </div>
           <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
@@ -442,17 +511,17 @@ export function ClientLayout() {
           <div className="container">
             <div className="cta-grid">
               <div className="cta-content">
-                <h2 id="footer-cta-title" className="cta-title">Kết nối khách hàng thông minh hơn, <span>tăng trưởng nhanh hơn cùng Losa</span></h2>
-                <p className="cta-lead">Một nền tảng duy nhất để đội ngũ của bạn tư vấn, chăm sóc và chuyển đổi khách hàng liên tục trên mọi kênh.</p>
+                <h2 id="footer-cta-title" className="cta-title">{t('cta.title')}</h2>
+                <p className="cta-lead">{t('cta.lead')}</p>
                 <ul className="cta-benefits">
-                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>Tự động hóa 24/7</strong> quy trình nhắn tin và chăm sóc khách hàng</span></li>
-                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>Tiếp cận quy mô lớn</strong> qua các chiến dịch đa kênh thông minh</span></li>
-                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>AI liền mạch</strong> hỗ trợ đội ngũ bán hàng trong từng hội thoại</span></li>
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>{t('cta.benefitAutomation')}</strong>{t('cta.benefitAutomationText')}</span></li>
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>{t('cta.benefitScale')}</strong>{t('cta.benefitScaleText')}</span></li>
+                  <li><span className="cta-benefit-icon"><Check size={15} /></span><span><strong>{t('cta.benefitAi')}</strong>{t('cta.benefitAiText')}</span></li>
                 </ul>
                 <div className="cta-trust-row">
-                  <span><Shield size={15} /> Bảo mật dữ liệu</span>
-                  <span><Headphones size={15} /> Đồng hành triển khai</span>
-                  <span><Zap size={15} /> Thiết lập nhanh</span>
+                  <span><Shield size={15} /> {t('cta.dataSecurity')}</span>
+                  <span><Headphones size={15} /> {t('cta.implementationSupport')}</span>
+                  <span><Zap size={15} /> {t('cta.quickSetup')}</span>
                 </div>
               </div>
 
@@ -460,19 +529,19 @@ export function ClientLayout() {
                 <div className="cta-form-heading">
                   <div className="cta-form-icon"><Rocket size={21} /></div>
                   <div>
-                    <span>Tư vấn miễn phí</span>
-                    <h3>Đặt lịch demo cùng chuyên gia</h3>
+                    <span>{t('cta.free')}</span>
+                    <h3>{t('cta.demo')}</h3>
                   </div>
                 </div>
-                <p className="cta-form-intro">Để lại thông tin, đội ngũ Losa sẽ liên hệ và tư vấn giải pháp phù hợp nhất với doanh nghiệp của bạn.</p>
+                <p className="cta-form-intro">{t('cta.intro')}</p>
                 <Form form={footerForm} layout="vertical" onFinish={handleCtaSubmit} className="footer-dynamic-form">
                   <FooterDynamicLeadFields config={leadFormQuery.data} prefix="footer-lead" />
                   <button id="footer-demo-submit" type="submit" className="cta-submit-btn" disabled={ctaSubmitting || leadFormQuery.loading}>
-                    {ctaSubmitting ? 'Đang gửi thông tin...' : <><span>{leadFormQuery.data?.submitLabel || 'Nhận tư vấn miễn phí'}</span><ArrowRight size={17} /></>}
+                    {ctaSubmitting ? t('cta.sending') : <><span>{leadFormQuery.data?.submitLabel || t('cta.submit')}</span><ArrowRight size={17} /></>}
                   </button>
                 </Form>
                 <div className="cta-secure-note">
-                  <Shield size={14} /> Thông tin của bạn được mã hóa và bảo mật tuyệt đối
+                  <Shield size={14} /> {t('cta.secure')}
                 </div>
               </div>
             </div>
@@ -483,13 +552,13 @@ export function ClientLayout() {
           <div className="container">
             <div className="footer-main-grid">
               <section className="footer-brand-card" aria-label="Giới thiệu Losa247">
-                <Link to="/" className="footer-brand-link">
+                <Link to={localizedPath('/')} className="footer-brand-link">
                   <img src={logoUrl} alt="Logo Losa247" />
                 </Link>
-                <p className="footer-desc">Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và tăng trưởng bền vững.</p>
+                <p className="footer-desc">{t('footer.description')}</p>
                 <div className="footer-brand-pills">
-                  <span><Bot size={14} /> AI đa kênh</span>
-                  <span><CheckCircle size={14} /> Hỗ trợ 24/7</span>
+                  <span><Bot size={14} /> {t('footer.omnichannelAi')}</span>
+                  <span><CheckCircle size={14} /> {t('footer.support247')}</span>
                 </div>
                 <div className="footer-socials">
                   <a href={facebookUrl} target="_blank" rel="noreferrer" className="social-icon" aria-label="Facebook Losa247"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
@@ -501,40 +570,40 @@ export function ClientLayout() {
 
               <nav className="footer-nav-grid" aria-label="Điều hướng chân trang">
                 <div className="footer-col">
-                  <h3>Sản phẩm</h3>
+                  <h3>{t('footer.products')}</h3>
                   <ul>
-                    <li><Link to="/giai-phap/chatbot">Chatbot AI</Link></li>
-                    <li><Link to="/giai-phap/crm">CRM</Link></li>
-                    <li><Link to="/giai-phap/marketing">Marketing Automation</Link></li>
-                    <li><Link to="/bang-gia">Bảng giá</Link></li>
+                    <li><Link to={localizedPath('/giai-phap/chatbot')}>Chatbot AI</Link></li>
+                    <li><Link to={localizedPath('/giai-phap/crm')}>CRM</Link></li>
+                    <li><Link to={localizedPath('/giai-phap/marketing')}>Marketing Automation</Link></li>
+                    <li><Link to={localizedPath('/bang-gia')}>{t('footer.pricing')}</Link></li>
                   </ul>
                 </div>
                 <div className="footer-col">
-                  <h3>Tài nguyên</h3>
+                  <h3>{t('footer.resources')}</h3>
                   <ul>
-                    <li><Link to="/blog">Blog kiến thức</Link></li>
-                    <li><Link to="#">Hướng dẫn sử dụng</Link></li>
-                    <li><Link to="#">Trung tâm trợ giúp</Link></li>
-                    <li><Link to="#">Câu hỏi thường gặp</Link></li>
+                    <li><Link to={localizedPath('/blog')}>{t('footer.blog')}</Link></li>
+                    <li><Link to="#">{t('footer.guide')}</Link></li>
+                    <li><Link to="#">{t('footer.help')}</Link></li>
+                    <li><Link to="#">{t('footer.faq')}</Link></li>
                   </ul>
                 </div>
                 <div className="footer-col">
-                  <h3>Doanh nghiệp</h3>
+                  <h3>{t('footer.company')}</h3>
                   <ul>
-                    <li><Link to="#">Về Losa247</Link></li>
-                    <li><Link to="#">Đối tác tích hợp</Link></li>
-                    <li><Link to="#">Cơ hội nghề nghiệp</Link></li>
-                    <li><Link to="#">Liên hệ</Link></li>
+                    <li><Link to="#">{t('footer.about')}</Link></li>
+                    <li><Link to="#">{t('footer.partners')}</Link></li>
+                    <li><Link to="#">{t('footer.careers')}</Link></li>
+                    <li><Link to="#">{t('footer.contact')}</Link></li>
                   </ul>
                 </div>
               </nav>
 
               <section className="footer-contact-card" aria-labelledby="footer-contact-title">
-                <span className="footer-contact-eyebrow">Luôn sẵn sàng hỗ trợ</span>
-                <h3 id="footer-contact-title">Kết nối với Losa247</h3>
+                <span className="footer-contact-eyebrow">{t('footer.support')}</span>
+                <h3 id="footer-contact-title">{t('footer.connect')}</h3>
                 <a href={`tel:${hotline.replace(/\s/g, '')}`} className="footer-contact-item">
                   <span className="footer-contact-icon"><Phone size={17} /></span>
-                  <span><small>Hotline tư vấn</small><strong>{hotline}</strong></span>
+                  <span><small>{t('footer.hotline')}</small><strong>{hotline}</strong></span>
                 </a>
                 <a href={`mailto:${email}`} className="footer-contact-item">
                   <span className="footer-contact-icon"><Mail size={17} /></span>
@@ -542,7 +611,7 @@ export function ClientLayout() {
                 </a>
                 <div className="footer-contact-item">
                   <span className="footer-contact-icon"><MapPin size={17} /></span>
-                  <span><small>Văn phòng</small><strong>{address}</strong></span>
+                  <span><small>{t('footer.office')}</small><strong>{address}</strong></span>
                 </div>
               </section>
             </div>
@@ -550,14 +619,14 @@ export function ClientLayout() {
             <div className="footer-bottom">
               <div className="footer-copyright">
                 <span className="footer-trust-icon"><Shield size={15} /></span>
-                <span>© 2024 Losa247. Tất cả quyền được bảo lưu.</span>
+                <span>{t('footer.copyright')}</span>
               </div>
               <div className="footer-links">
-                <Link to="#">Bảo mật</Link>
-                <Link to="#">Điều khoản</Link>
-                <Link to="#">Hoàn tiền</Link>
+                <Link to="#">{t('footer.privacy')}</Link>
+                <Link to="#">{t('footer.terms')}</Link>
+                <Link to="#">{t('footer.refund')}</Link>
               </div>
-              <span className="footer-made-in"><span></span> Phát triển tại Việt Nam</span>
+              <span className="footer-made-in"><span></span> {t('footer.madeIn')}</span>
             </div>
           </div>
         </footer>
@@ -566,7 +635,7 @@ export function ClientLayout() {
       <ChatWidget user={user} />
       <LeadFormModal />
       <Drawer
-        title="Menu"
+        title={t('navigation.menu')}
         placement="right"
         onClose={() => setMobileMenuOpen(false)}
         open={mobileMenuOpen}
@@ -574,46 +643,49 @@ export function ClientLayout() {
         width={250}
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          <NavLink to="/" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Trang chủ</NavLink>
+          <div className="language-switcher" aria-label={t('navigation.language')} style={{ display: 'flex', gap: 8, padding: '0 0 16px' }}>
+            {['vi', 'en'].map((code) => <button id={`mobile-language-${code}`} key={code} type="button" onClick={() => { switchLocale(code); setMobileMenuOpen(false) }} aria-pressed={locale === code} className="btn" style={{ flex: 1, border: '1px solid #cbd5e1', background: locale === code ? '#0f766e' : '#fff', color: locale === code ? '#fff' : '#334155' }}>{code.toUpperCase()}</button>)}
+          </div>
+          <NavLink to={localizedPath('/')} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t('navigation.home')}</NavLink>
 
           <div className="mobile-nav-submenu">
             <div className="mobile-nav-link" style={{ background: '#f8fafc', borderBottom: 'none', cursor: 'pointer' }} onClick={() => setMobileSolutionsOpen(!mobileSolutionsOpen)}>
-              Giải pháp <ChevronDown size={16} style={{ transform: mobileSolutionsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+              {t('navigation.solutions')} <ChevronDown size={16} style={{ transform: mobileSolutionsOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
             </div>
             {mobileSolutionsOpen && (
               <div className="mobile-nav-submenu-panel">
-                <NavLink to="/giai-phap/chatbot" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> Chatbot AI</NavLink>
-                <NavLink to="/giai-phap/crm" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> CRM</NavLink>
-                <NavLink to="/giai-phap/marketing" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> Marketing</NavLink>
+                <NavLink to={localizedPath('/giai-phap/chatbot')} className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> Chatbot AI</NavLink>
+                <NavLink to={localizedPath('/giai-phap/crm')} className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> CRM</NavLink>
+                <NavLink to={localizedPath('/giai-phap/marketing')} className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> Marketing</NavLink>
               </div>
             )}
           </div>
 
           <div className="mobile-nav-submenu">
             <div className="mobile-nav-link" style={{ background: '#f8fafc', borderBottom: 'none', cursor: 'pointer' }} onClick={() => setMobilePricingOpen(!mobilePricingOpen)}>
-              Bảng giá <ChevronDown size={16} style={{ transform: mobilePricingOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+              {t('navigation.pricing')} <ChevronDown size={16} style={{ transform: mobilePricingOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
             </div>
             {mobilePricingOpen && (
               <div className="mobile-nav-submenu-panel">
-                <NavLink to="/bang-gia" end className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> Bảng giá Chatbot</NavLink>
-                <NavLink to="/bang-gia/crm" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> Bảng giá CRM</NavLink>
-                <NavLink to="/bang-gia/marketing" className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> Bảng giá Marketing</NavLink>
+                <NavLink to={localizedPath('/bang-gia')} end className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Bot size={16} /> {t('navigation.pricing')} Chatbot</NavLink>
+                <NavLink to={localizedPath('/bang-gia/crm')} className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><BarChart2 size={16} /> {t('navigation.pricing')} CRM</NavLink>
+                <NavLink to={localizedPath('/bang-gia/marketing')} className="mobile-nav-sublink" onClick={() => setMobileMenuOpen(false)}><Send size={16} /> {t('navigation.pricing')} Marketing</NavLink>
               </div>
             )}
           </div>
-          <NavLink to="/blog" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Kiến thức</NavLink>
+          <NavLink to={localizedPath('/blog')} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t('navigation.knowledge')}</NavLink>
         </div>
 
         <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {authType === 'client' ? (
             <>
-              <NavLink to="/tai-khoan" className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> {user?.name || 'Tài khoản'}</NavLink>
-              <button className="btn" style={{ background: '#f1f5f9', color: '#475569', width: '100%', border: 'none' }} onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>Đăng xuất</button>
+              <NavLink to={localizedPath('/tai-khoan')} className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> {user?.name || t('common.account')}</NavLink>
+              <button className="btn" style={{ background: '#f1f5f9', color: '#475569', width: '100%', border: 'none' }} onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>{t('common.logout')}</button>
             </>
           ) : (
-            <NavLink to="/dang-nhap" className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> Đăng nhập</NavLink>
+            <NavLink to={localizedPath('/dang-nhap')} className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> {t('navigation.login')}</NavLink>
           )}
-          <button className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }} onClick={() => { openLeadModal(); setMobileMenuOpen(false); }}><Rocket size={16} /> Đăng ký trải nghiệm</button>
+          <button className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }} onClick={() => { openLeadModal(); setMobileMenuOpen(false); }}><Rocket size={16} /> {t('navigation.trial')}</button>
         </div>
       </Drawer>
     </div>

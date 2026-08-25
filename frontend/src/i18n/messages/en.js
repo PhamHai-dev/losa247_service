@@ -1,0 +1,17 @@
+const en = {
+  common: { loading: 'Loading...', error: 'Something went wrong', retry: 'Try again', close: 'Close', submit: 'Submit', cancel: 'Cancel', viewMore: 'View more', contact: 'Contact us', account: 'Account', logout: 'Log out' },
+  navigation: { home: 'Home', solutions: 'Solutions', chatbot: 'AI Chatbot', pricing: 'Pricing', knowledge: 'Insights', login: 'Log in', trial: 'Request a demo', menu: 'Menu', language: 'Language' },
+  footer: { products: 'Products', resources: 'Resources', company: 'Company', support: 'Always here to help', connect: 'Connect with Losa247', copyright: '© 2024 Losa247. All rights reserved.', description: 'An omnichannel AI platform that helps businesses automate sales, customer care and sustainable growth.', pricing: 'Pricing', blog: 'Insights blog', guide: 'User guides', help: 'Help center', faq: 'Frequently asked questions', about: 'About Losa247', partners: 'Integration partners', careers: 'Careers', contact: 'Contact', hotline: 'Sales hotline', office: 'Office', privacy: 'Privacy', terms: 'Terms', refund: 'Refund policy', madeIn: 'Built in Vietnam', omnichannelAi: 'Omnichannel AI', support247: '24/7 support' },
+  cta: { title: 'Connect with customers smarter and grow faster with Losa', lead: 'One platform for your team to advise, support and convert customers continuously across every channel.', free: 'Free consultation', demo: 'Book a demo with our experts', intro: 'Leave your details and the Losa team will recommend the right solution for your business.', sending: 'Sending your information...', submit: 'Get a free consultation', secure: 'Your information is encrypted and kept strictly confidential', benefitAutomation: '24/7 automation', benefitAutomationText: ' for messaging and customer care workflows', benefitScale: 'Reach at scale', benefitScaleText: ' through intelligent omnichannel campaigns', benefitAi: 'Seamless AI', benefitAiText: ' supporting sales teams in every conversation', dataSecurity: 'Data security', implementationSupport: 'Implementation support', quickSetup: 'Quick setup' },
+  home: { title: '24/7 customer engagement automation platform' },
+  solutions: { title: 'AI Chatbot Solutions' },
+  pricing: { title: 'Pricing', empty: 'No pricing plans are available' },
+  blog: { title: 'Insights', notFound: 'Article not found', related: 'Related articles', views: 'views', toc: 'On this page', hide: 'Hide' },
+  auth: { loginTitle: 'Customer login', registerTitle: 'Create your account', forgotTitle: 'Recover access', resetTitle: 'Set a new password', email: 'Email', password: 'Password', newPassword: 'New password', confirmPassword: 'Confirm password', login: 'Log in', register: 'Create account', forgot: 'Forgot password?', account: 'Account' },
+  account: { title: 'My account' },
+  chat: { loginRequired: 'Please log in to start a conversation.', online: 'Online', placeholder: 'Type a message...', upload: 'Uploading file...', uploadError: 'Unable to upload the file. Please try again.' },
+  forms: { required: 'This field is required', invalidEmail: 'Please enter a valid email', sending: 'Sending...', success: 'Thank you! Our team will contact you shortly.' },
+  errors: { generic: 'Something went wrong. Please try again.', load: 'Unable to load data', notFound: 'Page not found' },
+  seo: { siteName: 'Losa247', defaultDescription: 'An omnichannel AI platform that automates sales and customer engagement.' },
+}
+export default en

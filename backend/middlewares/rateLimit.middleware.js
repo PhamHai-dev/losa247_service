@@ -1,4 +1,4 @@
-﻿const buckets = new Map();
+const buckets = new Map();
 const createRateLimit = ({ windowMs = 15 * 60 * 1000, max = 100, key = (req) => req.ip }) => (req, res, next) => {
   const now = Date.now(); const id = key(req); const current = buckets.get(id);
   const entry = !current || current.resetAt <= now ? { count: 0, resetAt: now + windowMs } : current;
@@ -9,4 +9,11 @@ const createRateLimit = ({ windowMs = 15 * 60 * 1000, max = 100, key = (req) => 
 };
 setInterval(() => { const now = Date.now(); for (const [k, v] of buckets) if (v.resetAt <= now) buckets.delete(k); }, 10 * 60 * 1000).unref();
 const authKey = (req) => `${req.ip}:${String(req.body?.email || '').trim().toLowerCase()}`;
-module.exports = { loginLimiter: createRateLimit({ max: 10, key: authKey }), refreshLimiter: createRateLimit({ max: 30 }), resetLimiter: createRateLimit({ max: 5, key: authKey }), webhookLimiter: createRateLimit({ max: 60 }) };
+const geminiKey = (req) => `gemini:${req.user?._id || req.user?.id || req.ip}`;
+module.exports = {
+  loginLimiter: createRateLimit({ max: 10, key: authKey }),
+  refreshLimiter: createRateLimit({ max: 30 }),
+  resetLimiter: createRateLimit({ max: 5, key: authKey }),
+  webhookLimiter: createRateLimit({ max: 60 }),
+  geminiPreviewLimiter: createRateLimit({ windowMs: 10 * 60 * 1000, max: 10, key: geminiKey }),
+};

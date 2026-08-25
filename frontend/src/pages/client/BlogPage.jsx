@@ -1,6 +1,6 @@
 import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   CircleCheck, Crown, Gem, Check, X, TrendingUp, Star, ChevronDown, ChevronUp,
   Calendar, Tag as LucideTag, Phone, Mail, MessageSquare, MapPin, BellDot, Camera, Mic, Send, ChevronLeft, MoreVertical, Signal, Wifi, BatteryFull,
@@ -25,10 +25,14 @@ import { leadsService } from '../../features/leads/leadsService'
 import { useUIStore } from '../../stores/uiStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useDebounce } from '../../hooks/useDebounce'
+import { useI18n } from '../../hooks/useI18n'
+import { PageSeo } from '../../components/seo/PageSeo'
 
 // ---- Components -------------------------------------------------------------
 
 export function BlogPage() {
+  const { locale, t, localizedPath } = useI18n()
+  const blogPath = (slug = '') => localizedPath(`/blog${slug ? `/${slug}` : ''}`)
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
@@ -36,30 +40,44 @@ export function BlogPage() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [sort, setSort] = useState('newest');
   const openLeadModal = useUIStore((state) => state.openLeadModal);
+  const entityId = (item) => item?._id ?? item?.id ?? item?.slug;
+  const listKey = (type, item, index) => `${type}-${locale}-${entityId(item) ?? index}`;
 
-  // Reset page when search changes
+  // Reset paging and category selection when search or locale changes.
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
 
+  useEffect(() => {
+    setActiveCategory(null);
+    setPage(1);
+  }, [locale]);
+
   const featuredQuery = useApiQuery(
-    () => publicBlogsService.getList({ isFeatured: true, limit: 3, category: activeCategory }),
-    [activeCategory]
+    () => publicBlogsService.getList({ isFeatured: true, limit: 3, category: activeCategory }, locale),
+    [activeCategory, locale]
   );
   const featuredList = featuredQuery.data?.items || [];
 
-  const categoriesQuery = useApiQuery(() => publicBlogsService.getCategories(), []);
+  const categoriesQuery = useApiQuery(() => publicBlogsService.getCategories(locale), [locale]);
   const categories = categoriesQuery.data || [];
 
-  const tagsQuery = useApiQuery(() => publicBlogsService.getTags({ limit: 10 }), []);
+  useEffect(() => {
+    if (activeCategory && !categoriesQuery.loading && !categories.some((item) => entityId(item) === activeCategory)) {
+      setActiveCategory(null);
+      setPage(1);
+    }
+  }, [activeCategory, categories, categoriesQuery.loading]);
+
+  const tagsQuery = useApiQuery(() => publicBlogsService.getTags({ limit: 10 }, locale), [locale]);
   const tags = tagsQuery.data || [];
 
-  const latestQuery = useApiQuery(() => publicBlogsService.getList({ limit: 4 }), []);
+  const latestQuery = useApiQuery(() => publicBlogsService.getList({ limit: 4 }, locale), [locale]);
   const latestBlogs = latestQuery.data?.items || [];
 
   const mainListQuery = useApiQuery(
-    () => publicBlogsService.getList({ page, limit: 9, search: debouncedSearch, category: activeCategory, sort }),
-    [page, debouncedSearch, activeCategory, sort]
+    () => publicBlogsService.getList({ page, limit: 9, search: debouncedSearch, category: activeCategory, sort }, locale),
+    [page, debouncedSearch, activeCategory, sort, locale]
   );
   const blogs = mainListQuery.data?.items || [];
   const total = mainListQuery.data?.pagination?.total || 0;
@@ -69,25 +87,26 @@ export function BlogPage() {
 
   return (
     <main className="blog-page-container">
+      <PageSeo title={t('blog.title')} description={locale === 'en' ? 'Practical AI, marketing and sales insights for smarter business growth.' : 'Kiến thức thực chiến về AI, marketing và bán hàng giúp doanh nghiệp tăng trưởng thông minh hơn.'} />
       <section className="client-hero" aria-labelledby="blog-hero-title">
         <div className="blog-container-fluid">
           <div className="client-hero__grid">
             <motion.div className="client-hero__content" initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.12 } } }}>
-              <motion.span className="client-hero__badge" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}><Star size={14} fill="currentColor" /> Góc kiến thức từ Losa</motion.span>
-              <motion.h1 id="blog-hero-title" className="client-hero__title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></motion.h1>
-              <motion.p className="client-hero__lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.</motion.p>
+              <motion.span className="client-hero__badge" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}><Star size={14} fill="currentColor" /> {locale === 'en' ? 'Insights from Losa' : 'Góc kiến thức từ Losa'}</motion.span>
+              <motion.h1 id="blog-hero-title" className="client-hero__title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>{locale === 'en' ? <>Practical insights to <span>grow with AI</span></> : <>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></>}</motion.h1>
+              <motion.p className="client-hero__lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>{locale === 'en' ? 'Explore trends, in-depth guides and real-world case studies in AI Marketing and AI Sales.' : 'Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.'}</motion.p>
               <motion.div className="client-hero__proof" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                <span><CircleCheck size={17} /> Xu hướng mới nhất</span>
-                <span><CircleCheck size={17} /> Kiến thức ứng dụng</span>
-                <span><CircleCheck size={17} /> Case study thực tế</span>
+                <span><CircleCheck size={17} /> {locale === 'en' ? 'Latest trends' : 'Xu hướng mới nhất'}</span>
+                <span><CircleCheck size={17} /> {locale === 'en' ? 'Actionable knowledge' : 'Kiến thức ứng dụng'}</span>
+                <span><CircleCheck size={17} /> {locale === 'en' ? 'Real case studies' : 'Case study thực tế'}</span>
               </motion.div>
               <motion.div className="client-hero__actions blog-hero-actions" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                <button id="blog-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('blog-categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Khám phá bài viết <ArrowRight size={18} /></button>
+                <button id="blog-hero-explore-btn" type="button" className="saas-btn saas-btn-primary" onClick={() => document.getElementById('blog-categories')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{locale === 'en' ? 'Explore articles' : 'Khám phá bài viết'} <ArrowRight size={18} /></button>
               </motion.div>
             </motion.div>
             <motion.div className="client-hero__visual blog-hero-illustration" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
               <div className="blog-hero-glow" />
-              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt="Kho kiến thức AI Marketing và AI Sales từ Losa" />
+              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt={locale === 'en' ? 'Losa AI Marketing and AI Sales knowledge hub' : 'Kho kiến thức AI Marketing và AI Sales từ Losa'} />
             </motion.div>
           </div>
         </div>
@@ -96,13 +115,14 @@ export function BlogPage() {
       <div id="blog-categories" className="blog-container-fluid" style={{ marginTop: 40, scrollMarginTop: 100 }}>
         <div className="category-pills" style={{ justifyContent: 'center', marginBottom: 40 }}>
           <button className={`category-pill ${!activeCategory ? 'active' : ''}`} onClick={() => { setActiveCategory(null); setPage(1); }}>
-            Tất cả
+            {locale === 'en' ? 'All' : 'Tất cả'}
           </button>
-          {categories.map(c => (
-            <button key={c._id} className={`category-pill ${activeCategory === c._id ? 'active' : ''}`} onClick={() => { setActiveCategory(c._id); setPage(1); }}>
+          {categories.map((c, index) => {
+            const categoryId = entityId(c);
+            return <button key={listKey('category-pill', c, index)} className={`category-pill ${activeCategory === categoryId ? 'active' : ''}`} onClick={() => { setActiveCategory(categoryId); setPage(1); }}>
               {c.name}
             </button>
-          ))}
+          })}
         </div>
 
 
@@ -111,9 +131,9 @@ export function BlogPage() {
           <div className="blog-main-content">
             {mainFeatured && !search && page === 1 && (
               <div className="featured-section" style={{ marginBottom: 40, ...(sideFeatured.length === 0 ? { gridTemplateColumns: '1fr' } : {}) }}>
-                <Link to={`/blog/${mainFeatured.slug}`} className="featured-card large">
+                <Link to={blogPath(mainFeatured.slug)} className="featured-card large">
                   <div className="featured-content">
-                    <span className="featured-label">BÀI VIẾT NỔI BẬT</span>
+                    <span className="featured-label">{locale === 'en' ? 'FEATURED ARTICLE' : 'BÀI VIẾT NỔI BẬT'}</span>
                     {mainFeatured.category && (
                       <span className="featured-cat">{mainFeatured.category.name}</span>
                     )}
@@ -123,7 +143,7 @@ export function BlogPage() {
                       <span><CalendarOutlined /> {formatDate(mainFeatured.publishedAt)}</span>
                     </div>
                     <Button type="primary" size="large" className="read-more-btn">
-                      Đọc bài viết <RightOutlined />
+                      {locale === 'en' ? 'Read article' : 'Đọc bài viết'} <RightOutlined />
                     </Button>
                   </div>
                   <div className="featured-image-wrapper">
@@ -134,7 +154,7 @@ export function BlogPage() {
                 {sideFeatured.length > 0 && (
                   <div className="featured-side-list">
                     {sideFeatured.map((fb, idx) => (
-                      <Link to={`/blog/${fb.slug}`} key={fb._id} className={`featured-card small ${idx === 0 ? 'top-small' : 'bottom-small'}`} style={sideFeatured.length === 1 ? { height: 'calc(50% - 10px)' } : undefined}>
+                      <Link to={blogPath(fb.slug)} key={listKey('featured', fb, idx)} className={`featured-card small ${idx === 0 ? 'top-small' : 'bottom-small'}`} style={sideFeatured.length === 1 ? { height: 'calc(50% - 10px)' } : undefined}>
                         <div className="featured-content">
                           {fb.category && (
                             <span className="featured-cat">{fb.category.name}</span>
@@ -157,7 +177,7 @@ export function BlogPage() {
             <div className="blog-filters-row">
               <Input
                 size="large"
-                placeholder="Tìm kiếm bài viết..."
+                placeholder={locale === 'en' ? 'Search articles...' : 'Tìm kiếm bài viết...'}
                 prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
                 suffix={mainListQuery.loading ? <Spin size="small" /> : null}
                 value={search}
@@ -165,9 +185,9 @@ export function BlogPage() {
                 className="search-input"
               />
               <Select value={sort} onChange={(val) => { setSort(val); setPage(1); }} size="large" className="sort-select">
-                <Select.Option value="newest"><FilterOutlined /> Mới nhất</Select.Option>
-                <Select.Option value="oldest"><FilterOutlined /> Cũ nhất</Select.Option>
-                <Select.Option value="popular"><FilterOutlined /> Xem nhiều</Select.Option>
+                <Select.Option value="newest"><FilterOutlined /> {locale === 'en' ? 'Newest' : 'Mới nhất'}</Select.Option>
+                <Select.Option value="oldest"><FilterOutlined /> {locale === 'en' ? 'Oldest' : 'Cũ nhất'}</Select.Option>
+                <Select.Option value="popular"><FilterOutlined /> {locale === 'en' ? 'Most viewed' : 'Xem nhiều'}</Select.Option>
               </Select>
             </div>
 
@@ -175,12 +195,12 @@ export function BlogPage() {
               {mainListQuery.loading && !blogs.length ? (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}><Spin size="large" /></div>
               ) : !blogs.length ? (
-                <Empty description="Không tìm thấy bài viết nào" style={{ margin: '40px 0' }} />
+                <Empty description={locale === 'en' ? 'No articles found' : 'Không tìm thấy bài viết nào'} style={{ margin: '40px 0' }} />
               ) : (
                 <>
                   <div className="main-blog-grid">
-                    {blogs.map(b => (
-                      <Link to={`/blog/${b.slug}`} key={b._id} className="blog-card">
+                    {blogs.map((b, index) => (
+                      <Link to={blogPath(b.slug)} key={listKey('article', b, index)} className="blog-card">
                         <img src={b.coverImageUrl || 'https://placehold.co/600x400/f8fafc/64748b?text=Losa247+Blog'} alt={b.title} className="blog-card-img" />
                         <div className="blog-card-body">
                           {b.category && (
@@ -210,27 +230,28 @@ export function BlogPage() {
 
           <div className="blog-sidebar">
             <div className="sidebar-widget">
-              <h3>Danh mục</h3>
+              <h3>{locale === 'en' ? 'Categories' : 'Danh mục'}</h3>
               <div>
                 <div className={`cat-list-item ${!activeCategory ? 'active' : ''}`} onClick={() => { setActiveCategory(null); setPage(1); }}>
-                  <span>Tất cả</span>
+                  <span>{locale === 'en' ? 'All' : 'Tất cả'}</span>
                   <span className="cat-count">{categories.reduce((acc, c) => acc + (c.count || 0), 0)}</span>
                 </div>
-                {categories.map(c => (
-                  <div key={c._id} className={`cat-list-item ${activeCategory === c._id ? 'active' : ''}`} onClick={() => { setActiveCategory(c._id); setPage(1); }}>
+                {categories.map((c, index) => {
+                  const categoryId = entityId(c);
+                  return <div key={listKey('category-sidebar', c, index)} className={`cat-list-item ${activeCategory === categoryId ? 'active' : ''}`} onClick={() => { setActiveCategory(categoryId); setPage(1); }}>
                     <span>{c.name}</span>
                     <span className="cat-count">{c.count || 0}</span>
                   </div>
-                ))}
+                })}
               </div>
-              <div className="view-all-cats">Xem tất cả danh mục <RightOutlined /></div>
+              <div className="view-all-cats">{locale === 'en' ? 'View all categories' : 'Xem tất cả danh mục'} <RightOutlined /></div>
             </div>
 
             <div className="sidebar-widget">
-              <h3>Bài viết mới nhất</h3>
+              <h3>{locale === 'en' ? 'Latest articles' : 'Bài viết mới nhất'}</h3>
               <div>
-                {latestBlogs.map(b => (
-                  <Link to={`/blog/${b.slug}`} key={b._id} className="latest-post-item">
+                {latestBlogs.map((b, index) => (
+                  <Link to={blogPath(b.slug)} key={listKey('latest', b, index)} className="latest-post-item">
                     <img src={b.coverImageUrl || 'https://placehold.co/600x400/f8fafc/64748b?text=Losa247+Blog'} alt={b.title} />
                     <div className="info">
                       <h4>{b.title}</h4>
@@ -242,22 +263,22 @@ export function BlogPage() {
             </div>
 
             <div className="sidebar-widget">
-              <h3>Tags phổ biến</h3>
+              <h3>{locale === 'en' ? 'Popular tags' : 'Tags phổ biến'}</h3>
               <div className="popular-tags">
-                {tags.map(t => (
-                  <Link to={`/tag/${t.slug}`} key={t._id} className="tag-pill">
-                    #{t.name}
+                {tags.map((tag, index) => (
+                  <Link to={localizedPath(`/tag/${tag.slug}`)} key={listKey('tag', tag, index)} className="tag-pill">
+                    #{tag.name}
                   </Link>
                 ))}
               </div>
             </div>
 
             <div className="sidebar-widget newsletter-widget">
-              <h3>Không bỏ lỡ bài viết mới!</h3>
-              <p>Đăng ký nhận bản tin để cập nhật kiến thức và xu hướng mới nhất.</p>
-              <Input placeholder="Nhập email của bạn" size="large" style={{ marginBottom: 12, borderRadius: 8 }} />
+              <h3>{locale === 'en' ? 'Never miss a new article!' : 'Không bỏ lỡ bài viết mới!'}</h3>
+              <p>{locale === 'en' ? 'Subscribe for the latest insights and trends.' : 'Đăng ký nhận bản tin để cập nhật kiến thức và xu hướng mới nhất.'}</p>
+              <Input placeholder={locale === 'en' ? 'Enter your email' : 'Nhập email của bạn'} size="large" style={{ marginBottom: 12, borderRadius: 8 }} />
               <Button id="blog-newsletter-register-btn" type="primary" size="large" block className="newsletter-register-btn" onClick={openLeadModal}>
-                Đăng ký ngay <ArrowRight size={17} />
+                {locale === 'en' ? 'Subscribe now' : 'Đăng ký ngay'} <ArrowRight size={17} />
               </Button>
             </div>
           </div>
@@ -267,29 +288,29 @@ export function BlogPage() {
           <div className="feature-item">
             <div className="feature-icon"><CheckCircleOutlined /></div>
             <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>Nội dung chất lượng</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Kiến thức được chọn lọc và cập nhật thường xuyên</p>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Quality content' : 'Nội dung chất lượng'}</h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Curated insights updated regularly' : 'Kiến thức được chọn lọc và cập nhật thường xuyên'}</p>
             </div>
           </div>
           <div className="feature-item">
             <div className="feature-icon"><TrophyOutlined /></div>
             <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>Từ chuyên gia</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Đội ngũ chuyên gia giàu kinh nghiệm trong lĩnh vực</p>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'From experts' : 'Từ chuyên gia'}</h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Insights from an experienced team of specialists' : 'Đội ngũ chuyên gia giàu kinh nghiệm trong lĩnh vực'}</p>
             </div>
           </div>
           <div className="feature-item">
             <div className="feature-icon"><ToolOutlined /></div>
             <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>Ứng dụng thực tế</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Kiến thức dễ áp dụng, mang lại hiệu quả thực tế</p>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Practical applications' : 'Ứng dụng thực tế'}</h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Easy-to-apply knowledge that delivers real results' : 'Kiến thức dễ áp dụng, mang lại hiệu quả thực tế'}</p>
             </div>
           </div>
           <div className="feature-item">
             <div className="feature-icon"><TeamOutlined /></div>
             <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>Cộng đồng hỗ trợ</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>Tham gia cộng đồng để học hỏi và chia sẻ kinh nghiệm</p>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Supportive community' : 'Cộng đồng hỗ trợ'}</h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Join the community to learn and share experience' : 'Tham gia cộng đồng để học hỏi và chia sẻ kinh nghiệm'}</p>
             </div>
           </div>
         </div>

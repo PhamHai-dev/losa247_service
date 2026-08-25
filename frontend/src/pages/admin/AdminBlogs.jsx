@@ -60,6 +60,19 @@ function QueryState({ loading, error, empty, children }) {
   return children
 }
 
+const normalizeTaxonomyPayload = (values, { includeDescription = true } = {}) => {
+  const clean = (translation) => translation ? {
+    name: String(translation.name || '').trim(),
+    slug: String(translation.slug || '').trim() || undefined,
+    ...(includeDescription ? { description: String(translation.description || '') } : {}),
+  } : undefined
+  const vi = clean(values?.translations?.vi)
+  const en = clean(values?.translations?.en)
+  return { translations: { vi, ...(en?.name ? { en } : {}) } }
+}
+
+const apiErrorMessage = (error, fallback) => error?.error?.message || error?.message || fallback
+
 // ---- Dashboard ------------------------------------------------------------
 
 export function AdminBlogs() {
@@ -100,7 +113,7 @@ function BlogsView() {
     [status, category, source, debounced, page]
   )
   const statsQuery = useApiQuery(() => blogsService.getStats(), [])
-  const stats = statsQuery.data || { totalBlogs: 0, publishedBlogs: 0, pendingBlogs: 0, totalViews: 0 }
+  const stats = statsQuery.data || { totalBlogs: 0, draftBlogs: 0, scheduledBlogs: 0, publishedBlogs: 0, totalViews: 0 }
   const rows = query.data?.items || []
   const total = query.data?.pagination?.total || 0
   const activeFilterCount = [status, category, source, debounced].filter(Boolean).length
@@ -109,7 +122,7 @@ function BlogsView() {
   const kpis = [
     { label: 'Tổng bài viết', value: stats.totalBlogs, sub: 'Trong thư viện', icon: <FileTextOutlined />, color: '#0d9488', soft: '#e3f8f4' },
     { label: 'Đã xuất bản', value: stats.publishedBlogs, sub: 'Đang hiển thị', icon: <CheckCircleOutlined />, color: '#16a34a', soft: '#e9f9ee' },
-    { label: 'Cần xử lý', value: stats.pendingBlogs, sub: 'Chờ duyệt & bản nháp', icon: <ClockCircleOutlined />, color: '#d97706', soft: '#fff7df' },
+    { label: 'Chưa xuất bản', value: Number(stats.draftBlogs || 0) + Number(stats.scheduledBlogs || 0), sub: `${stats.draftBlogs || 0} nháp · ${stats.scheduledBlogs || 0} đã lên lịch`, icon: <ClockCircleOutlined />, color: '#d97706', soft: '#fff7df' },
     { label: 'Tổng lượt xem', value: Number(stats.totalViews || 0).toLocaleString('vi-VN'), sub: 'Mức độ tiếp cận', icon: <EyeOutlined />, color: '#0284c7', soft: '#e5f5fc' },
   ]
   const sourceOptions = [{ value: 'writer', label: 'Writer' }, { value: 'other', label: 'Khác' }]
@@ -145,7 +158,7 @@ function BlogsView() {
         </div>
         {activeFilterCount > 0 && <div className="blogs-active-filters"><span>Đang lọc:</span>{debounced && <Tag closable onClose={() => onSearch('')}>“{debounced}”</Tag>}{category && <Tag closable onClose={() => setCategory('')}>{categories.find((item) => item._id === category)?.name}</Tag>}{source && <Tag closable onClose={() => setSource('')}>{sourceOptions.find((item) => item.value === source)?.label}</Tag>}{status && <Tag closable onClose={() => setStatus('')}>{BLOG_STATUS[status]?.label}</Tag>}</div>}
       </div>
-      <div className="blogs-status-tabs"><Segmented value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={[{ value: '', label: `Tất cả (${stats.totalBlogs})` }, { value: 'draft', label: 'Bản nháp' }, { value: 'pending', label: 'Chờ duyệt' }, { value: 'published', label: `Đã đăng (${stats.publishedBlogs})` }, { value: 'rejected', label: 'Từ chối' }]} /></div>
+      <div className="blogs-status-tabs"><Segmented value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={[{ value: '', label: `Tất cả (${stats.totalBlogs || 0})` }, { value: 'draft', label: `Bản nháp (${stats.draftBlogs || 0})` }, { value: 'scheduled', label: `Đã lên lịch (${stats.scheduledBlogs || 0})` }, { value: 'published', label: `Đã đăng (${stats.publishedBlogs || 0})` }]} /></div>
       {query.error && <Alert type="error" showIcon title={query.error} style={{ margin: 16 }} />}
       <div className="blogs-table-wrap"><Table rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} scroll={{ x: 1100 }} pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false, showTotal: (count) => `${count} bài viết` }} /></div>
     </div>
@@ -155,6 +168,7 @@ function BlogsView() {
 function BlogTagsTable() {
   const { message } = App.useApp()
   const [editing, setEditing] = useState(null)
+  const [tagLocale, setTagLocale] = useState('vi')
   const [form] = Form.useForm()
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
 
@@ -168,7 +182,13 @@ function BlogTagsTable() {
 
   const handleEdit = (tag) => {
     setEditing(tag)
-    form.setFieldsValue(tag)
+    setTagLocale('vi')
+    form.setFieldsValue({
+      translations: {
+        vi: tag.translations?.vi || { name: tag.name, slug: tag.slug, description: tag.description },
+        en: tag.translations?.en,
+      },
+    })
   }
 
   const handleDelete = async (id) => {
@@ -181,21 +201,24 @@ function BlogTagsTable() {
     }
   }
 
-  const submit = async (values) => {
+  const submit = async () => {
     try {
-      if (editing?._id) await blogTagsService.updateTag(editing._id, values)
-      else await blogTagsService.createTag(values)
+      const payload = normalizeTaxonomyPayload(form.getFieldsValue(true))
+      if (editing?._id) await blogTagsService.updateTag(editing._id, payload)
+      else await blogTagsService.createTag(payload)
       message.success('Đã lưu thẻ')
       setEditing(null)
+      setTagLocale('vi')
       form.resetFields()
       query.refetch()
     } catch (e) {
-      message.error(e?.response?.data?.message || e?.error?.message || 'Lỗi khi lưu thẻ')
+      message.error(apiErrorMessage(e, 'Lỗi khi lưu thẻ'))
     }
   }
 
   const handleCancel = () => {
     setEditing(null)
+    setTagLocale('vi')
     form.resetFields()
   }
 
@@ -239,24 +262,22 @@ function BlogTagsTable() {
       <Col xs={24} lg={9}>
         <Card title={editing ? 'Sửa thẻ' : 'Thêm thẻ mới'}>
           <Form form={form} layout="vertical" onFinish={submit}>
-            <Form.Item name="name" label="Tên thẻ" rules={[{ required: true, message: 'Nhập tên thẻ' }]}>
-              <Input placeholder="Nhập tên thẻ" />
-            </Form.Item>
-            <Form.Item name="slug" label="Slug" extra="Slug sẽ được tạo tự động từ tên thẻ. Bạn có thể chỉnh sửa.">
-              <Input placeholder="slug-the-viet-lien-khong-dau" />
-            </Form.Item>
-            <Form.Item name="description" label="Mô tả">
-              <Input.TextArea rows={4} placeholder="Nhập mô tả thẻ (không bắt buộc)" />
-            </Form.Item>
-
-            <Form.Item label="SEO Preview" style={{ marginBottom: 24 }}>
-              <div style={{ color: '#0d9488', fontSize: 14, marginBottom: 4, wordBreak: 'break-all' }}>
-                https://www.losa247.vn/tag/{Form.useWatch('slug', form) || 'slug-tu-dong'}
-              </div>
-              <div style={{ color: '#64748b', fontSize: 12 }}>
-                Đây là đường dẫn hiển thị trên website.
-              </div>
-            </Form.Item>
+            <nav className="blog-language-tabs" aria-label="Ngôn ngữ thẻ nội dung">
+              <button id="blog-tag-language-vi" type="button" className={tagLocale === 'vi' ? 'active' : ''} onClick={() => setTagLocale('vi')}>Tiếng Việt</button>
+              <button id="blog-tag-language-en" type="button" className={tagLocale === 'en' ? 'active' : ''} onClick={() => setTagLocale('en')}>English</button>
+            </nav>
+            <div className="blog-language-panel" key={tagLocale}>
+              {tagLocale === 'vi' ? <>
+                <Form.Item name={['translations', 'vi', 'name']} label="Tên thẻ" rules={[{ required: true, message: 'Nhập tên thẻ tiếng Việt' }]}><Input placeholder="Nhập tên thẻ" /></Form.Item>
+                <Form.Item name={['translations', 'vi', 'slug']} label="Slug"><Input placeholder="slug-the-viet-lien-khong-dau" /></Form.Item>
+                <Form.Item name={['translations', 'vi', 'description']} label="Mô tả"><Input.TextArea rows={3} /></Form.Item>
+              </> : <>
+                <Alert type="info" showIcon message="Bản English không bắt buộc. Khi nhập, cần có tên để lưu." style={{ marginBottom: 16 }} />
+                <Form.Item name={['translations', 'en', 'name']} label="Tag name"><Input placeholder="English tag name" /></Form.Item>
+                <Form.Item name={['translations', 'en', 'slug']} label="English slug"><Input placeholder="english-tag-slug" /></Form.Item>
+                <Form.Item name={['translations', 'en', 'description']} label="Description"><Input.TextArea rows={3} /></Form.Item>
+              </>}
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
               <Button onClick={handleCancel}>Hủy</Button>
@@ -273,6 +294,7 @@ function CategoriesView() {
   const { message } = App.useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCat, setEditingCat] = useState(null)
+  const [categoryLocale, setCategoryLocale] = useState('vi')
   const [form] = Form.useForm()
 
   const query = useApiQuery(() => blogCategoriesService.getCategories(), [])
@@ -283,6 +305,7 @@ function CategoriesView() {
   useEffect(() => {
     const handleOpen = () => {
       setEditingCat(null)
+      setCategoryLocale('vi')
       form.resetFields()
       setIsModalOpen(true)
     }
@@ -292,7 +315,13 @@ function CategoriesView() {
 
   const handleEdit = (cat) => {
     setEditingCat(cat)
-    form.setFieldsValue({ name: cat.name })
+    setCategoryLocale('vi')
+    form.setFieldsValue({
+      translations: {
+        vi: cat.translations?.vi || { name: cat.name, slug: cat.slug },
+        en: cat.translations?.en,
+      },
+    })
     setIsModalOpen(true)
   }
 
@@ -306,19 +335,20 @@ function CategoriesView() {
     }
   }
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async () => {
     try {
+      const payload = normalizeTaxonomyPayload(form.getFieldsValue(true), { includeDescription: false })
       if (editingCat) {
-        await blogCategoriesService.updateCategory(editingCat._id, values)
+        await blogCategoriesService.updateCategory(editingCat._id, payload)
         message.success('Cập nhật thành công')
       } else {
-        await blogCategoriesService.createCategory(values)
+        await blogCategoriesService.createCategory(payload)
         message.success('Thêm mới thành công')
       }
       setIsModalOpen(false)
       query.refetch()
     } catch (e) {
-      message.error(e?.error?.message || 'Có lỗi xảy ra')
+      message.error(apiErrorMessage(e, 'Có lỗi xảy ra'))
     }
   }
 
@@ -379,9 +409,19 @@ function CategoriesView() {
         footer={null}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}>
-            <Input placeholder="VD: Marketing" />
-          </Form.Item>
+          <nav className="blog-language-tabs" aria-label="Ngôn ngữ danh mục">
+            <button id="blog-category-language-vi" type="button" className={categoryLocale === 'vi' ? 'active' : ''} onClick={() => setCategoryLocale('vi')}>Tiếng Việt</button>
+            <button id="blog-category-language-en" type="button" className={categoryLocale === 'en' ? 'active' : ''} onClick={() => setCategoryLocale('en')}>English</button>
+          </nav>
+          <div className="blog-language-panel" key={categoryLocale}>
+            {categoryLocale === 'vi' ? <>
+              <Form.Item name={['translations', 'vi', 'name']} label="Tên danh mục" rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}><Input placeholder="VD: Marketing" /></Form.Item>
+              <Form.Item name={['translations', 'vi', 'slug']} label="Slug tiếng Việt"><Input placeholder="marketing" /></Form.Item>
+            </> : <>
+              <Form.Item name={['translations', 'en', 'name']} label="Category name"><Input placeholder="Example: Marketing" /></Form.Item>
+              <Form.Item name={['translations', 'en', 'slug']} label="English slug"><Input placeholder="marketing" /></Form.Item>
+            </>}
+          </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
             <Button onClick={() => setIsModalOpen(false)}>Huỷ</Button>
             <Button type="primary" htmlType="submit">Lưu lại</Button>

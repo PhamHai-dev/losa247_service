@@ -33,11 +33,15 @@ enum LeadStatus {
   lost
 }
 
-enum BlogStatus {
+enum Locale {
+  vi
+  en
+}
+
+enum TranslationStatus {
   draft
-  pending
+  scheduled
   published
-  rejected
 }
 
 enum BlogSource {
@@ -219,56 +223,101 @@ model Lead {
 }
 
 model BlogCategory {
-  id        String   @id @db.VarChar(24)
-  name      String   @db.VarChar(255)
-  slug      String   @unique @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
-  blogs     Blog[]
+  id           String                    @id @db.VarChar(24)
+  createdAt    DateTime                  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime                  @updatedAt @map("updated_at") @db.DateTime(3)
+  blogs        Blog[]
+  translations BlogCategoryTranslation[]
 
   @@map("blog_categories")
 }
 
+model BlogCategoryTranslation {
+  id         BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  categoryId String       @map("category_id") @db.VarChar(24)
+  locale     Locale
+  name       String       @db.VarChar(255)
+  slug       String       @db.VarChar(255)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.DateTime(3)
+  category   BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([categoryId, locale])
+  @@unique([locale, slug])
+  @@index([locale, name])
+  @@map("blog_category_translations")
+}
+
 model BlogTag {
-  id          String          @id @db.VarChar(24)
-  name        String          @unique @db.VarChar(255)
-  slug        String          @unique @db.VarChar(255)
-  description String?         @db.Text
-  createdAt   DateTime        @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt   DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
-  blogs       BlogTagOnBlog[]
+  id           String               @id @db.VarChar(24)
+  createdAt    DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+  blogs        BlogTagOnBlog[]
+  translations BlogTagTranslation[]
 
   @@map("blog_tags")
 }
 
-model Blog {
-  id              String          @id @db.VarChar(24)
-  title           String          @db.VarChar(500)
-  slug            String          @unique @db.VarChar(255)
-  excerpt         String?         @db.Text
-  metaDescription String?         @map("meta_description") @db.Text
-  isFeatured      Boolean         @default(false) @map("is_featured")
-  allowComments   Boolean         @default(true) @map("allow_comments")
-  allowIndexing   Boolean         @default(true) @map("allow_indexing")
-  showToc         Boolean         @default(true) @map("show_toc")
-  content         String          @db.LongText
-  coverImageUrl   String?         @map("cover_image_url") @db.VarChar(2048)
-  categoryId      String?         @map("category_id") @db.VarChar(24)
-  status          BlogStatus      @default(draft)
-  source          BlogSource      @default(writer)
-  publishedAt     DateTime?       @map("published_at") @db.DateTime(3)
-  authorId        String?         @map("author_id") @db.VarChar(24)
-  views           Int             @default(0) @db.UnsignedInt
-  createdAt       DateTime        @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt       DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
-  category        BlogCategory?   @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  author          User?           @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  tags            BlogTagOnBlog[]
+model BlogTagTranslation {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  tagId       String   @map("tag_id") @db.VarChar(24)
+  locale      Locale
+  name        String   @db.VarChar(255)
+  slug        String   @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  tag         BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@index([status, publishedAt])
+  @@unique([tagId, locale])
+  @@unique([locale, slug])
+  @@index([locale, name])
+  @@map("blog_tag_translations")
+}
+
+model Blog {
+  id              String            @id @db.VarChar(24)
+  isFeatured      Boolean           @default(false) @map("is_featured")
+  allowComments   Boolean           @default(true) @map("allow_comments")
+  coverImageUrl   String?           @map("cover_image_url") @db.VarChar(2048)
+  categoryId      String?           @map("category_id") @db.VarChar(24)
+  source          BlogSource        @default(writer)
+  authorId        String?           @map("author_id") @db.VarChar(24)
+  views           Int               @default(0) @db.UnsignedInt
+  createdAt       DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+  category        BlogCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  author          User?             @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  tags            BlogTagOnBlog[]
+  translations    BlogTranslation[]
+
   @@index([categoryId])
   @@index([authorId])
   @@map("blogs")
+}
+
+model BlogTranslation {
+  id              BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  blogId          String            @map("blog_id") @db.VarChar(24)
+  locale          Locale
+  title           String            @db.VarChar(500)
+  slug            String            @db.VarChar(255)
+  excerpt         String?           @db.Text
+  metaDescription String?           @map("meta_description") @db.Text
+  content         String            @db.LongText
+  status          TranslationStatus @default(draft)
+  publishedAt     DateTime?         @map("published_at") @db.DateTime(3)
+  allowIndexing   Boolean           @default(true) @map("allow_indexing")
+  showToc         Boolean           @default(true) @map("show_toc")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+  blog            Blog              @relation(fields: [blogId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([blogId, locale])
+  @@unique([locale, slug])
+  @@index([locale, status, publishedAt])
+  @@index([locale, title])
+  @@map("blog_translations")
 }
 
 model BlogTagOnBlog {

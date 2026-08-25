@@ -1,0 +1,17 @@
+const vi = {
+  common: { loading: 'Đang tải...', error: 'Đã xảy ra lỗi', retry: 'Thử lại', close: 'Đóng', submit: 'Gửi', cancel: 'Hủy', viewMore: 'Xem thêm', contact: 'Liên hệ', account: 'Tài khoản', logout: 'Đăng xuất' },
+  navigation: { home: 'Trang chủ', solutions: 'Giải pháp', chatbot: 'Chatbot AI', pricing: 'Bảng giá', knowledge: 'Kiến thức', login: 'Đăng nhập', trial: 'Đăng ký trải nghiệm', menu: 'Menu', language: 'Ngôn ngữ' },
+  footer: { products: 'Sản phẩm', resources: 'Tài nguyên', company: 'Doanh nghiệp', support: 'Luôn sẵn sàng hỗ trợ', connect: 'Kết nối với Losa247', copyright: '© 2024 Losa247. Tất cả quyền được bảo lưu.', description: 'Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng, chăm sóc khách hàng và tăng trưởng bền vững.', pricing: 'Bảng giá', blog: 'Blog kiến thức', guide: 'Hướng dẫn sử dụng', help: 'Trung tâm trợ giúp', faq: 'Câu hỏi thường gặp', about: 'Về Losa247', partners: 'Đối tác tích hợp', careers: 'Cơ hội nghề nghiệp', contact: 'Liên hệ', hotline: 'Hotline tư vấn', office: 'Văn phòng', privacy: 'Bảo mật', terms: 'Điều khoản', refund: 'Hoàn tiền', madeIn: 'Phát triển tại Việt Nam', omnichannelAi: 'AI đa kênh', support247: 'Hỗ trợ 24/7' },
+  cta: { title: 'Kết nối khách hàng thông minh hơn, tăng trưởng nhanh hơn cùng Losa', lead: 'Một nền tảng duy nhất để đội ngũ của bạn tư vấn, chăm sóc và chuyển đổi khách hàng liên tục trên mọi kênh.', free: 'Tư vấn miễn phí', demo: 'Đặt lịch demo cùng chuyên gia', intro: 'Để lại thông tin, đội ngũ Losa sẽ liên hệ và tư vấn giải pháp phù hợp nhất với doanh nghiệp của bạn.', sending: 'Đang gửi thông tin...', submit: 'Nhận tư vấn miễn phí', secure: 'Thông tin của bạn được mã hóa và bảo mật tuyệt đối', benefitAutomation: 'Tự động hóa 24/7', benefitAutomationText: ' quy trình nhắn tin và chăm sóc khách hàng', benefitScale: 'Tiếp cận quy mô lớn', benefitScaleText: ' qua các chiến dịch đa kênh thông minh', benefitAi: 'AI liền mạch', benefitAiText: ' hỗ trợ đội ngũ bán hàng trong từng hội thoại', dataSecurity: 'Bảo mật dữ liệu', implementationSupport: 'Đồng hành triển khai', quickSetup: 'Thiết lập nhanh' },
+  home: { title: 'Nền tảng tự động hóa chăm sóc khách hàng 24/7' },
+  solutions: { title: 'Giải pháp Chatbot AI' },
+  pricing: { title: 'Bảng giá', empty: 'Chưa có gói dịch vụ' },
+  blog: { title: 'Kiến thức', notFound: 'Không tìm thấy bài viết', related: 'Bài viết liên quan', views: 'lượt xem', toc: 'Nội dung chính', hide: 'Ẩn' },
+  auth: { loginTitle: 'Đăng nhập khách hàng', registerTitle: 'Tạo tài khoản khách hàng', forgotTitle: 'Khôi phục quyền truy cập', resetTitle: 'Đặt lại mật khẩu mới', email: 'Email', password: 'Mật khẩu', newPassword: 'Mật khẩu mới', confirmPassword: 'Xác nhận mật khẩu', login: 'Đăng nhập', register: 'Tạo tài khoản', forgot: 'Quên mật khẩu?', account: 'Tài khoản' },
+  account: { title: 'Tài khoản của tôi' },
+  chat: { loginRequired: 'Vui lòng đăng nhập để bắt đầu trò chuyện!', online: 'Đang hoạt động', placeholder: 'Nhập tin nhắn...', upload: 'Đang tải file lên...', uploadError: 'Không thể tải ảnh lên. Vui lòng thử lại.' },
+  forms: { required: 'Vui lòng nhập thông tin', invalidEmail: 'Email không hợp lệ', sending: 'Đang gửi thông tin...', success: 'Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.' },
+  errors: { generic: 'Có lỗi xảy ra, vui lòng thử lại!', load: 'Đã xảy ra lỗi khi tải dữ liệu', notFound: 'Không tìm thấy trang' },
+  seo: { siteName: 'Losa247', defaultDescription: 'Nền tảng AI đa kênh giúp doanh nghiệp tự động hóa bán hàng và chăm sóc khách hàng.' },
+}
+export default vi

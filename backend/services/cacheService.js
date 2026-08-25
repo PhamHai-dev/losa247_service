@@ -16,9 +16,9 @@ const stableQuery = (query = {}) => Object.keys(query)
 
 const keys = Object.freeze({
   blogList: (query) => `${PREFIX.BLOGS}:list:${stableQuery(query)}`,
-  blogSlug: (slug) => `${PREFIX.BLOGS}:slug:${encodeURIComponent(slug)}`,
-  blogRelated: (slug) => `${PREFIX.BLOGS}:related:${encodeURIComponent(slug)}`,
-  blogCategories: () => `${PREFIX.BLOGS}:categories`,
+  blogSlug: (slug, locale = 'vi') => `${PREFIX.BLOGS}:slug:${locale}:${encodeURIComponent(slug)}`,
+  blogRelated: (slug, locale = 'vi') => `${PREFIX.BLOGS}:related:${locale}:${encodeURIComponent(slug)}`,
+  blogCategories: (locale = 'vi') => `${PREFIX.BLOGS}:categories:${locale}`,
   blogTags: (query) => `${PREFIX.BLOGS}:tags:${stableQuery(query)}`,
   faqList: (query) => `${PREFIX.FAQS}:list:${stableQuery(query)}`,
   siteInfo: () => `${PREFIX.SETTINGS}:site-info`,

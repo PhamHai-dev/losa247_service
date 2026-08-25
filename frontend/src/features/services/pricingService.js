@@ -41,10 +41,10 @@ export const pricingService = {
 }
 
 export const publicPricingService = {
-  getPlans: async () => {
-    return await axiosClient.get('/client/pricing/plans')
+  getPlans: async (locale = 'vi') => {
+    return await axiosClient.get('/client/pricing/plans', { params: { locale } })
   },
-  getComparisons: async () => {
-    return await axiosClient.get('/client/pricing/comparisons')
+  getComparisons: async (locale = 'vi') => {
+    return await axiosClient.get('/client/pricing/comparisons', { params: { locale } })
   }
 }

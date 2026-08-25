@@ -1,4 +1,5 @@
 import { Rocket, BriefcaseBusiness, Building2, CheckCircle2, ArrowRight } from 'lucide-react'
+import { useI18n } from '../../../hooks/useI18n'
 
 const getIcon = (order) => {
   if (order === 1) return <Rocket size={23} />
@@ -21,6 +22,9 @@ const normalizeStringList = (value) => {
 }
 
 const PricingCard = ({ plan, onConsult }) => {
+  const { locale } = useI18n()
+  const fallbackPrice = locale === 'en' ? 'Contact for pricing' : 'Liên hệ báo giá'
+  const fallbackButton = locale === 'en' ? 'Free consultation' : 'Tư vấn miễn phí'
   const features = normalizeStringList(plan.feature ?? plan.features)
   const subtitles = normalizeStringList(plan.subtitle)
   const isFeatured = Boolean(plan.badge)
@@ -36,7 +40,7 @@ const PricingCard = ({ plan, onConsult }) => {
         </div>
 
         <div className="saas-card-v2-price-wrap">
-          <div className="saas-card-v2-price">{plan.price || 'Liên hệ báo giá'}</div>
+          <div className="saas-card-v2-price">{plan.price || fallbackPrice}</div>
         </div>
 
         <div className="saas-card-v2-desc">
@@ -45,7 +49,7 @@ const PricingCard = ({ plan, onConsult }) => {
       </div>
 
       <div className="saas-card-v2-divider" />
-      <p className="saas-card-v2-feature-label">Gói dịch vụ bao gồm</p>
+      <p className="saas-card-v2-feature-label">{locale === 'en' ? 'Plan includes' : 'Gói dịch vụ bao gồm'}</p>
       <ul className="saas-card-v2-features">
         {features.map((item, index) => (
           <li key={index}><CheckCircle2 size={19} /><span>{item}</span></li>
@@ -53,8 +57,8 @@ const PricingCard = ({ plan, onConsult }) => {
       </ul>
 
       <div className="saas-card-v2-btn-wrap">
-        <button id={`pricing-card-consult-${planId}`} type="button" className="saas-card-v2-btn" onClick={onConsult} aria-label={`${plan.buttonText || 'Tư vấn miễn phí'} cho gói ${plan.name}`}>
-          {plan.buttonText || 'Tư vấn miễn phí'} <ArrowRight size={17} />
+        <button id={`pricing-card-consult-${planId}`} type="button" className="saas-card-v2-btn" onClick={onConsult} aria-label={`${plan.buttonText || fallbackButton} ${locale === 'en' ? 'for plan' : 'cho gói'} ${plan.name}`}>
+          {plan.buttonText || fallbackButton} <ArrowRight size={17} />
         </button>
       </div>
     </article>

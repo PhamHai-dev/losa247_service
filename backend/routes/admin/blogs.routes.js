@@ -4,6 +4,7 @@ const blogsController = require('../../controllers/admin/blogs.controller');
 const blogTagsController = require('../../controllers/admin/blogTags.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
+const { geminiPreviewLimiter } = require('../../middlewares/rateLimit.middleware');
 const cache = require('../../services/cacheService');
 
 const invalidateBlogs = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.allBlogs()] }));
@@ -19,8 +20,10 @@ router.put('/categories/:id', requirePermission('blogs.update'), invalidateBlogs
 router.delete('/categories/:id', requirePermission('blogs.delete'), invalidateBlogs, blogsController.deleteCategory);
 router.get('/stats', requirePermission('blogs.view'), blogsController.getStats);
 router.get('/', requirePermission('blogs.view'), blogsController.getBlogs);
+router.post('/translate-preview', requirePermission('blogs.update'), geminiPreviewLimiter, blogsController.translatePreview);
 router.post('/', requirePermission('blogs.create'), invalidateBlogs, blogsController.createBlog);
 router.put('/:id', requirePermission('blogs.update'), invalidateBlogs, blogsController.updateBlog);
+router.delete('/:id/translations/:locale', requirePermission('blogs.delete'), invalidateBlogs, blogsController.deleteTranslation);
 router.delete('/:id', requirePermission('blogs.delete'), invalidateBlogs, blogsController.deleteBlog);
 router.patch('/:id/approve', requirePermission('blogs.publish'), invalidateBlogs, blogsController.approveBlog);
 router.patch('/:id/reject', requirePermission('blogs.publish'), invalidateBlogs, blogsController.rejectBlog);

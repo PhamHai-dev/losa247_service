@@ -1,12 +1,24 @@
+const normalizeResponseValue = (value) => {
+  if (typeof value === 'bigint') return value.toString();
+  if (Array.isArray(value)) return value.map(normalizeResponseValue);
+  if (value && typeof value === 'object') {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value;
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeResponseValue(item)]));
+  }
+  return value;
+};
+
 const toLegacyEntity = (record) => {
   if (!record) return null;
   const { id, roleName, ...rest } = record;
-  return {
-    _id: id,
-    id,
+  const normalizedId = normalizeResponseValue(id);
+  return normalizeResponseValue({
+    _id: normalizedId,
+    id: normalizedId,
     ...rest,
     ...(roleName !== undefined ? { role: roleName } : {}),
-  };
+  });
 };
 
 const toLegacyRole = (record) => {

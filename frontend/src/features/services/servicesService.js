@@ -1,6 +1,9 @@
 import axiosClient from '../../services/axiosClient'
 
-const toList = (res) => ({ items: res?.data || [], pagination: res?.pagination || null })
+const toList = (res) => ({
+  items: res?.data || [], pagination: res?.pagination || null,
+  requestedLocale: res?.requestedLocale, resolvedLocale: res?.resolvedLocale, isFallback: Boolean(res?.isFallback),
+})
 
 // ADMIN
 export const servicesService = {
@@ -12,7 +15,7 @@ export const servicesService = {
 
 // CLIENT (public)
 export const publicServicesService = {
-  getList: (params) => axiosClient.get('/services', { params }).then(toList),
-  getBySlug: (slug) => axiosClient.get(`/services/${slug}`).then((res) => res?.data),
+  getList: (params = {}, locale = 'vi') => axiosClient.get('/services', { params: { ...params, locale } }).then(toList),
+  getBySlug: (slug, locale = 'vi') => axiosClient.get(`/services/${slug}`, { params: { locale } }).then((res) => res?.data),
   createLead: (payload) => axiosClient.post('/leads', payload).then((res) => res?.data),
 }

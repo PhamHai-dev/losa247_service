@@ -18,9 +18,8 @@ export const LEAD_STATUS = {
 
 export const BLOG_STATUS = {
   draft: { label: 'Nháp', color: 'default' },
-  pending: { label: 'Chờ duyệt', color: 'gold' },
+  scheduled: { label: 'Đã lên lịch', color: 'cyan' },
   published: { label: 'Đã đăng', color: 'green' },
-  rejected: { label: 'Từ chối', color: 'red' },
 }
 
 export const CHAT_MODE = {

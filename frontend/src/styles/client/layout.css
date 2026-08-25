@@ -47,9 +47,12 @@ html {
   font-weight: 600
 }
 
-.menu a.active,
-.menu a:hover {
+.menu a.active {
   background: var(--blue-100);
+  color: var(--blue-700)
+}
+
+.menu a:hover {
   color: var(--blue-700)
 }
 
@@ -79,6 +82,114 @@ html {
   background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
   box-shadow: none;
   transform: translateY(0) scale(.98);
+}
+
+.language-picker {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.language-picker__trigger {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  color: #0f172a;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .2s ease;
+}
+
+.language-picker__trigger[aria-expanded="true"] {
+  background: #f1f5f9;
+}
+
+.language-picker__trigger:active {
+  transform: scale(.94);
+}
+
+.language-picker__trigger:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, .24);
+  outline-offset: 2px;
+}
+
+.language-picker__flag {
+  display: block;
+  font-size: 27px;
+  line-height: 1;
+  filter: saturate(1.08);
+}
+
+.language-picker__menu {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 8px);
+  left: -24px;
+  right: auto;
+  width: 180px;
+  border: 1px solid rgba(226, 232, 240, .9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .16), 0 3px 10px rgba(15, 23, 42, .06);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(.97);
+  transform-origin: top right;
+  transition: opacity .2s ease, transform .24s cubic-bezier(.22, 1, .36, 1), visibility .2s;
+}
+
+.language-picker__menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.language-picker__menu button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  color: #172033;
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .18s ease, color .18s ease;
+}
+
+.language-picker__menu button:hover {
+  color: #172033;
+  background: #f8fafc;
+}
+
+.language-picker__menu button:focus-visible {
+  outline: 2px solid var(--blue-400);
+  outline-offset: -2px;
+}
+
+.language-picker__menu button span:first-child {
+  font-size: 25px;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .language-picker__menu,
+  .language-picker__trigger {
+    transition: none;
+  }
 }
 
 .hero {
@@ -518,6 +629,21 @@ html {
   color: #d9eff9;
   font-size: 12px;
   font-weight: 650;
+}
+
+/* Required marks are rendered explicitly after dynamic labels. */
+.client-app-wrapper .ant-form-item-label>label.ant-form-item-required::before,
+.client-app-wrapper .ant-form-item-label>label.ant-form-item-required::after {
+  display: none !important;
+  content: none !important;
+}
+
+.client-app-wrapper .lead-required-mark {
+  display: inline-block;
+  margin-left: 4px;
+  color: #38bdf8;
+  font-size: inherit;
+  line-height: 1;
 }
 
 .cta-form-card .footer-field .ant-input-affix-wrapper,
@@ -5778,7 +5904,7 @@ a.price-card:hover {
 }
 
 .home-faq-accordion-wrap {
-  margin-top: 68px;
+  margin-top: 50px;
   padding: 9px;
   border: 1px solid #d8ebf5;
   border-radius: 27px;
@@ -5836,20 +5962,29 @@ a.price-card:hover {
 }
 
 .home-faq-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
   width: 32px;
   height: 32px;
-  display: grid;
-  place-items: center;
+  line-height: 0;
   border-radius: 50%;
   color: #299dcc;
   background: #edf9ff;
   transition: transform .25s, color .25s, background .25s;
 }
 
+.home-faq-toggle svg {
+  display: block;
+  flex: none;
+  margin: 0;
+}
+
 .home-faq-toggle.active {
   color: #fff;
   background: linear-gradient(135deg, #0284c7, #38bdf8);
-  transform: rotate(180deg);
 }
 
 .home-faq-collapse .ant-collapse-content {

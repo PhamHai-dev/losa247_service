@@ -1,6 +1,6 @@
 import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
-import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import {
   CircleCheck, Crown, Gem, Check, X, TrendingUp, Star, ChevronDown, ChevronUp,
   Calendar, Tag as LucideTag, Phone, Mail, MessageSquare, MapPin, BellDot, Camera, Mic, Send, ChevronLeft, MoreVertical, Signal, Wifi, BatteryFull,
@@ -25,19 +25,22 @@ import { leadsService } from '../../features/leads/leadsService'
 import { useUIStore } from '../../stores/uiStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useDebounce } from '../../hooks/useDebounce'
+import { useI18n } from '../../hooks/useI18n'
+import { PageSeo } from '../../components/seo/PageSeo'
 
 // ---- Components -------------------------------------------------------------
 
 export function TagDetailPage() {
   const { slug } = useParams();
+  const { locale, localizedPath } = useI18n();
   const [page, setPage] = useState(1);
 
-  const tagsQuery = useApiQuery(() => publicBlogsService.getTags(), []);
+  const tagsQuery = useApiQuery(() => publicBlogsService.getTags(locale), [locale]);
   const tagObj = tagsQuery.data?.find(t => t.slug === slug);
 
   const mainListQuery = useApiQuery(
-    () => tagObj ? publicBlogsService.getList({ page, limit: 12, tag: tagObj._id }) : Promise.resolve({ items: [], pagination: { total: 0 } }),
-    [page, tagObj?._id]
+    () => tagObj ? publicBlogsService.getList({ page, limit: 12, tag: tagObj._id }, locale) : Promise.resolve({ items: [], pagination: { total: 0 } }),
+    [page, tagObj?._id, locale]
   );
 
   const blogs = mainListQuery.data?.items || [];
@@ -45,22 +48,23 @@ export function TagDetailPage() {
 
   return (
     <main className="blog-page-container">
+      <PageSeo title={`${locale === 'en' ? 'Articles tagged' : 'Bài viết theo thẻ'} #${tagObj?.name || slug}`} description={locale === 'en' ? `Explore articles about ${tagObj?.name || slug}.` : `Khám phá các bài viết thuộc chủ đề ${tagObj?.name || slug}.`} isFallback={mainListQuery.data?.isFallback} />
       <div className="container">
         <div className="blog-header" style={{ textAlign: 'center', display: 'block', marginBottom: 60 }}>
           <h1 style={{ fontSize: 42, color: 'var(--navy)', marginBottom: 16 }}>
-            Bài viết theo thẻ: <span style={{ color: 'var(--orange)' }}>#{tagObj?.name || slug}</span>
+            {locale === 'en' ? 'Articles tagged' : 'Bài viết theo thẻ'}: <span style={{ color: 'var(--primary)' }}>#{tagObj?.name || slug}</span>
           </h1>
-          <p style={{ color: '#64748b', fontSize: 16 }}>Khám phá các bài viết thuộc chủ đề này</p>
+          <p style={{ color: '#64748b', fontSize: 16 }}>{locale === 'en' ? 'Explore articles about this topic' : 'Khám phá các bài viết thuộc chủ đề này'}</p>
         </div>
 
         <Spin spinning={mainListQuery.loading || tagsQuery.loading}>
           {!blogs.length ? (
-            <Empty description="Không tìm thấy bài viết nào" style={{ margin: '80px 0' }} />
+            <Empty description={locale === 'en' ? 'No articles found' : 'Không tìm thấy bài viết nào'} style={{ margin: '80px 0' }} />
           ) : (
             <>
               <div className="main-blog-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 {blogs.map(b => (
-                  <Link to={`/blog/${b.slug}`} key={b._id} className="blog-card">
+                  <Link to={localizedPath(`/blog/${b.slug}`)} key={b._id} className="blog-card">
                     <img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} className="blog-card-img" />
                     <div className="blog-card-body">
                       {b.category && (
