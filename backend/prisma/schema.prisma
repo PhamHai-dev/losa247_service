@@ -507,60 +507,87 @@ model WebhookInbox {
 }
 
 model Faq {
-  id            String         @id @db.VarChar(24)
-  question      String         @db.VarChar(300)
-  answer        String         @db.Text
-  page          FaqPage        @default(home)
-  categoryId    String?        @map("category_id") @db.VarChar(24)
-  serviceDetail ServiceDetail? @map("service_detail")
-  order         Int            @default(0) @db.UnsignedInt
-  createdAt     DateTime       @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt     DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+  id            String           @id @db.VarChar(24)
+  page          FaqPage          @default(home)
+  categoryId    String?          @map("category_id") @db.VarChar(24)
+  serviceDetail ServiceDetail?   @map("service_detail")
+  order         Int              @default(0) @db.UnsignedInt
+  createdAt     DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+  translations  FaqTranslation[]
 
   @@index([page, serviceDetail, order, createdAt])
   @@map("faqs")
 }
 
+model FaqTranslation {
+  id        BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  faqId     String   @map("faq_id") @db.VarChar(24)
+  locale    Locale
+  question  String   @db.VarChar(300)
+  answer    String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  faq       Faq      @relation(fields: [faqId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([faqId, locale])
+  @@index([locale, question])
+  @@map("faq_translations")
+}
+
 model PricingPlan {
-  id          String               @id @db.VarChar(24)
-  name        String               @db.VarChar(120)
-  priceAmount BigInt?              @map("price_amount")
-  priceLabel  String               @default("") @map("price_label") @db.VarChar(120)
-  subtitle    Json
-  badge       String               @default("") @db.VarChar(80)
-  buttonText  String               @default("") @map("button_text") @db.VarChar(80)
-  order       Int                  @default(0) @db.UnsignedInt
-  isActive    Boolean              @default(true) @map("is_active")
-  createdAt   DateTime             @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt   DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
-  features    PricingPlanFeature[]
+  id           String                   @id @db.VarChar(24)
+  order        Int                      @default(0) @db.UnsignedInt
+  isActive     Boolean                  @default(true) @map("is_active")
+  createdAt    DateTime                 @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime                 @updatedAt @map("updated_at") @db.DateTime(3)
+  translations PricingPlanTranslation[]
 
   @@index([isActive, order, createdAt])
-  @@index([name])
   @@map("pricing_plans")
 }
 
-model PricingPlanFeature {
-  id        BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
-  planId    String      @map("plan_id") @db.VarChar(24)
-  content   String      @db.Text
-  sortOrder Int         @default(0) @map("sort_order") @db.UnsignedInt
-  plan      PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+model PricingPlanTranslation {
+  id          BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  planId      String      @map("plan_id") @db.VarChar(24)
+  locale      Locale
+  name        String      @db.VarChar(120)
+  priceLabel  String      @default("") @map("price_label") @db.VarChar(120)
+  subtitle    Json
+  badge       String      @default("") @db.VarChar(80)
+  buttonText  String      @default("") @map("button_text") @db.VarChar(80)
+  features    Json
+  createdAt   DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.DateTime(3)
+  plan        PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([planId, sortOrder])
-  @@map("pricing_plan_features")
+  @@unique([planId, locale])
+  @@map("pricing_plan_translations")
 }
 
 model PricingComparison {
-  id        String   @id @db.VarChar(24)
-  title     String   @db.VarChar(160)
-  values    String   @db.LongText
-  order     Int      @default(0) @db.UnsignedInt
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  id           String                         @id @db.VarChar(24)
+  order        Int                            @default(0) @db.UnsignedInt
+  createdAt    DateTime                       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime                       @updatedAt @map("updated_at") @db.DateTime(3)
+  translations PricingComparisonTranslation[]
 
   @@index([order, createdAt])
   @@map("pricing_comparisons")
+}
+
+model PricingComparisonTranslation {
+  id           BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  comparisonId String            @map("comparison_id") @db.VarChar(24)
+  locale       Locale
+  title        String            @db.VarChar(160)
+  values       String            @db.LongText
+  createdAt    DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+  comparison   PricingComparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([comparisonId, locale])
+  @@map("pricing_comparison_translations")
 }
 
 model Notification {

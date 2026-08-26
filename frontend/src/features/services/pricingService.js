@@ -38,6 +38,10 @@ export const pricingService = {
   deleteComparison: async (id) => {
     return await axiosClient.delete(`/admin/pricing/comparisons/${id}`)
   },
+  translatePreview: async (type, source) => {
+    const response = await axiosClient.post('/admin/pricing/translate-preview', { type, source })
+    return response?.data
+  },
 }
 
 export const publicPricingService = {

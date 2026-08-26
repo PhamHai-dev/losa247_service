@@ -3,35 +3,34 @@ const { createEntityId } = require('./entityId');
 const { toLegacyEntity } = require('./legacyMapper');
 
 const mapFaq = (row) => row && toLegacyEntity({ ...row, category: row.categoryId });
-const mapPlan = (row) => {
-  if (!row) {
-    return null;
-  }
-
-  const { priceAmount, priceLabel, features, ...plan } = row;
-
-  return toLegacyEntity({
-    ...plan,
-    price: priceLabel || (priceAmount == null ? '' : String(priceAmount)),
-    feature: (features || []).map((item) => item.content),
-  });
-};
 const parseComparisonValues = (values) => {
   if (values && typeof values === 'object' && !Array.isArray(values)) return values;
   if (typeof values !== 'string' || !values.trim()) return {};
   try {
     const parsed = JSON.parse(values);
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
+  } catch { return {}; }
 };
-const mapComparison = (row) =>
-  row && toLegacyEntity({ ...row, values: parseComparisonValues(row.values) });
-const serializeComparisonData = (data) => ({
-  ...data,
-  ...(data.values !== undefined ? { values: JSON.stringify(parseComparisonValues(data.values)) } : {}),
+const translationMap = (rows = [], mapper) => Object.fromEntries(rows.map((row) => [row.locale, mapper(row)]));
+const mapPlanTranslation = ({ id, planId, locale, createdAt, updatedAt, features, priceLabel, ...fields }) => ({
+  ...fields, price: priceLabel || '', subtitle: Array.isArray(fields.subtitle) ? fields.subtitle : [], feature: Array.isArray(features) ? features : [],
 });
+const mapPlan = (row, locale) => {
+  if (!row) return null;
+  const { translations = [], ...plan } = row;
+  const selected = translations.find((item) => item.locale === locale) || translations.find((item) => item.locale === 'vi');
+  const localized = selected ? mapPlanTranslation(selected) : { name: '', price: '', subtitle: [], badge: '', buttonText: '', feature: [] };
+  return toLegacyEntity({ ...plan, ...localized, translations: translationMap(translations, mapPlanTranslation), hasEnglish: translations.some((item) => item.locale === 'en'), resolvedLocale: selected?.locale || 'vi' });
+};
+const mapComparisonTranslation = ({ id, comparisonId, locale, createdAt, updatedAt, title, values }) => ({ title, values: parseComparisonValues(values) });
+const mapComparison = (row, locale) => {
+  if (!row) return null;
+  const { translations = [], ...comparison } = row;
+  const selected = translations.find((item) => item.locale === locale) || translations.find((item) => item.locale === 'vi');
+  const localized = selected ? mapComparisonTranslation(selected) : { title: row.title, values: parseComparisonValues(row.values) };
+  return toLegacyEntity({ ...comparison, ...localized, translations: translationMap(translations, mapComparisonTranslation), hasEnglish: translations.some((item) => item.locale === 'en'), resolvedLocale: selected?.locale || 'vi' });
+};
+const serializeComparisonValues = (values) => JSON.stringify(parseComparisonValues(values));
 const mapSettings = (row) => ({
   _id: row.id,
   id: row.id,
@@ -120,104 +119,54 @@ const faqRepository = {
   },
 };
 
-const normalizePlanData = (data) => {
-  const result = { ...data };
-  if (result.price !== undefined) {
-    result.priceLabel = String(result.price);
-    const digits = String(result.price).replace(/\D/g, '');
-    result.priceAmount = digits ? BigInt(digits) : null;
-    delete result.price;
-  }
-  delete result.feature;
-  return result;
-};
-const planInclude = { features: { orderBy: { sortOrder: 'asc' } } };
+const planInclude = { translations: true };
+const comparisonInclude = { translations: true };
 const pricingRepository = {
-  async listPlans({ search, isActive, skip, take }) {
-    const where = {
-      ...(search ? { name: { contains: search } } : {}),
-      ...(isActive !== undefined ? { isActive } : {}),
-    };
+  async listPlans({ search, isActive, skip, take, locale }) {
+    const where = { ...(search ? { translations: { some: { name: { contains: search } } } } : {}), ...(isActive !== undefined ? { isActive } : {}) };
     const [rows, total] = await Promise.all([
-      prisma.pricingPlan.findMany({
-        where,
-        include: planInclude,
-        orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
-        skip,
-        take,
-      }),
+      prisma.pricingPlan.findMany({ where, include: planInclude, orderBy: [{ order: 'asc' }, { createdAt: 'desc' }], skip, take }),
       prisma.pricingPlan.count({ where }),
     ]);
-    return { rows: rows.map(mapPlan), total };
+    return { rows: rows.map((row) => mapPlan(row, locale)), total };
   },
-  async findPlan(id) {
-    return mapPlan(await prisma.pricingPlan.findUnique({ where: { id }, include: planInclude }));
-  },
+  async findPlan(id, locale) { return mapPlan(await prisma.pricingPlan.findUnique({ where: { id }, include: planInclude }), locale); },
   async savePlan(id, data) {
-    const features = data.feature;
-    const scalar = normalizePlanData(data);
+    const { translations, ...shared } = data;
     return prisma.$transaction(async (tx) => {
       const row = id
-        ? await tx.pricingPlan.update({ where: { id }, data: scalar })
-        : await tx.pricingPlan.create({ data: { id: createEntityId(), subtitle: [], ...scalar } });
-      if (features !== undefined) {
-        await tx.pricingPlanFeature.deleteMany({ where: { planId: row.id } });
-        if (features.length)
-          await tx.pricingPlanFeature.createMany({
-            data: features.map((content, sortOrder) => ({ planId: row.id, content, sortOrder })),
-          });
+        ? await tx.pricingPlan.update({ where: { id }, data: shared })
+        : await tx.pricingPlan.create({ data: { id: createEntityId(), ...shared } });
+      if (translations) {
+        for (const [locale, value] of Object.entries(translations)) await tx.pricingPlanTranslation.upsert({ where: { planId_locale: { planId: row.id, locale } }, create: { planId: row.id, locale, name: value.name, priceLabel: value.price || '', subtitle: value.subtitle || [], badge: value.badge || '', buttonText: value.buttonText || '', features: value.feature || [] }, update: { name: value.name, priceLabel: value.price || '', subtitle: value.subtitle || [], badge: value.badge || '', buttonText: value.buttonText || '', features: value.feature || [] } });
+        if (!translations.en) await tx.pricingPlanTranslation.deleteMany({ where: { planId: row.id, locale: 'en' } });
       }
-      return mapPlan(
-        await tx.pricingPlan.findUnique({ where: { id: row.id }, include: planInclude }),
-      );
+      return mapPlan(await tx.pricingPlan.findUnique({ where: { id: row.id }, include: planInclude }));
     });
   },
   async deletePlan(id) {
     return prisma.$transaction(async (tx) => {
       const row = await tx.pricingPlan.delete({ where: { id } });
-      const comparisons = await tx.pricingComparison.findMany();
-      await Promise.all(
-        comparisons.map(({ id: comparisonId, values }) => {
-          const next = { ...parseComparisonValues(values) };
-          delete next[id];
-          return tx.pricingComparison.update({
-            where: { id: comparisonId },
-            data: { values: JSON.stringify(next) },
-          });
-        }),
-      );
+      const translations = await tx.pricingComparisonTranslation.findMany();
+      await Promise.all(translations.map((item) => { const values = parseComparisonValues(item.values); delete values[id]; return tx.pricingComparisonTranslation.update({ where: { id: item.id }, data: { values: JSON.stringify(values) } }); }));
       return mapPlan(row);
     });
   },
-  async stats() {
-    return Promise.all([
-      prisma.pricingPlan.count(),
-      prisma.pricingPlan.count({ where: { isActive: true } }),
-      prisma.pricingPlanFeature.count(),
-      prisma.pricingComparison.count(),
-    ]);
-  },
-  async listComparisons() {
-    return (
-      await prisma.pricingComparison.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })
-    ).map(mapComparison);
-  },
-  async findComparison(id) {
-    return mapComparison(await prisma.pricingComparison.findUnique({ where: { id } }));
-  },
+  async stats() { return Promise.all([prisma.pricingPlan.count(), prisma.pricingPlan.count({ where: { isActive: true } }), prisma.pricingPlanTranslation.findMany({ select: { features: true } }).then((rows) => rows.reduce((sum, row) => sum + (Array.isArray(row.features) ? row.features.length : 0), 0)), prisma.pricingComparison.count()]); },
+  async listComparisons(locale) { return (await prisma.pricingComparison.findMany({ include: comparisonInclude, orderBy: [{ order: 'asc' }, { createdAt: 'asc' }] })).map((row) => mapComparison(row, locale)); },
+  async findComparison(id, locale) { return mapComparison(await prisma.pricingComparison.findUnique({ where: { id }, include: comparisonInclude }), locale); },
   async saveComparison(id, data) {
-    const serializedData = serializeComparisonData(data);
-    return mapComparison(
-      id
-        ? await prisma.pricingComparison.update({ where: { id }, data: serializedData })
-        : await prisma.pricingComparison.create({
-            data: { id: createEntityId(), values: '{}', ...serializedData },
-          }),
-    );
+    const { translations, ...shared } = data;
+    return prisma.$transaction(async (tx) => {
+      const row = id ? await tx.pricingComparison.update({ where: { id }, data: shared }) : await tx.pricingComparison.create({ data: { id: createEntityId(), ...shared } });
+      if (translations) {
+        for (const [locale, value] of Object.entries(translations)) await tx.pricingComparisonTranslation.upsert({ where: { comparisonId_locale: { comparisonId: row.id, locale } }, create: { comparisonId: row.id, locale, title: value.title, values: serializeComparisonValues(value.values) }, update: { title: value.title, values: serializeComparisonValues(value.values) } });
+        if (!translations.en) await tx.pricingComparisonTranslation.deleteMany({ where: { comparisonId: row.id, locale: 'en' } });
+      }
+      return mapComparison(await tx.pricingComparison.findUnique({ where: { id: row.id }, include: comparisonInclude }));
+    });
   },
-  async deleteComparison(id) {
-    return mapComparison(await prisma.pricingComparison.delete({ where: { id } }));
-  },
+  async deleteComparison(id) { return mapComparison(await prisma.pricingComparison.delete({ where: { id } })); },
 };
 
 const settingsRepository = {

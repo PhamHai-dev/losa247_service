@@ -800,34 +800,35 @@
   border-color: var(--admin-border);
   background: var(--admin-surface);
   font-weight: 650;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
-  transition: color .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  box-shadow: none !important;
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease;
 }
 
-.admin-shell .ant-btn:not(:disabled):not(.ant-btn-text):hover {
+.admin-shell .ant-btn:not(:disabled):not(.ant-btn-text):not(.ant-btn-primary):hover {
   color: var(--admin-primary-hover) !important;
-  border-color: #99d8d0 !important;
-  background: #f8fffe !important;
-  transform: translateY(-1px);
+  border-color: #b5ddd8 !important;
+  background: #f7fcfb !important;
 }
 
 .admin-shell .ant-btn-primary,
 .admin-shell .ant-btn-primary:not(:disabled) {
   color: #fff;
   border-color: var(--admin-primary);
-  background: linear-gradient(135deg, var(--admin-primary-hover), var(--admin-primary));
-  box-shadow: 0 7px 16px rgba(13, 148, 136, .18);
+  background: var(--admin-primary);
+  box-shadow: none !important;
 }
 
 .admin-shell .ant-btn-primary:not(:disabled):hover {
   color: #fff !important;
-  border-color: var(--admin-primary-hover) !important;
-  background: linear-gradient(135deg, var(--admin-primary-active), var(--admin-primary-hover)) !important;
-  box-shadow: 0 9px 20px rgba(13, 148, 136, .24);
+  border-color: #0c857b !important;
+  background: #0c857b !important;
+  box-shadow: none !important;
 }
 
 .admin-shell .ant-btn-primary:not(:disabled):active {
-  transform: translateY(0);
+  border-color: var(--admin-primary-hover) !important;
+  background: var(--admin-primary-hover) !important;
+  box-shadow: none !important;
 }
 
 .admin-shell .ant-btn-text {

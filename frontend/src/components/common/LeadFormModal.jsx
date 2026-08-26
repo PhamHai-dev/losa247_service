@@ -5,11 +5,12 @@ import { useUIStore } from '../../stores/uiStore';
 import { leadsService } from '../../features/leads/leadsService';
 import { settingsService } from '../../features/settings/settingsService';
 import { useApiQuery } from '../../hooks/useApiQuery';
+import { useI18n } from '../../hooks/useI18n';
 
-export function DynamicLeadFields({ config, prefix = 'lead' }) {
+export function DynamicLeadFields({ config, prefix = 'lead', locale = 'vi' }) {
   return (config?.fields || []).filter((field) => field.enabled).map((field) => {
-    const rules = [{ required: field.required, message: `Vui lòng nhập ${field.label}` }];
-    if (field.type === 'email') rules.push({ type: 'email', message: `${field.label} không hợp lệ` });
+    const rules = [{ required: field.required, message: locale === 'en' ? `Please enter ${field.label}` : `Vui lòng nhập ${field.label}` }];
+    if (field.type === 'email') rules.push({ type: 'email', message: locale === 'en' ? `${field.label} is invalid` : `${field.label} không hợp lệ` });
     let control = <Input id={`${prefix}-${field.key}`} placeholder={field.placeholder} type={field.type === 'phone' ? 'tel' : 'text'} />;
     if (field.type === 'textarea') control = <Input.TextArea id={`${prefix}-${field.key}`} rows={3} placeholder={field.placeholder} />;
     if (field.type === 'number') control = <InputNumber id={`${prefix}-${field.key}`} style={{ width: '100%' }} placeholder={field.placeholder} />;
@@ -43,21 +44,22 @@ export default function LeadFormModal() {
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const [submitting, setSubmitting] = useState(false);
-  const configQuery = useApiQuery(() => settingsService.getPublicLeadForm(), [], { enabled: isLeadModalVisible });
+  const { locale } = useI18n();
+  const configQuery = useApiQuery(() => settingsService.getPublicLeadForm(locale), [locale], { enabled: isLeadModalVisible });
   const submit = async (values) => {
     setSubmitting(true);
     try {
       await leadsService.createPublicLead({ formVersion: configQuery.data?.version, values });
-      message.success('Đăng ký thành công! Chúng tôi sẽ liên hệ sớm nhất.');
+      message.success(locale === 'en' ? 'Thank you! We will contact you shortly.' : 'Đăng ký thành công! Chúng tôi sẽ liên hệ sớm nhất.');
       closeLeadModal(); form.resetFields();
-    } catch (error) { message.error(error?.error?.message || 'Có lỗi xảy ra, vui lòng thử lại!'); }
+    } catch (error) { message.error(error?.error?.message || (locale === 'en' ? 'Something went wrong. Please try again.' : 'Có lỗi xảy ra, vui lòng thử lại!')); }
     finally { setSubmitting(false); }
   };
   if (!isLeadModalVisible) return null;
   return <div className="lead-form-overlay" role="presentation" onClick={closeLeadModal}>
     <section className="lead-form-modal" role="dialog" aria-modal="true" aria-labelledby="lead-form-title" onClick={(event) => event.stopPropagation()}>
-      <header className="lead-form-modal__header"><div><small>LOSA247</small><h2 id="lead-form-title">{configQuery.data?.title || 'Đăng ký tư vấn'}</h2><p>Để lại thông tin, đội ngũ Losa sẽ liên hệ hỗ trợ bạn sớm nhất.</p></div><Button id="lead-modal-close" className="lead-form-modal__close" type="text" icon={<X size={20} />} onClick={closeLeadModal} aria-label="Đóng form" /></header>
-      <div className="lead-form-modal__body">{configQuery.loading ? <Skeleton active /> : configQuery.error ? <Alert type="error" showIcon message={configQuery.error} /> : <Form form={form} layout="vertical" onFinish={submit}><DynamicLeadFields config={configQuery.data} prefix="modal-lead" /><Button id="lead-modal-submit" htmlType="submit" type="primary" size="large" block loading={submitting}>{configQuery.data?.submitLabel || 'Gửi yêu cầu'}</Button></Form>}</div>
+      <header className="lead-form-modal__header"><div><small>LOSA247</small><h2 id="lead-form-title">{configQuery.data?.title || (locale === 'en' ? 'Request a consultation' : 'Đăng ký tư vấn')}</h2><p>{locale === 'en' ? 'Leave your details and the Losa team will contact you shortly.' : 'Để lại thông tin, đội ngũ Losa sẽ liên hệ hỗ trợ bạn sớm nhất.'}</p></div><Button id="lead-modal-close" className="lead-form-modal__close" type="text" icon={<X size={20} />} onClick={closeLeadModal} aria-label={locale === 'en' ? 'Close form' : 'Đóng form'} /></header>
+      <div className="lead-form-modal__body">{configQuery.loading ? <Skeleton active /> : configQuery.error ? <Alert type="error" showIcon message={configQuery.error} /> : <Form form={form} layout="vertical" onFinish={submit}><DynamicLeadFields config={configQuery.data} prefix="modal-lead" locale={locale} /><Button id="lead-modal-submit" htmlType="submit" type="primary" size="large" block loading={submitting}>{configQuery.data?.submitLabel || (locale === 'en' ? 'Submit request' : 'Gửi yêu cầu')}</Button></Form>}</div>
     </section>
   </div>;
 }

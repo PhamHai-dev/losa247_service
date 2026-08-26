@@ -8,9 +8,9 @@ router.get('/plans', (req, res, next) => {
   // force isActive = true for public endpoint
   req.query.isActive = 'true';
   next();
-}, cache.middleware((req) => cache.keys.pricingPlans({ page: req.query.page || 1, limit: req.query.limit || 20, search: req.query.search, isActive: true }), cache.TTL.PRICING), pricingController.getPlans);
+}, cache.middleware((req) => cache.keys.pricingPlans({ page: req.query.page || 1, limit: req.query.limit || 20, search: req.query.search, isActive: true, locale: req.query.locale || 'vi' }), cache.TTL.PRICING), pricingController.getPlans);
 
 // Public route to get comparisons
-router.get('/comparisons', cache.middleware(() => cache.keys.pricingComparisons(), cache.TTL.PRICING), pricingController.getComparisons);
+router.get('/comparisons', cache.middleware((req) => cache.keys.pricingComparisons(req.query.locale || 'vi'), cache.TTL.PRICING), pricingController.getComparisons);
 
 module.exports = router;

@@ -75,6 +75,11 @@ export function AdminBlogEditor() {
   const coverImageUrl = Form.useWatch('coverImageUrl', form)
   const activeTranslation = Form.useWatch(['translations', activeLocale], form) || {}
 
+  useEffect(() => {
+    const scrollContainer = document.querySelector('.admin-content')
+    if (scrollContainer) scrollContainer.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [editing?._id])
+
   const categoriesQuery = useApiQuery(() => blogCategoriesService.getCategories(), [])
   const categoryOptions = (categoriesQuery.data?.items || [])
     .filter(category => category.translations?.[activeLocale]?.name)
@@ -261,9 +266,9 @@ export function AdminBlogEditor() {
 
   return <>
     <PageHeader title={editing ? 'Sửa bài viết song ngữ' : 'Viết bài mới'} extra={<Button icon={<CloseOutlined />} onClick={() => navigate('/admin/blogs')}>Huỷ</Button>} />
-    <Form form={form} layout="vertical" onFinish={onFinish} initialValues={initialValues}>
-      <Row gutter={24}>
-        <Col xs={24} lg={16}>
+    <Form className="blog-editor-form" form={form} layout="vertical" onFinish={onFinish} initialValues={initialValues}>
+      <Row className="blog-editor-columns" gutter={24}>
+        <Col className="blog-editor-column blog-editor-column--content" xs={24} lg={16}>
           <Card>
             <nav className="blog-language-tabs" aria-label="Ngôn ngữ bài viết">
               <button id="blog-language-tab-vi" type="button" className={activeLocale === 'vi' ? 'active' : ''} onClick={() => setActiveLocale('vi')}>
@@ -276,8 +281,8 @@ export function AdminBlogEditor() {
             <div className="blog-language-panel" key={activeLocale}>{translationPanel(activeLocale)}</div>
           </Card>
         </Col>
-        <Col xs={24} lg={8}>
-          <Card title={`Xuất bản · ${activeLocale === 'vi' ? 'Tiếng Việt' : 'English'}`} style={{ position: 'sticky', top: 24 }}>
+        <Col className="blog-editor-column blog-editor-column--publish" xs={24} lg={8}>
+          <Card className="blog-publish-card" title={`Xuất bản · ${activeLocale === 'vi' ? 'Tiếng Việt' : 'English'}`}>
             <Alert type="info" showIcon message="Trạng thái và lịch đăng áp dụng riêng cho ngôn ngữ đang chọn." style={{ marginBottom: 16 }} />
             <Form.Item name="category" label="Danh mục"><Select allowClear placeholder="Chọn danh mục" options={categoryOptions} loading={categoriesQuery.loading} /></Form.Item>
             <Form.Item name="tags" label="Tags"><Select mode="multiple" placeholder="Chọn thẻ..." options={tagOptions} loading={tagsQuery.loading} /></Form.Item>

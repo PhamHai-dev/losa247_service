@@ -10,6 +10,7 @@ export const settingsService = {
   getLeadForm: () => axiosClient.get('/admin/settings/lead-form').then((res) => res?.data),
   getPublicLeadForm: (locale = 'vi') => axiosClient.get('/settings/lead-form', { params: { locale } }).then((res) => res?.data),
   updateLeadForm: (payload) => axiosClient.put('/admin/settings/lead-form', payload).then((res) => res?.data),
+  translateLeadFormPreview: (payload) => axiosClient.post('/admin/settings/lead-form/translate-preview', payload, { timeout: 90000 }).then((res) => res?.data),
   // Upload asset dạng multipart: nhận File, trả url.
   uploadAsset: (file) => {
     const form = new FormData()

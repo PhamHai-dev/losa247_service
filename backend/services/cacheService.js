@@ -23,9 +23,9 @@ const keys = Object.freeze({
   faqList: (query) => `${PREFIX.FAQS}:list:${stableQuery(query)}`,
   siteInfo: () => `${PREFIX.SETTINGS}:site-info`,
   appearance: () => `${PREFIX.SETTINGS}:appearance`,
-  leadForm: () => `${PREFIX.SETTINGS}:lead-form`,
+  leadForm: (locale = 'vi') => `${PREFIX.SETTINGS}:lead-form:${locale}`,
   pricingPlans: (query) => `${PREFIX.PRICING}:plans:${stableQuery(query)}`,
-  pricingComparisons: () => `${PREFIX.PRICING}:comparisons`,
+  pricingComparisons: (locale = 'vi') => `${PREFIX.PRICING}:comparisons:${locale}`,
 });
 
 const patterns = Object.freeze({
@@ -36,6 +36,8 @@ const patterns = Object.freeze({
   blogTags: () => `${PREFIX.BLOGS}:tags:*`,
   faqs: () => `${PREFIX.FAQS}:list:*`,
   pricingPlans: () => `${PREFIX.PRICING}:plans:*`,
+  pricingComparisons: () => `${PREFIX.PRICING}:comparisons:*`,
+  leadForms: () => `${PREFIX.SETTINGS}:lead-form:*`,
 });
 
 const get = async (key) => {

@@ -14,6 +14,7 @@ export const faqsService = {
   deleteFaq: (id) => axiosClient.delete(`/admin/faqs/${id}`),
   reorder: (orderedIds, scope = {}) => axiosClient.patch('/admin/faqs/reorder', { orderedIds, ...scope }).then((res) => res?.data),
   getSuggestions: (search) => axiosClient.get('/admin/faqs/search-suggestions', { params: { search } }).then((res) => res?.data),
+  translatePreview: (payload) => axiosClient.post('/admin/faqs/translate-preview', payload).then((res) => res?.data),
 }
 
 // CLIENT (public)

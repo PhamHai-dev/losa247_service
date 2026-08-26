@@ -9,6 +9,7 @@ router.use(authMiddleware('admin'));
 router.get('/search-suggestions', requirePermission('faqs.view'), faqsController.searchSuggestions);
 router.get('/stats', requirePermission('faqs.view'), faqsController.getStats);
 router.get('/', requirePermission('faqs.view'), faqsController.getFaqs);
+router.post('/translate-preview', requirePermission('faqs.update'), faqsController.translatePreview);
 router.post('/', requirePermission('faqs.create'), invalidateFaqs, faqsController.createFaq);
 router.patch('/reorder', requirePermission('faqs.update'), invalidateFaqs, faqsController.reorderFaqs);
 router.put('/:id', requirePermission('faqs.update'), invalidateFaqs, faqsController.updateFaq);

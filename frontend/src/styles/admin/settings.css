@@ -152,6 +152,53 @@
     gap: 10px
 }
 
+.settings-drawer .ant-btn {
+    color: #475569;
+    border-color: #dfe7ee;
+    background: #fff;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: color .2s ease, background-color .2s ease, border-color .2s ease
+}
+
+.settings-drawer .ant-btn:not(:disabled):not(.ant-btn-text):not(.ant-btn-primary):hover {
+    color: #0f766e !important;
+    border-color: #b5ddd8 !important;
+    background: #f7fcfb !important;
+    box-shadow: none !important;
+    transform: none !important
+}
+
+.settings-drawer .ant-btn-primary,
+.settings-drawer .ant-btn-primary:not(:disabled) {
+    color: #fff !important;
+    border-color: #0d9488 !important;
+    background: #0d9488 !important;
+    box-shadow: none !important;
+    transform: none !important
+}
+
+.settings-drawer .ant-btn-primary:not(:disabled):hover {
+    color: #fff !important;
+    border-color: #0c857b !important;
+    background: #0c857b !important;
+    box-shadow: none !important;
+    transform: none !important
+}
+
+.settings-drawer .ant-btn-primary:not(:disabled):active {
+    color: #fff !important;
+    border-color: #0f766e !important;
+    background: #0f766e !important;
+    box-shadow: none !important;
+    transform: none !important
+}
+
+.settings-drawer .ant-btn-text:not(:disabled):hover {
+    box-shadow: none !important;
+    transform: none !important
+}
+
 .settings-form .ant-form-item-label label {
     font-weight: 650
 }
@@ -324,10 +371,100 @@
 .form-field-switches {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 18px;
     padding-top: 2px;
     color: #475569;
     font-size: 13px
+}
+
+.form-field-switches label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none
+}
+
+.form-language-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 6px;
+    border: 1px solid #dbe8e6;
+    border-radius: 14px;
+    background: #f4f8f7
+}
+
+.form-language-tabs {
+    display: flex;
+    gap: 4px
+}
+
+.form-language-tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #64748b;
+    font-weight: 650;
+    cursor: pointer;
+    transition: all .2s ease
+}
+
+.form-language-tabs button.active {
+    background: #fff;
+    color: #0f766e;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, .12)
+}
+
+.form-language-tabs small {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 10px
+}
+
+.form-language-panel>.ant-alert {
+    margin-bottom: 16px
+}
+
+.translated-fields-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 6px 0 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ecfeff, #eff6ff)
+}
+
+.translated-fields-heading span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px
+}
+
+.translated-fields-heading strong {
+    color: #164e63;
+    font-size: 13px
+}
+
+.translated-fields-heading small {
+    color: #64748b;
+    font-size: 11px
+}
+
+.form-field-card--translation {
+    border-color: #d8e5fb;
+    background: linear-gradient(145deg, #fff, #f6f9ff)
 }
 
 @media(max-width:640px) {

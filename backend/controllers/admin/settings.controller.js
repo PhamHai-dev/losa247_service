@@ -1,7 +1,8 @@
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const uploadHelper = require('../../helpers/upload');
-const { leadFormConfigSchema, normalizeLeadFormConfig } = require('../../validators/leadForm.validator');
+const { leadFormConfigSchema, englishSchema, normalizeLeadFormConfig, resolveLeadFormConfig } = require('../../validators/leadForm.validator');
+const { translateLeadFormPreview } = require('../../services/geminiService');
 
 const serialize = (settings) => ({
   appearance: { themeMode: settings.themeMode, accentColor: settings.accentColor },
@@ -20,6 +21,22 @@ const getSettings = async () => {
 exports.getLeadForm = async (_req, res, next) => {
   try { return res.json({ success: true, data: normalizeLeadFormConfig((await getSettings()).leadFormConfig) }); }
   catch (err) { return next(err); }
+};
+exports.getPublicLeadForm = async (req, res, next) => {
+  try { return res.json({ success: true, data: resolveLeadFormConfig((await getSettings()).leadFormConfig, req.query.locale) }); }
+  catch (err) { return next(err); }
+};
+exports.translateLeadFormPreview = async (req, res, next) => {
+  try {
+    const source = { title: req.body.title, submitLabel: req.body.submitLabel, fields: (req.body.fields || []).map(({ id, label, placeholder, options }) => ({ id, label, placeholder: placeholder || '', options: options || [] })) };
+    const preview = englishSchema.parse(await translateLeadFormPreview(source));
+    if (source.fields.some((field, index) => field.id !== preview.fields[index]?.id || field.options.length !== preview.fields[index]?.options.length)) return res.status(502).json({ success: false, error: { code: 'GEMINI_INVALID_RESPONSE', message: 'Bản dịch không khớp cấu trúc form' } });
+    return res.json({ success: true, data: preview, message: 'Bản dịch chỉ là preview và chưa được lưu' });
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: err.issues?.[0]?.message } });
+    if (err.statusCode) return res.status(err.statusCode).json({ success: false, error: { code: err.code || 'GEMINI_ERROR', message: err.message } });
+    return next(err);
+  }
 };
 exports.updateLeadForm = async (req, res, next) => {
   try {

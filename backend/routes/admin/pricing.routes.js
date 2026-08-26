@@ -6,13 +6,14 @@ const { requirePermission } = require('../../middlewares/rbac.middleware');
 const cache = require('../../services/cacheService');
 
 const invalidatePlans = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingPlans()] }));
-const invalidateComparisons = cache.invalidateAfterSuccess(() => ({ keys: [cache.keys.pricingComparisons()] }));
-const invalidatePlanDelete = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingPlans()], keys: [cache.keys.pricingComparisons()] }));
+const invalidateComparisons = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingComparisons()] }));
+const invalidatePlanDelete = cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.pricingPlans(), cache.patterns.pricingComparisons()] }));
 
 router.use(authMiddleware('admin'));
 
 router.get('/plans', requirePermission('pricing.view'), pricingController.getPlans);
 router.get('/stats', requirePermission('pricing.view'), pricingController.getStats);
+router.post('/translate-preview', requirePermission('pricing.update'), pricingController.translatePreview);
 router.get('/plans/:id', requirePermission('pricing.view'), pricingController.getPlanById);
 router.post('/plans', requirePermission('pricing.create'), invalidatePlans, pricingController.createPlan);
 router.put('/plans/:id', requirePermission('pricing.update'), invalidatePlans, pricingController.updatePlan);

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import {
   Alert, App, Button, Col, Drawer, Form, Input, InputNumber, Popconfirm, Row,
-  Select, Space, Table, Tag, Typography,
+  Select, Table, Tag, Typography,
 } from 'antd'
 import {
   ArrowDownOutlined, ArrowUpOutlined, BookOutlined, CheckOutlined, DeleteOutlined,
   EditOutlined, FileTextOutlined, HomeOutlined, MessageOutlined, PlusOutlined,
-  QuestionCircleOutlined, ReloadOutlined, SearchOutlined, TagsOutlined,
+  QuestionCircleOutlined, ReloadOutlined, SearchOutlined, TagsOutlined, TranslationOutlined,
 } from '@ant-design/icons'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useListParams } from '../../hooks/useListParams'
@@ -37,6 +37,7 @@ export function AdminFaqs() {
   const [activeTab, setActiveTab] = useState('home')
   const [selectedService, setSelectedService] = useState()
   const [saving, setSaving] = useState(false)
+  const [translating, setTranslating] = useState(false)
   const [movingId, setMovingId] = useState(null)
   const [form] = Form.useForm()
   const { search, onSearch, debounced, page, setPage, pageSize } = useListParams()
@@ -56,7 +57,16 @@ export function AdminFaqs() {
     setPage(1)
   }
   const openDrawer = (row = null) => {
-    const values = row || { page: activeTab, serviceDetail: needsService ? selectedService : undefined, question: '', answer: '', order: 0 }
+    const values = row ? {
+      ...row,
+      translations: {
+        vi: row.translations?.vi || { question: row.question || '', answer: row.answer || '' },
+        en: row.translations?.en || { question: '', answer: '' },
+      },
+    } : {
+      page: activeTab, serviceDetail: needsService ? selectedService : undefined, order: 0,
+      translations: { vi: { question: '', answer: '' }, en: { question: '', answer: '' } },
+    }
     setEditing(row)
     form.setFieldsValue(values)
     setOpen(true)
@@ -68,6 +78,8 @@ export function AdminFaqs() {
       const values = await form.validateFields()
       setSaving(true)
       if (!['solutions', 'pricing'].includes(values.page)) delete values.serviceDetail
+      const english = values.translations?.en
+      if (!english?.question?.trim() && !english?.answer?.trim()) delete values.translations.en
       if (editing?._id) await faqsService.updateFaq(editing._id, values)
       else await faqsService.createFaq(values)
       message.success(editing ? 'Đã cập nhật câu hỏi' : 'Đã tạo câu hỏi mới')
@@ -75,6 +87,17 @@ export function AdminFaqs() {
     } catch (error) {
       if (!error?.errorFields) message.error(errorMessage(error, 'Không lưu được câu hỏi'))
     } finally { setSaving(false) }
+  }
+  const translate = async () => {
+    try {
+      const source = await form.validateFields([['translations', 'vi', 'question'], ['translations', 'vi', 'answer']])
+      setTranslating(true)
+      const preview = await faqsService.translatePreview(source.translations.vi)
+      form.setFieldValue(['translations', 'en'], preview)
+      message.success('Đã tạo bản dịch English. Hãy kiểm tra trước khi lưu.')
+    } catch (error) {
+      if (!error?.errorFields) message.error(errorMessage(error, 'Không thể dịch câu hỏi bằng Gemini'))
+    } finally { setTranslating(false) }
   }
   const remove = async (row) => {
     try { await faqsService.deleteFaq(row._id); message.success('Đã xóa câu hỏi'); refresh() }
@@ -98,6 +121,7 @@ export function AdminFaqs() {
     { title: 'Nội dung hỏi đáp', key: 'content', minWidth: 390, render: (_, row) => <div className="faq-content-cell"><span><QuestionCircleOutlined /></span><div><strong>{row.question}</strong><p>{row.answer}</p></div></div> },
     { title: 'Khu vực', dataIndex: 'page', key: 'page', width: 145, render: (value) => <Tag className={`faq-page-tag ${value}`}>{pageLabel(value)}</Tag> },
     { title: 'Dịch vụ', dataIndex: 'serviceDetail', key: 'service', width: 125, render: (value) => value ? <span className="faq-service-tag">{serviceLabel(value)}</span> : <span className="faq-muted">Nội dung chung</span> },
+    { title: 'Dịch', key: 'translation', width: 125, render: (_, row) => row.hasEnglish ? <Tag color="success">English</Tag> : <Tag color="warning">Thiếu English</Tag> },
     { title: 'Cập nhật', dataIndex: 'updatedAt', key: 'updatedAt', width: 145, render: (value) => <span className="faq-date">{value ? formatDate(value) : '—'}</span> },
     { title: 'Thao tác', key: 'action', fixed: 'right', width: 110, render: (_, row) => <div className="faq-row-actions"><Button type="text" icon={<EditOutlined />} aria-label={`Sửa ${row.question}`} onClick={() => openDrawer(row)} /><Popconfirm title="Xóa câu hỏi?" description="Câu hỏi sẽ bị xóa khỏi website." onConfirm={() => remove(row)}><Button type="text" danger icon={<DeleteOutlined />} aria-label={`Xóa ${row.question}`} /></Popconfirm></div> },
   ]
@@ -130,7 +154,7 @@ export function AdminFaqs() {
       <Table className="faqs-table" rowKey="_id" loading={query.loading} columns={columns} dataSource={rows} scroll={{ x: 1100 }} locale={{ emptyText: <FaqEmpty /> }} pagination={{ current: page, pageSize, total, onChange: setPage, showSizeChanger: false, showTotal: (count) => `Tổng ${count} câu hỏi` }} />
     </section>
 
-    <FaqDrawer open={open} editing={editing} form={form} saving={saving} activeTab={activeTab} selectedService={selectedService} onClose={closeDrawer} onSubmit={submit} />
+    <FaqDrawer open={open} editing={editing} form={form} saving={saving} translating={translating} activeTab={activeTab} selectedService={selectedService} onClose={closeDrawer} onSubmit={submit} onTranslate={translate} />
   </main>
 }
 
@@ -142,17 +166,28 @@ function FaqEmpty() {
   return <div className="faqs-empty"><QuestionCircleOutlined /><strong>Chưa có câu hỏi trong khu vực này</strong><span>Thử thay đổi bộ lọc hoặc tạo nội dung mới.</span></div>
 }
 
-function FaqDrawer({ open, editing, form, saving, activeTab, selectedService, onClose, onSubmit }) {
-  return <Drawer className="faqs-drawer" title={null} width={640} open={open} onClose={onClose} destroyOnClose>
-    <div className="faqs-drawer-header"><span><QuestionCircleOutlined /></span><div><Title level={4}>{editing ? 'Chỉnh sửa câu hỏi' : 'Tạo câu hỏi mới'}</Title><Text>Nội dung được công khai tại khu vực bạn lựa chọn.</Text></div></div>
+function FaqDrawer({ open, editing, form, saving, translating, activeTab, selectedService, onClose, onSubmit, onTranslate }) {
+  const [activeLocale, setActiveLocale] = useState('vi')
+  const englishQuestion = Form.useWatch(['translations', 'en', 'question'], form)
+  const englishAnswer = Form.useWatch(['translations', 'en', 'answer'], form)
+  const hasEnglish = Boolean(englishQuestion?.trim() && englishAnswer?.trim())
+  const contentFields = (locale) => <div className="faq-language-panel" key={locale}>
+    <Form.Item name={['translations', locale, 'question']} label={locale === 'vi' ? 'Câu hỏi' : 'Question'} rules={locale === 'vi' ? [{ required: true, whitespace: true, message: 'Vui lòng nhập câu hỏi' }, { max: 300, message: 'Tối đa 300 ký tự' }] : [{ max: 300, message: 'Tối đa 300 ký tự' }]}><Input id={`faq-form-question-${locale}`} showCount maxLength={300} placeholder={locale === 'vi' ? 'Ví dụ: Tôi có thể dùng thử dịch vụ trước khi đăng ký không?' : 'English question...'} /></Form.Item>
+    <Form.Item name={['translations', locale, 'answer']} label={locale === 'vi' ? 'Câu trả lời' : 'Answer'} dependencies={locale === 'en' ? [['translations', 'en', 'question']] : undefined} rules={locale === 'vi' ? [{ required: true, whitespace: true, message: 'Vui lòng nhập câu trả lời' }, { max: 5000, message: 'Tối đa 5000 ký tự' }] : [({ getFieldValue }) => ({ validator(_, value) { const question = getFieldValue(['translations', 'en', 'question']); if (!question?.trim() && !value?.trim()) return Promise.resolve(); if (!question?.trim() || !value?.trim()) return Promise.reject(new Error('Question và Answer English phải được nhập đầy đủ')); return Promise.resolve() } }), { max: 5000, message: 'Tối đa 5000 ký tự' }]}><Input.TextArea id={`faq-form-answer-${locale}`} rows={8} showCount maxLength={5000} placeholder={locale === 'vi' ? 'Trình bày câu trả lời đầy đủ nhưng dễ quét nội dung...' : 'English answer...'} /></Form.Item>
+  </div>
+  return <Drawer className="faqs-drawer" title={null} width={680} open={open} onClose={onClose} destroyOnClose afterOpenChange={(visible) => { if (visible) setActiveLocale('vi') }}>
+    <div className="faqs-drawer-header"><span><QuestionCircleOutlined /></span><div><Title level={4}>{editing ? 'Chỉnh sửa câu hỏi' : 'Tạo câu hỏi mới'}</Title><Text>Quản lý nội dung Tiếng Việt và English trong cùng một câu hỏi.</Text></div></div>
     <Form form={form} layout="vertical" requiredMark={false} className="faqs-form" initialValues={{ page: activeTab, serviceDetail: selectedService, order: 0 }}>
       <section className="faqs-form-section"><div className="faqs-form-title"><span>01</span><div><strong>Vị trí hiển thị</strong><small>Chọn đúng ngữ cảnh để khách hàng dễ tìm thấy</small></div></div>
         <Row gutter={14}><Col span={16}><Form.Item name="page" label="Khu vực trên website" rules={[{ required: true, message: 'Vui lòng chọn khu vực' }]}><Select id="faq-form-page" options={PAGE_OPTIONS.map(({ value, label }) => ({ value, label }))} onChange={(value) => { if (!['solutions', 'pricing'].includes(value)) form.setFieldValue('serviceDetail', undefined) }} /></Form.Item></Col><Col span={8}><Form.Item name="order" label="Thứ tự"><InputNumber min={0} style={{ width: '100%' }} /></Form.Item></Col></Row>
         <Form.Item noStyle shouldUpdate={(previous, current) => previous.page !== current.page}>{({ getFieldValue }) => ['solutions', 'pricing'].includes(getFieldValue('page')) ? <Form.Item name="serviceDetail" label="Dịch vụ chi tiết"><Select id="faq-form-service" allowClear placeholder="Nội dung chung hoặc chọn dịch vụ" options={SERVICE_OPTIONS} /></Form.Item> : null}</Form.Item>
       </section>
-      <section className="faqs-form-section"><div className="faqs-form-title"><span>02</span><div><strong>Nội dung hỏi đáp</strong><small>Viết ngắn gọn, trực tiếp và dễ hiểu</small></div></div>
-        <Form.Item name="question" label="Câu hỏi" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập câu hỏi' }, { max: 300, message: 'Tối đa 300 ký tự' }]}><Input id="faq-form-question" showCount maxLength={300} placeholder="Ví dụ: Tôi có thể dùng thử dịch vụ trước khi đăng ký không?" /></Form.Item>
-        <Form.Item name="answer" label="Câu trả lời" rules={[{ required: true, whitespace: true, message: 'Vui lòng nhập câu trả lời' }, { max: 5000, message: 'Tối đa 5000 ký tự' }]}><Input.TextArea id="faq-form-answer" rows={8} showCount maxLength={5000} placeholder="Trình bày câu trả lời đầy đủ nhưng dễ quét nội dung..." /></Form.Item>
+      <section className="faqs-form-section"><div className="faqs-form-title faq-content-title"><span>02</span><div><strong>Nội dung hỏi đáp</strong><small>Tiếng Việt là bản gốc, English có thể tạo bằng Gemini</small></div>{activeLocale === 'en' && <Button id="faq-translate" type="primary" icon={<TranslationOutlined />} loading={translating} onClick={onTranslate}>Dịch bằng Gemini</Button>}</div>
+        <nav className="faq-language-tabs" aria-label="Ngôn ngữ hỏi đáp">
+          <button id="faq-language-tab-vi" type="button" className={activeLocale === 'vi' ? 'active' : ''} onClick={() => setActiveLocale('vi')}><span>Tiếng Việt</span></button>
+          <button id="faq-language-tab-en" type="button" className={activeLocale === 'en' ? 'active' : ''} onClick={() => setActiveLocale('en')}><span>English</span>{hasEnglish && <small>Đã có</small>}</button>
+        </nav>
+        {contentFields(activeLocale)}
       </section>
     </Form>
     <div className="faqs-drawer-actions"><Button onClick={onClose}>Hủy</Button><Button id="faq-save" type="primary" icon={<CheckOutlined />} loading={saving} onClick={onSubmit}>{editing ? 'Lưu thay đổi' : 'Tạo câu hỏi'}</Button></div>

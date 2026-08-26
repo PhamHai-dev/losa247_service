@@ -5,6 +5,7 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
 const upload = require('../../config/multer');
 const cache = require('../../services/cacheService');
+const { geminiPreviewLimiter } = require('../../middlewares/rateLimit.middleware');
 
 router.use(authMiddleware('admin'));
 
@@ -13,7 +14,8 @@ router.put('/appearance', requirePermission('settings.update'), cache.invalidate
 router.get('/site-info', requirePermission('settings.view'), settingsController.getSiteInfo);
 router.put('/site-info', requirePermission('settings.update'), cache.invalidateAfterSuccess(() => ({ keys: [cache.keys.siteInfo()] })), settingsController.updateSiteInfo);
 router.get('/lead-form', requirePermission('settings.view'), settingsController.getLeadForm);
-router.put('/lead-form', requirePermission('settings.update'), cache.invalidateAfterSuccess(() => ({ keys: [cache.keys.leadForm()] })), settingsController.updateLeadForm);
+router.post('/lead-form/translate-preview', requirePermission('settings.update'), geminiPreviewLimiter, settingsController.translateLeadFormPreview);
+router.put('/lead-form', requirePermission('settings.update'), cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.leadForms()] })), settingsController.updateLeadForm);
 router.post('/upload-asset', requirePermission('settings.update'), upload.single('file'), settingsController.uploadAsset);
 
 module.exports = router;
