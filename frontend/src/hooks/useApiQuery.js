@@ -31,7 +31,7 @@ export function useApiQuery(fetcher, deps = [], { enabled = true, initialData = 
       return
     }
     run()
-    
+
     if (refetchInterval) {
       const id = setInterval(run, refetchInterval)
       return () => clearInterval(id)

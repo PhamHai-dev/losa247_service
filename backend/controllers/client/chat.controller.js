@@ -1,73 +1,94 @@
+const crypto = require('crypto');
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
 const { verifyToken } = require('../../helpers/token');
 const uploadHelper = require('../../helpers/upload');
+const { createCustomerMessage } = require('../../services/chat/messageService');
+const { takeover } = require('../../services/chat/handoffService');
+const { publish } = require('../../services/realtime/eventPublisher');
+const { subscribe } = require('../../services/realtime/sseHub');
+const { createSessionToken, hashSessionToken, matchesSessionToken } = require('../../services/realtime/streamTicketService');
+
+const resolveCustomerId = (req) => {
+  if (!req.headers.authorization?.startsWith('Bearer ')) return null;
+  try { return verifyToken(req.headers.authorization.slice(7), 'client', 'access').id; } catch { return null; }
+};
+const sessionToken = (req) => req.get('x-chat-session-token') || req.query.token;
+const getAuthorizedSession = async (req, sessionId) => {
+  const session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
+  if (!session) return null;
+  const customerId = resolveCustomerId(req);
+  if ((customerId && session.customerId === customerId) || matchesSessionToken(sessionToken(req), session.sessionTokenHash)) return session;
+  return null;
+};
+const deny = (res) => res.status(403).json({ success: false, error: { code: 'SESSION_FORBIDDEN', message: 'Không có quyền truy cập phiên chat' } });
 
 exports.startSession = async (req, res, next) => {
   try {
     const { customerName, customerPhone } = req.body;
-    let customerId = null;
-    if (req.headers.authorization?.startsWith('Bearer')) {
-      try {
-        customerId = verifyToken(req.headers.authorization.split(' ')[1], 'client', 'access').id;
-      } catch {
-        /* Khách chưa đăng nhập vẫn có thể bắt đầu phiên chat ẩn danh. */
-      }
-    }
+    const customerId = resolveCustomerId(req);
     if (customerId) {
-      let existing = await prisma.chatSession.findFirst({
-        where: { customerId },
-        orderBy: { createdAt: 'desc' },
-      });
+      const existing = await prisma.chatSession.findFirst({ where: { customerId, status: 'open' }, orderBy: { createdAt: 'desc' } });
       if (existing) {
-        if (customerName || customerPhone)
-          existing = await prisma.chatSession.update({
-            where: { id: existing.id },
-            data: {
-              ...(customerName ? { customerName } : {}),
-              ...(customerPhone ? { customerPhone } : {}),
-            },
-          });
-        return res.status(200).json({ success: true, data: toLegacyEntity(existing) });
+        const token = createSessionToken();
+        const secured = await prisma.chatSession.update({ where: { id: existing.id }, data: { sessionTokenHash: hashSessionToken(token), ...(customerName ? { customerName } : {}), ...(customerPhone ? { customerPhone } : {}) } });
+        return res.json({ success: true, data: { ...toLegacyEntity(secured), sessionToken: token } });
       }
     }
-    const session = await prisma.chatSession.create({
-      data: {
-        id: createEntityId(),
-        customerName: customerName || null,
-        customerPhone: customerPhone || null,
-        customerId,
-        mode: 'bot',
-        status: 'open',
-      },
-    });
-    return res.status(201).json({ success: true, data: toLegacyEntity(session) });
-  } catch (err) {
-    return next(err);
-  }
+    const token = createSessionToken();
+    const session = await prisma.chatSession.create({ data: { id: createEntityId(), customerName: customerName || null, customerPhone: customerPhone || null, customerId, sessionTokenHash: hashSessionToken(token), mode: 'bot', status: 'open' } });
+    return res.status(201).json({ success: true, data: { ...toLegacyEntity(session), sessionToken: token } });
+  } catch (err) { return next(err); }
 };
 
 exports.getSessionMessages = async (req, res, next) => {
   try {
-    const rows = await prisma.chatMessage.findMany({
-      where: { sessionId: req.params.sessionId },
-      orderBy: { createdAt: 'asc' },
-    });
+    if (!await getAuthorizedSession(req, req.params.sessionId)) return deny(res);
+    const after = req.query.after ? new Date(req.query.after) : null;
+    const rows = await prisma.chatMessage.findMany({ where: { sessionId: req.params.sessionId, ...(after && !Number.isNaN(after.valueOf()) ? { createdAt: { gt: after } } : {}) }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: 200 });
     return res.json({ success: true, data: rows.map(toLegacyEntity) });
-  } catch (err) {
-    return next(err);
-  }
+  } catch (err) { return next(err); }
 };
+
+exports.sendMessage = async (req, res, next) => {
+  try {
+    const session = await getAuthorizedSession(req, req.params.sessionId);
+    if (!session) return deny(res);
+    const result = await createCustomerMessage({ sessionId: session.id, clientMessageId: req.body.clientMessageId || crypto.randomUUID(), content: String(req.body.content || '').trim(), attachmentIds: Array.isArray(req.body.attachmentIds) ? req.body.attachmentIds : [] });
+    const message = toLegacyEntity(result.message);
+    if (!result.duplicate) await publish({ type: 'message.created', sessionId: session.id, data: message });
+    return res.status(result.duplicate ? 200 : 201).json({ success: true, duplicate: result.duplicate, data: message });
+  } catch (err) { return next(err); }
+};
+
+exports.requestHuman = async (req, res, next) => {
+  try {
+    const current = await getAuthorizedSession(req, req.params.sessionId);
+    if (!current) return deny(res);
+    const session = current.mode === 'human' ? current : await takeover({ sessionId: current.id, expectedVersion: current.version, adminId: null, reason: 'customer_request' });
+    await publish({ type: 'session.mode_changed', sessionId: session.id, data: { mode: 'human', version: session.version } });
+    return res.json({ success: true, data: toLegacyEntity(session) });
+  } catch (err) { return next(err); }
+};
+
+exports.streamEvents = async (req, res, next) => {
+  try {
+    const session = await getAuthorizedSession(req, req.params.sessionId);
+    if (!session) return deny(res);
+    return subscribe({ req, res, scope: 'session', principalId: session.id });
+  } catch (err) { return next(err); }
+};
+
 exports.uploadAttachment = async (req, res, next) => {
   try {
-    if (!req.file)
-      return res
-        .status(400)
-        .json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng chọn file' } });
-    const secureUrl = await uploadHelper.uploadToCloudinary(req.file);
-    return res.json({ success: true, data: { url: secureUrl } });
-  } catch (err) {
-    return next(err);
-  }
+    if (!req.file) return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng chọn file' } });
+    const session = await getAuthorizedSession(req, req.body.sessionId);
+    if (!session) return deny(res);
+    const id = createEntityId();
+    const result = await uploadHelper.uploadChatAttachment(req.file, { sessionId: session.id, attachmentId: id });
+    const row = await prisma.chatAttachment.create({ data: { id, sessionId: session.id, publicId: result.public_id, resourceType: result.resource_type || 'image', deliveryType: result.type || 'authenticated', format: result.format || null, originalName: req.file.originalname, mimeType: req.file.mimetype, size: BigInt(req.file.size), sha256: crypto.createHash('sha256').update(req.file.buffer).digest('hex'), width: result.width || null, height: result.height || null } });
+    return res.status(201).json({ success: true, data: { id: row.id, url: uploadHelper.createAuthenticatedUrl(row), mimeType: row.mimeType } });
+  } catch (err) { return next(err); }
 };
+

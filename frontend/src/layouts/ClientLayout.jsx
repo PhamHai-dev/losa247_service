@@ -6,7 +6,7 @@ import { Drawer, Form, message } from 'antd'
 import { useAuthStore } from '../stores/authStore'
 import { useUIStore } from '../stores/uiStore'
 import { clientChatService } from '../features/chat/chatService'
-import { useChatSocket } from '../features/chat/useChatSocket'
+import { useChatRealtime } from '../features/chat/useChatRealtime'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { settingsService } from '../features/settings/settingsService'
 import { leadsService } from '../features/leads/leadsService'
@@ -42,6 +42,7 @@ function ChatWidget({ user }) {
   const { locale, t, localizedPath } = useI18n()
   const [open, setOpen] = useState(false)
   const [sessionId, setSessionId] = useState(null)
+  const [sessionToken, setSessionToken] = useState(null)
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -53,10 +54,11 @@ function ChatWidget({ user }) {
   const imageInputRef = useRef(null)
   const emojiPickerRef = useRef(null)
 
-  const { sendMessage, joinSession } = useChatSocket(sessionId, {
-    role: 'customer',
-    onMessage: (msg) => setMessages((prev) => [...prev, msg]),
+  const appendMessage = (incoming) => setMessages((prev) => {
+    const id = incoming?._id || incoming?.id
+    return id && prev.some((item) => (item._id || item.id) === id) ? prev : [...prev, incoming]
   })
+  useChatRealtime({ sessionId, sessionToken, role: 'customer', onMessage: appendMessage })
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -77,6 +79,7 @@ function ChatWidget({ user }) {
 
   useEffect(() => {
     setSessionId(null)
+    setSessionToken(null)
     setMessages([])
     setOpen(false)
   }, [user])
@@ -91,13 +94,15 @@ function ChatWidget({ user }) {
       }
       const session = await clientChatService.createSession(payload)
       setSessionId(session._id)
+      const token = session.sessionToken || null
+      setSessionToken(token)
 
-      const history = await clientChatService.getMessages(session._id)
+      const history = await clientChatService.getMessages(session._id, token)
       if (history && history.length > 0) {
         setMessages(history)
       }
 
-      return session._id
+      return { id: session._id, token }
     } catch {
       return null
     }
@@ -118,13 +123,12 @@ function ChatWidget({ user }) {
     if (!file) return
     setUploading(true)
     try {
-      const id = await ensureSession()
-      if (!id) throw new Error('Không thể tạo phiên chat')
-      joinSession(id)
+      const credentials = sessionId ? { id: sessionId, token: sessionToken } : await ensureSession()
+      if (!credentials?.id) throw new Error('Không thể tạo phiên chat')
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('sessionId', id)
-      const data = await clientChatService.uploadAttachment(formData)
+      formData.append('sessionId', credentials.id)
+      const data = await clientChatService.uploadAttachment(formData, credentials.token)
       if (data?.id && data?.url) setAttachments(prev => [...prev, data])
     } catch (err) {
       console.error('Lỗi tải file:', err)
@@ -137,16 +141,19 @@ function ChatWidget({ user }) {
 
   const send = async () => {
     if (!text.trim() && !attachments.length) return
-    let id = sessionId
-    if (!id) {
-      id = await ensureSession()
-      if (id) joinSession(id)
-    }
-    if (!id) return
-    sendMessage(text, attachments, id)
-    setText('')
-    setAttachments([])
-    setShowEmojiPicker(false)
+    const credentials = sessionId ? { id: sessionId, token: sessionToken } : await ensureSession()
+    if (!credentials?.id) return
+    try {
+      const saved = await clientChatService.sendMessage(credentials.id, credentials.token, {
+        clientMessageId: globalThis.crypto?.randomUUID?.() || `${Date.now()}`,
+        content: text,
+        attachmentIds: attachments.map((item) => item.id),
+      })
+      appendMessage(saved)
+      setText('')
+      setAttachments([])
+      setShowEmojiPicker(false)
+    } catch { message.error('Không thể gửi tin nhắn') }
   }
 
   const onEmojiClick = (emojiObject) => {

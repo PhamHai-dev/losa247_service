@@ -29,7 +29,7 @@ import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
-import { useChatSocket } from '../../features/chat/useChatSocket'
+import { useChatRealtime } from '../../features/chat/useChatRealtime'
 import { useAuthStore } from '../../stores/authStore'
 import dayjs from 'dayjs'
 
@@ -117,11 +117,14 @@ export function AdminChat() {
     })
   }
 
-  const { sendMessage } = useChatSocket(canView ? activeId : null, {
-    role: canReply ? 'admin' : 'viewer',
+  useChatRealtime({
+    role: 'admin',
     enabled: canView,
-    onMessage: appendMessage,
-    onPermissionError: () => message.error('Bạn không có quyền phản hồi hội thoại'),
+    onMessage: (incoming, envelope) => {
+      appendMessage(incoming)
+      if (envelope.sessionId !== activeId) sessionsQ.refetch()
+    },
+    onModeChange: () => sessionsQ.refetch(),
   })
 
   const active = useMemo(() => sessions.find((s) => s._id === activeId), [sessions, activeId])
@@ -148,13 +151,16 @@ export function AdminChat() {
     }
   }
 
-  const send = () => {
+  const send = async () => {
     if (!canReply) return message.error('Bạn không có quyền phản hồi hội thoại')
     if (!text.trim() && !attachments.length) return
-    sendMessage(text, attachments)
-    setText('')
-    setAttachments([])
-    setShowEmojiPicker(false)
+    try {
+      const saved = await chatService.sendMessage(activeId, { content: text, attachments })
+      appendMessage(saved)
+      setText('')
+      setAttachments([])
+      setShowEmojiPicker(false)
+    } catch (error) { message.error(error?.error?.message || 'Không thể gửi tin nhắn') }
   }
 
   const onEmojiClick = (emojiObject) => {

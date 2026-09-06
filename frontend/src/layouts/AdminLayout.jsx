@@ -90,18 +90,26 @@ function SubMenuItem({ item, onNavigate }) {
 export function AdminLayout() {
   const navigate = useNavigate()
   const { user, authType, initialized, logout } = useAuthStore()
-  const { notifications, unreadCount, fetchNotifications, markAsRead, initSocket, disconnectSocket } = useNotificationStore()
+  const { notifications, unreadCount, fetchNotifications, markAsRead, initRealtime, disconnectRealtime } = useNotificationStore()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notifVisible, setNotifVisible] = useState(false)
 
   useEffect(() => {
-    if (initialized && authType === 'admin' && user) {
-      fetchNotifications()
-      initSocket()
+    if (!(initialized && authType === 'admin' && user)) return undefined
+
+    fetchNotifications()
+    initRealtime()
+    const syncTimer = window.setInterval(fetchNotifications, 15000)
+    const syncOnFocus = () => { if (document.visibilityState === 'visible') fetchNotifications() }
+    document.addEventListener('visibilitychange', syncOnFocus)
+
+    return () => {
+      window.clearInterval(syncTimer)
+      document.removeEventListener('visibilitychange', syncOnFocus)
+      disconnectRealtime()
     }
-    return () => disconnectSocket()
-  }, [initialized, authType, user])
+  }, [initialized, authType, user, fetchNotifications, initRealtime, disconnectRealtime])
 
   const handleLogout = async () => {
     await logout()
@@ -223,7 +231,10 @@ export function AdminLayout() {
               trigger="click"
               placement="bottomRight"
               open={notifVisible}
-              onOpenChange={setNotifVisible}
+              onOpenChange={(open) => {
+                setNotifVisible(open)
+                if (open) fetchNotifications()
+              }}
             >
               <Badge count={unreadCount} overflowCount={99} size="small" style={{ cursor: 'pointer' }}>
                 <BellOutlined style={{ fontSize: 18, color: '#64748b', cursor: 'pointer' }} />

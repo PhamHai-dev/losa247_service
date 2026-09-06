@@ -29,7 +29,6 @@ import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
 import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
-import { useChatSocket } from '../../features/chat/useChatSocket'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography

@@ -1,7 +1,7 @@
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
-const { getIo } = require('../../config/socket');
+const { publish } = require('../../services/realtime/eventPublisher');
 const { normalizeLeadFormConfig, validateSubmission } = require('../../validators/leadForm.validator');
 
 exports.createLead = async (req, res, next) => {
@@ -22,7 +22,7 @@ exports.createLead = async (req, res, next) => {
       return { lead, notification };
     });
     const legacyNotification = toLegacyEntity(notification);
-    getIo().of('/notifications').to('admin_notifications').emit('new_notification', legacyNotification);
+    await publish({ type: 'notification.created', data: legacyNotification });
     return res.status(201).json({ success: true, data: toLegacyEntity(lead) });
   } catch (err) { return next(err); }
 };

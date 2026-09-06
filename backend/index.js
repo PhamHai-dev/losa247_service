@@ -6,14 +6,13 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const env = require('./config/env');
 const connectDB = require('./config/db');
-const { initSocket } = require('./config/socket');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const auditLogMiddleware = require('./middlewares/auditLog.middleware');
 
 // 1. Khởi tạo app Express
 const app = express();
 
-// 2. Tạo HTTP server để dùng cho cả Express và Socket.io
+// 2. Tạo HTTP server cho Express REST và các kết nối SSE
 const server = http.createServer(app);
 
 // 3. Gắn các middlewares cơ bản
@@ -43,11 +42,9 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 connectDB();
 const { getReadyClient } = require('./config/redis');
 void getReadyClient();
+void require('./services/realtime/eventPublisher').init();
 
-// 5. Initialize Sockets
-const io = initSocket(server);
-require('./sockets/chat.socket')(io);
-require('./sockets/notifications.socket')(io);
+// 5. REST + SSE realtime được khởi tạo qua eventPublisher ở trên.
 
 // 6. Mount routes
 const adminAuthRoutes = require('./routes/admin/auth.routes');

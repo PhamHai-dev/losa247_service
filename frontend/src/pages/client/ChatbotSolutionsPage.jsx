@@ -49,10 +49,37 @@ function CustomerMarquee({ en = false }) {
     </section>;
 }
 
-const businessBenefits = [
-    [Globe2, 'Chăm sóc khách hàng đa kênh', 'Hợp nhất Website, Messenger, Zalo và các nền tảng nhắn tin phổ biến trong một luồng vận hành liền mạch.', 'Phản hồi nhanh · Không bỏ sót hội thoại'],
-    [Send, 'Chủ động tiếp cận khách hàng tiềm năng', 'Thiết kế chiến dịch nhắn tin hàng loạt theo từng nhóm đối tượng để mở rộng tệp khách hàng và tạo thêm cơ hội bán hàng.', 'Đúng nhóm khách · Đúng thời điểm'],
-    [BrainCircuit, 'Remarketing cá nhân hóa bằng AI', 'AI phân tích nhu cầu và lịch sử tương tác để gửi thông điệp phù hợp, nuôi dưỡng khách cũ và thúc đẩy họ quay lại mua hàng.', 'Cá nhân hóa · Tăng khả năng chuyển đổi']
+const businessStories = [
+    {
+        icon: Clock3,
+        title: 'Không để khách hàng phải chờ đợi',
+        description: 'Losa tiếp nhận, phản hồi và tìm hiểu nhu cầu ngay cả khi đội ngũ đang bận hoặc ngoài giờ làm việc.',
+        result: 'Phản hồi kịp thời · Không bỏ sót hội thoại',
+        person: 'Thanh Hương', channel: 'Messenger', time: '21:38',
+        signal: ['Nhu cầu mới ngoài giờ', 'Văn phòng 60m² · Cần 3 máy lọc A2'],
+        actions: ['Tiếp nhận yêu cầu ngay lập tức', 'Xác định sản phẩm, số lượng và quy mô', 'Chuẩn bị đầy đủ ngữ cảnh cho đội ngũ'],
+        outcome: ['Một nhu cầu mới được giữ lại', 'Dù đội ngũ đang ngoài giờ làm việc']
+    },
+    {
+        icon: Send,
+        title: 'Xuất hiện đúng lúc khách hàng cần',
+        description: 'Tiếp cận nhóm khách đang quan tâm bằng nội dung phù hợp vào thời điểm doanh nghiệp thiết lập.',
+        result: 'Đúng khách · Đúng thông điệp · Đúng lúc',
+        person: 'Lan Anh', channel: 'Zalo OA', time: '09:00',
+        signal: ['Khách doanh nghiệp đang quan tâm', 'Đã xem mẫu A2 · Dự kiến cần 20 máy'],
+        actions: ['Nhận diện đúng nhóm khách phù hợp', 'Kích hoạt nội dung vào thời điểm đã chọn', 'Chuẩn bị chính sách theo số lượng'],
+        outcome: ['Sự quan tâm trở thành cơ hội bán hàng', 'Đội ngũ có đủ dữ liệu để tư vấn tiếp']
+    },
+    {
+        icon: BrainCircuit,
+        title: 'Cho khách hàng một lý do để quay lại',
+        description: 'Chăm sóc dựa trên dữ liệu và lịch sử tương tác hiện có, thay vì gửi những thông điệp đại trà.',
+        result: 'Chăm sóc phù hợp · Tăng cơ hội quay lại',
+        person: 'Minh Trang', channel: 'Messenger', time: '10:15',
+        signal: ['Nhu cầu cũ vừa trở nên phù hợp', 'Đã quan tâm A2 · Đang dùng 20 máy'],
+        actions: ['Đối chiếu lịch sử quan tâm hiện có', 'Chọn đúng bộ lọc và phiên bản phù hợp', 'Tạo cơ hội chăm sóc và báo giá lại'],
+        outcome: ['Khách hàng có lý do thực sự để quay lại', 'Nội dung đúng với sản phẩm họ đang sử dụng']
+    }
 ];
 const outcomes = [{ icon: Filter, label: 'TIẾP NHẬN THÔNG MINH', title: 'Không bỏ lỡ nhu cầu mới', text: 'AI phản hồi, đặt câu hỏi và nhận diện khách tiềm năng ngay từ tin nhắn đầu tiên.' }, { icon: ShoppingBag, label: 'TƯ VẤN THEO NGỮ CẢNH', title: 'Đưa khách đến quyết định nhanh hơn', text: 'Tư vấn đúng nhu cầu bằng dữ liệu sản phẩm, giá và tồn kho thực tế.' }, { icon: Database, label: 'DỮ LIỆU CÓ THỂ HÀNH ĐỘNG', title: 'Biến hội thoại thành dữ liệu', text: 'Tín hiệu quan trọng được lưu và đồng bộ để đội ngũ tiếp tục chăm sóc đúng lúc.' }];
 const caps = [{ id: 'lead', icon: BrainCircuit, kicker: 'Tiếp nhận & phân loại', title: 'Hiểu nhu cầu ngay từ tin nhắn đầu tiên', text: 'AI trò chuyện tự nhiên, hỏi đúng thông tin và nhận diện khách hàng tiềm năng để đội ngũ ưu tiên đúng cơ hội.', bullets: ['Hiểu ý định và ngữ cảnh', 'Thu thập thông tin có cấu trúc', 'Gán nhãn và chấm điểm lead', 'Đẩy dữ liệu sang đội ngũ phụ trách'] }, { id: 'vision', icon: Camera, kicker: 'AI Vision & OCR', title: 'Hiểu cả hình ảnh khách hàng gửi đến', text: 'AI phân tích ảnh ngay trong hội thoại để nhận diện sản phẩm, đọc mã và phản hồi theo đúng ngữ cảnh.', bullets: ['Nhận diện sản phẩm và mẫu mã', 'Đọc chữ, mã hoặc hóa đơn', 'Phân tích chi tiết hình ảnh', 'Kết hợp ảnh với câu hỏi của khách'] }, { id: 'quote', icon: Quote, kicker: 'Tư vấn & bán hàng', title: 'Biến hội thoại thành một quy trình bán hàng', text: 'Chatbot kết nối dữ liệu sản phẩm để tư vấn, kiểm tra tồn kho và tạo báo giá tức thì.', bullets: ['Tìm và gợi ý sản phẩm phù hợp', 'Kiểm tra giá và tồn kho', 'Tạo báo giá tự động', 'Thu thập thông tin chốt đơn'] }, { id: 'shipping', icon: Truck, kicker: 'Vận chuyển & chăm sóc', title: 'Tính phí ship và chăm sóc sau bán tự động', text: 'AI nhận địa chỉ, tra cứu phí vận chuyển và tiếp tục đồng hành sau khi khách đặt hàng.', bullets: ['Nhận và xác thực địa chỉ', 'Tính phí vận chuyển', 'Cập nhật trạng thái đơn hàng', 'Follow-up khách cũ'] }, { id: 'omnichannel', icon: Globe2, kicker: 'Đồng bộ đa kênh', title: 'Một bộ não AI trên mọi điểm chạm', text: 'Khách bắt đầu trên Website và tiếp tục ở kênh quen thuộc mà lịch sử và ngữ cảnh vẫn nhất quán.', bullets: ['Website, Messenger, Zalo và nhiều kênh', 'Dùng chung nguồn tri thức', 'Quản lý hội thoại tập trung', 'Giữ nguyên ngữ cảnh xuyên kênh'] }, { id: 'handoff', icon: UserRoundCheck, kicker: 'AI & con người phối hợp', title: 'Chuyển nhân viên đúng lúc, không hỏi lại', text: 'Khi cần chuyên môn, AI chuyển đến đúng nhân viên kèm toàn bộ bối cảnh cuộc trò chuyện.', bullets: ['Chuyển đúng nhóm phụ trách', 'Đính kèm lịch sử hội thoại', 'Nhân viên tiếp quản bất kỳ lúc nào', 'Phân quyền và lưu lịch sử xử lý'] }, { id: 'integration', icon: PlugZap, kicker: 'Kết nối hệ thống', title: 'Chatbot không đứng một mình', text: 'Losa kết nối dữ liệu và biến hội thoại thành hành động trong hệ thống doanh nghiệp đang vận hành.', bullets: ['Đồng bộ hồ sơ với CRM', 'Kết nối API và hệ thống nội bộ', 'Tra cứu tồn kho và đơn hàng', 'Đo lường trên dashboard'] }];
@@ -110,65 +137,63 @@ function WorkflowDemo() { const [visible, setVisible] = useState(1), [paused, se
 
 function BusinessValueStory({ en = false }) {
     const [activeStory, setActiveStory] = useState(0);
-    const storyRefs = useRef([]);
-    const localizedBenefits = en ? [
-        [Globe2, 'Omnichannel customer care', 'Unify Website, Messenger, Zalo and popular messaging platforms into one seamless operation.', 'Faster responses · No missed conversations'],
-        [Send, 'Proactively reach prospects', 'Design targeted messaging campaigns to expand your audience and create more sales opportunities.', 'Right audience · Right time'],
-        [BrainCircuit, 'AI-powered personalized remarketing', 'AI uses needs and interaction history to deliver relevant messages, nurture customers and encourage repeat purchases.', 'Personalized · Higher conversion'],
-    ] : businessBenefits;
+    const [paused, setPaused] = useState(false);
+    const englishStories = [
+        { ...businessStories[0], title: 'Never keep a customer waiting', description: 'Losa welcomes and captures customer needs even when your team is busy or offline.', result: 'Timely response · No missed opportunity', person: 'Thanh Huong', signal: ['A new need arrives after hours', '60m² office · 3 A2 purifiers needed'], actions: ['Receive the request immediately', 'Identify product, quantity and office size', 'Prepare complete context for the team'], outcome: ['A new opportunity is preserved', 'Even while the team is offline'] },
+        { ...businessStories[1], title: 'Be there when customers need you', description: 'Reach interested customer groups with relevant content at the time your business chooses.', result: 'Right customer · Right message · Right time', signal: ['An interested business customer', 'Viewed A2 · Planning for 20 units'], actions: ['Identify the relevant customer group', 'Activate content at the chosen time', 'Prepare the volume-based policy'], outcome: ['Interest becomes a sales opportunity', 'The team has the context to continue'] },
+        { ...businessStories[2], title: 'Give customers a reason to return', description: 'Nurture customers with available data and interaction history instead of generic messages.', result: 'Relevant care · More reasons to return', signal: ['A past need becomes relevant again', 'Previously viewed A2 · Currently uses 20 units'], actions: ['Review available interest history', 'Match the right filter and version', 'Create a follow-up and quotation opportunity'], outcome: ['The customer has a real reason to return', 'Content matches the product they use'] }
+    ];
+    const stories = en ? englishStories : businessStories;
+    const story = stories[activeStory];
 
     useEffect(() => {
-        const observer = new IntersectionObserver(() => {
-            const viewportCenter = window.innerHeight / 2;
-            const closestIndex = storyRefs.current.reduce((closest, node, index) => {
-                if (!node) return closest;
-                const rect = node.getBoundingClientRect();
-                const distance = Math.abs(rect.top + rect.height / 2 - viewportCenter);
-                return distance < closest.distance ? { index, distance } : closest;
-            }, { index: 0, distance: Infinity }).index;
-            setActiveStory(closestIndex);
-        }, { rootMargin: '-32% 0px -32% 0px', threshold: [0, .25, .5, .75, 1] });
-        storyRefs.current.forEach(node => node && observer.observe(node));
-        return () => observer.disconnect();
-    }, []);
-
-    const storyImages = [
-        '/images/solutions/solution_3_section1.png',
-        '/images/solutions/solution_4_section1.jpg',
-        '/images/solutions/solution_5_section1.png'
-    ];
+        if (paused || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const timer = setInterval(() => setActiveStory(current => (current + 1) % stories.length), 6500);
+        return () => clearInterval(timer);
+    }, [paused, stories.length]);
 
     return <section className="csp-section csp-business-story" id="business-value">
         <div className="csp-shell">
             <header className="csp-business-story__heading">
                 <div className="csp-eyebrow">{en ? 'LOSA SUPPORTS BUSINESS GROWTH' : 'LOSA ĐỒNG HÀNH CÙNG DOANH NGHIỆP'}</div>
                 <h2>{en ? <>Turn every conversation into a <span>growth opportunity</span></> : <>Từ mỗi cuộc trò chuyện đến một <span>cơ hội tăng trưởng</span></>}</h2>
-                <p>{en ? 'Losa connects customer care, outreach and remarketing into one seamless customer journey.' : 'Losa kết nối chăm sóc, tiếp cận và remarketing thành một hành trình khách hàng liền mạch.'}</p>
+                <p>{en ? 'Losa remembers what customers care about, captures every new need and helps your business continue the conversation at the right time.' : 'Losa ghi nhớ điều khách hàng quan tâm, tiếp nhận mọi nhu cầu mới và giúp doanh nghiệp tiếp tục cuộc trò chuyện vào đúng thời điểm.'}</p>
             </header>
-            <div className="csp-business-story__layout">
-                <div className="csp-business-story__chapters">
-                    {localizedBenefits.map(([Icon, title, text, result], i) => <article
-                        key={title}
-                        ref={node => { storyRefs.current[i] = node }}
-                        data-story={i}
-                        className={activeStory === i ? 'is-active' : ''}
-                        onClick={() => setActiveStory(i)}
-                    >
-                        <div className="csp-business-story__index">0{i + 1}</div>
-                        <div className="csp-business-story__chapter-icon"><Icon /></div>
-                        <div><h4>{title}</h4><p>{text}</p><span><CheckCircle2 />{result}</span></div>
-                    </article>)}
+
+            <div className="csp-human-story__tabs" role="tablist" aria-label={en ? 'Customer growth stories' : 'Các tình huống tăng trưởng khách hàng'}>
+                {stories.map((item, index) => { const Icon = item.icon; const active = index === activeStory; return <button type="button" id={`growth-story-tab-${index}`} role="tab" aria-selected={active} aria-controls={`growth-story-panel-${index}`} className={active ? 'is-active' : ''} onClick={() => { setActiveStory(index); setPaused(true) }} onFocus={() => setPaused(true)} key={item.title}>
+                    <span className="csp-human-story__tab-index">0{index + 1}</span><span className="csp-human-story__tab-icon"><Icon /></span><span className="csp-human-story__tab-copy"><strong>{item.title}</strong><small>{item.description}</small><em><CheckCircle2 /> {item.result}</em></span>
+                </button> })}
+            </div>
+
+            <div className="csp-human-story" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+                <div className="csp-human-story__scene">
+                    <img src="/images/solutions/human-shop-story.png" alt={en ? 'A business owner responding to customers in her showroom' : 'Chủ doanh nghiệp tiếp nhận khách hàng tại showroom'} loading="lazy" />
+                    <div className="csp-human-story__shade" />
+                    <div className="csp-human-story__presence"><span>TH</span><div><strong>{story.person}</strong><small><i /> {en ? 'Customer is online' : 'Khách hàng đang online'}</small></div></div>
+                    <div className="csp-human-story__promise"><Sparkles /><span><small>{en ? 'LOSA IS HERE' : 'LOSA LUÔN SẴN SÀNG'}</small><strong>{en ? 'Every message is welcomed' : 'Mọi tin nhắn đều được tiếp nhận'}</strong></span></div>
                 </div>
-                <div className="csp-business-story__sticky">
-                    <figure className="csp-business-story__image-frame">
-                        <img
-                            key={storyImages[activeStory]}
-                            className="csp-business-story__image"
-                            src={storyImages[activeStory]}
-                            alt={`${en ? 'Illustration of' : 'Minh họa'} ${localizedBenefits[activeStory][1]}`}
-                            loading="lazy"
-                        />
-                    </figure>
+
+                <div className="csp-human-story__journey" key={activeStory} id={`growth-story-panel-${activeStory}`} role="tabpanel" aria-live="polite">
+                    <div className="csp-human-story__moment-head">
+                        <div><small>{en ? 'CUSTOMER MOMENT' : 'KHOẢNH KHẮC KHÁCH HÀNG'}</small><strong>{story.time} · {story.channel}</strong></div>
+                        <span><i /> {en ? 'Signal detected' : 'Đã nhận diện tín hiệu'}</span>
+                    </div>
+
+                    <div className="csp-human-story__signal">
+                        <span><Zap /></span><div><small>{en ? '01 · CUSTOMER SIGNAL' : '01 · TÍN HIỆU TỪ KHÁCH'}</small><strong>{story.signal[0]}</strong><p>{story.signal[1]}</p></div>
+                    </div>
+
+                    <div className="csp-human-story__process">
+                        <div className="csp-human-story__process-title"><span><Sparkles /></span><div><small>{en ? '02 · LOSA TAKES ACTION' : '02 · LOSA CHỦ ĐỘNG XỬ LÝ'}</small><strong>{en ? 'From signal to a ready opportunity' : 'Từ tín hiệu đến một cơ hội sẵn sàng'}</strong></div></div>
+                        <div className="csp-human-story__steps">
+                            {story.actions.map((action, index) => <div style={{ '--step-order': index }} key={action}><span><Check /></span><p>{action}</p></div>)}
+                        </div>
+                    </div>
+
+                    <div className="csp-human-story__outcome">
+                        <span><ArrowRight /></span><div><small>{en ? '03 · BUSINESS OUTCOME' : '03 · CƠ HỘI CHO DOANH NGHIỆP'}</small><strong>{story.outcome[0]}</strong><p>{story.outcome[1]}</p></div><CheckCircle2 />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1358,11 +1383,6 @@ export default function ChatbotSolutionsPage() {
         { ...caps[6], kicker: 'System integration', title: 'A chatbot that does not work alone', text: 'Losa connects data and turns conversations into actions in the systems your business already operates.', bullets: ['Synchronize profiles with CRM', 'Connect APIs and internal systems', 'Look up inventory and orders', 'Measure results on dashboards'] },
     ] : caps;
     const active = localizedCaps.find(x => x.id === cap);
-    const localizedOutcomes = en ? [
-        { icon: Filter, label: 'SMART INTAKE', title: 'Never miss new demand', text: 'AI responds, asks relevant questions and identifies prospects from the very first message.' },
-        { icon: ShoppingBag, label: 'CONTEXTUAL CONSULTING', title: 'Help customers decide faster', text: 'Recommend solutions based on actual product, price and inventory data.' },
-        { icon: Database, label: 'ACTIONABLE DATA', title: 'Turn conversations into data', text: 'Important signals are saved and synchronized so your team can follow up at the right time.' },
-    ] : outcomes;
     const localizedIndustries = en ? industries.map(item => ({ ...item, name: ({ retail: 'Retail & E-commerce', education: 'Education', health: 'Healthcare & Clinics', b2b: 'B2B Services' })[item.id] })) : industries;
     const localizedRollout = en ? [
         { ...rollout[0], title: 'Discovery', text: 'Define the challenge, channels and goals.' },
@@ -1371,7 +1391,6 @@ export default function ChatbotSolutionsPage() {
         { ...rollout[3], title: 'Testing', text: 'Evaluate responses and handoff scenarios.' },
         { ...rollout[4], title: 'Operations', text: 'Monitor, measure and continuously optimize.' },
     ] : rollout;
-    const conversionStages = en ? [[BrainCircuit, 'Understand demand', 'Identify intent and important information'], [Filter, 'Qualify the opportunity', 'Tag, score and prioritize the lead'], [ShoppingBag, 'Perform actions', 'Check products and inventory, then create a quotation'], [Database, 'Synchronize data', 'Update CRM and route to the right team']] : [[BrainCircuit, 'Hiểu nhu cầu', 'Nhận diện ý định và thông tin quan trọng'], [Filter, 'Phân loại cơ hội', 'Gán nhãn, chấm điểm và ưu tiên lead'], [ShoppingBag, 'Thực hiện tác vụ', 'Kiểm tra sản phẩm, tồn kho và tạo báo giá'], [Database, 'Đồng bộ dữ liệu', 'Cập nhật CRM và chuyển đúng đội ngũ']];
     return <main className="csp-page">
         <PageSeo title={en ? 'Omnichannel AI Chatbot for Businesses' : 'Chatbot AI đa kênh cho doanh nghiệp'} description={en ? 'Losa AI Chatbot automates consulting, quotations, shipping and omnichannel customer care.' : 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.'} isFallback={q.data?.isFallback} />
         <section className="client-hero" id="chatbot-hero"><div className="csp-shell client-hero__grid"><motion.div className="client-hero__content" initial="hidden" animate="visible" variants={heroStagger}><motion.div className="client-hero__badge" variants={heroFadeUp}><Sparkles /> {en ? 'Omnichannel AI Chatbot for businesses' : 'Chatbot AI đa kênh cho doanh nghiệp'}</motion.div><motion.h1 className="client-hero__title" variants={heroFadeUp}>{en ? <>Turn every conversation into a <span>growth opportunity</span></> : <>Mỗi cuộc trò chuyện là một <span>cơ hội tăng trưởng</span></>}</motion.h1><motion.p className="client-hero__lead" variants={heroFadeUp}>{en ? 'Losa AI Chatbot understands customer needs, recommends products, creates quotations, calculates shipping and supports customers 24/7 across every channel you use.' : 'Chatbot AI Losa hiểu nhu cầu, tư vấn sản phẩm, tạo báo giá, tính phí vận chuyển và chăm sóc khách hàng 24/7 — trên mọi kênh bạn đang kinh doanh.'}</motion.p><motion.div className="client-hero__proof" variants={heroFadeUp}><span><Check /> {en ? '24/7 responses' : 'Phản hồi 24/7'}</span><span><Check /> {en ? 'Human handoff when needed' : 'Chuyển người thật khi cần'}</span><span><Check /> {en ? 'Centralized data' : 'Dữ liệu tập trung'}</span></motion.div><motion.div className="client-hero__actions" variants={heroFadeUp}><button id="chatbot-view-demo" className="csp-btn csp-btn--primary" onClick={() => document.getElementById('capabilities')?.scrollIntoView({ behavior: 'smooth' })}>{en ? 'Explore AI capabilities' : 'Khám phá năng lực AI'} <ArrowRight /></button></motion.div></motion.div><motion.div className="client-hero__visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8 }}><HeroVisual en={en} /></motion.div></div></section>
@@ -1403,7 +1422,6 @@ export default function ChatbotSolutionsPage() {
                 </div>
             </div>
         </section>
-        <section className="csp-section csp-outcomes"><div className="csp-shell"><Heading eyebrow={en ? 'FROM MESSAGES TO CONVERSIONS' : 'TỪ TIN NHẮN ĐẾN CHUYỂN ĐỔI'} title={en ? 'Every conversation can produce a result' : 'Mỗi cuộc trò chuyện đều có thể tạo ra kết quả'} text={en ? 'Losa does more than answer. AI understands demand, performs tasks and saves signals so your team can close at the right time.' : 'Losa không chỉ trả lời. AI hiểu nhu cầu, thực hiện tác vụ và lưu tín hiệu để đội ngũ chốt đơn đúng lúc.'} /><div className="csp-conversion-engine"><div className="csp-conversion-engine__input"><div className="csp-conversion-engine__label"><MessageCircle /> {en ? 'CUSTOMER SIGNAL' : 'TÍN HIỆU TỪ KHÁCH HÀNG'}</div><div className="csp-conversion-engine__bubble">{en ? '“We need 20 air purifiers for our office, delivered this week.”' : '“Bên mình cần 20 máy lọc không khí cho văn phòng, giao trong tuần này.”'}</div><div className="csp-conversion-engine__signals"><span><small>{en ? 'DEMAND' : 'NHU CẦU'}</small>{en ? '20 air purifiers' : '20 máy lọc không khí'}</span><span><small>{en ? 'TIMELINE' : 'THỜI GIAN'}</small>{en ? 'Delivery this week' : 'Giao trong tuần'}</span><span><small>{en ? 'CUSTOMER TYPE' : 'ĐỐI TƯỢNG'}</small>{en ? 'Business customer' : 'Khách hàng doanh nghiệp'}</span><span><small>{en ? 'PRIORITY' : 'MỨC ĐỘ'}</small>{en ? 'High potential' : 'Tiềm năng cao'}</span></div></div><div className="csp-conversion-engine__pipeline"><div className="csp-conversion-engine__line"><i /></div>{conversionStages.map(([Icon, title, text], i) => <div className="csp-conversion-engine__stage" key={title}><b>0{i + 1}</b><span><Icon /></span><div><strong>{title}</strong><small>{text}</small></div></div>)}</div><div className="csp-conversion-engine__output"><span className="csp-conversion-engine__status"><i /> {en ? 'READY FOR ACTION' : 'SẴN SÀNG XỬ LÝ'}</span><div className="csp-conversion-engine__output-icon"><UserRoundCheck /></div><small>{en ? 'OUTPUT' : 'KẾT QUẢ ĐẦU RA'}</small><h3>{en ? 'A fully contextualized sales opportunity' : 'Một cơ hội bán hàng có đầy đủ ngữ cảnh'}</h3><p>{en ? 'Your team receives the right customer, demand and timing to continue consulting.' : 'Đội ngũ nhận đúng khách hàng, đúng nhu cầu và đúng thời điểm để tiếp tục tư vấn.'}</p><ul><li><CheckCircle2 /> {en ? 'Lead profile standardized' : 'Hồ sơ lead đã được chuẩn hóa'}</li><li><CheckCircle2 /> {en ? 'Quotation ready to send' : 'Báo giá sẵn sàng gửi'}</li><li><CheckCircle2 /> {en ? 'Employee receives the full context' : 'Nhân viên nhận trọn ngữ cảnh'}</li></ul></div></div><div className="csp-outcome-grid">{localizedOutcomes.map(x => { const Icon = x.icon; return <article key={x.title}><span className="csp-outcome-card__icon"><Icon /></span><div><small>{x.label}</small><h3>{x.title}</h3><p>{x.text}</p></div><ArrowRight /></article> })}</div></div></section>
         <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow={en ? 'LOSA AI CHATBOT CAPABILITIES' : 'NĂNG LỰC CHATBOT AI LOSA'} title={en ? 'What can Losa AI Chatbot do for your business?' : 'Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?'} text={en ? 'One AI assistant supporting the journey from first message to consulting, shipping and post-sale care.' : 'Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán.'} /><div className="csp-capability-layout"><CapabilityTabs items={localizedCaps} activeId={cap} onSelect={setCap} /><div className="csp-capability-panel" role="tabpanel"><div className="csp-capability-panel__copy"><div className="csp-eyebrow">{active.kicker}</div><h3>{active.title}</h3><p>{active.text}</p><ul>{active.bullets.map(x => <li key={x}><CheckCircle2 />{x}</li>)}</ul></div><Conversation mode={active.id} compact /></div></div></div></section>
         <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow={en ? 'AI DESIGNED FOR YOUR INDUSTRY' : 'AI THIẾT KẾ THEO NGÀNH'} title={en ? 'Every business operates differently' : 'Mỗi doanh nghiệp có một cách vận hành khác nhau'} text={en ? 'Losa is designed around the unique processes, data and tasks of each industry.' : 'Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành.'} /><div className="csp-usecase-tabs" role="tablist" aria-label={en ? 'Choose an AI industry use case' : 'Chọn ngành ứng dụng AI'} onKeyDown={event => { const index = localizedIndustries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = localizedIndustries[(index + direction + localizedIndustries.length) % localizedIndustries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{localizedIndustries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
             <IndustryWorkflowStudio industryId={industry} en={en} />

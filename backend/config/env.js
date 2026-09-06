@@ -55,6 +55,10 @@ const env = {
   OUTBOX_BATCH_SIZE: parseInteger(process.env.OUTBOX_BATCH_SIZE, 50),
   OUTBOX_MAX_ATTEMPTS: parseInteger(process.env.OUTBOX_MAX_ATTEMPTS, 20),
   RUN_CHAT_WORKERS_IN_API: parseBoolean(process.env.RUN_CHAT_WORKERS_IN_API, !isProduction),
+  SSE_HEARTBEAT_MS: parseInteger(process.env.SSE_HEARTBEAT_MS, 25000),
+  SSE_TICKET_TTL_SECONDS: parseInteger(process.env.SSE_TICKET_TTL_SECONDS, 60),
+  SSE_MAX_CONNECTIONS_PER_PRINCIPAL: parseInteger(process.env.SSE_MAX_CONNECTIONS_PER_PRINCIPAL, 3),
+  REALTIME_REDIS_ENABLED: parseBoolean(process.env.REALTIME_REDIS_ENABLED, true),
 };
 
 const errors = [];

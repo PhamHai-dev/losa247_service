@@ -1,6 +1,8 @@
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const env = require('../../config/env');
+const { publish } = require('../realtime/eventPublisher');
+const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
 const { sign } = require('./webhookSecurityService');
 
 const normalizePhone = (value) => value ? String(value).replace(/[^\d+]/g, '') : null;
@@ -16,9 +18,11 @@ const processActions = async (tx, command, messageId) => {
       const existing = await tx.lead.findFirst({ where: { chatSessionId: command.sessionId, OR: [{ sourceMessageId: messageId }, ...(phoneNormalized ? [{ phoneNormalized }] : []), ...(emailNormalized ? [{ emailNormalized }] : [])] } });
       const data = { name: payload.name || undefined, phone: payload.phone || undefined, email: payload.email || undefined, phoneNormalized, emailNormalized, score: payload.score, temperature: payload.temperature, detectedBy: 'ai', chatSessionId: command.sessionId, sourceMessageId: messageId };
       const lead = existing ? await tx.lead.update({ where: { id: existing.id }, data }) : await tx.lead.create({ data: { id: createEntityId(), ...data, source: 'chat', status: 'new', notes: [] } });
-      await tx.notification.create({ data: { id: createEntityId(), title: 'Lead từ chatbot', message: `${lead.name || lead.phone || lead.email || 'Khách hàng'} cần được tư vấn.`, type: 'lead', link: '/admin/leads' } });
+      const notification = await tx.notification.create({ data: { id: createEntityId(), title: 'Lead từ chatbot', message: `${lead.name || lead.phone || lead.email || 'Khách hàng'} cần được tư vấn.`, type: 'lead', link: '/admin/leads' } });
+      await publish({ type: 'notification.created', data: toLegacyEntity(notification) });
     } else if (action?.type === 'notification.create') {
-      await tx.notification.create({ data: { id: createEntityId(), title: payload.title, message: payload.message, type: 'alert', link: `/admin/chat?session=${command.sessionId}` } });
+      const notification = await tx.notification.create({ data: { id: createEntityId(), title: payload.title, message: payload.message, type: 'alert', link: `/admin/chat?session=${command.sessionId}` } });
+      await publish({ type: 'notification.created', data: toLegacyEntity(notification) });
     } else if (action?.type === 'handoff.request') {
       await tx.chatSession.updateMany({ where: { id: command.sessionId, mode: 'bot', version: command.expectedVersion }, data: { mode: 'human', version: { increment: 1 }, handoffAt: new Date(), automationStatus: 'idle' } });
       await tx.chatHandoff.create({ data: { id: createEntityId(), sessionId: command.sessionId, fromMode: 'bot', toMode: 'human', fromVersion: command.expectedVersion, toVersion: command.expectedVersion + 1, reason: 'ai_handoff', actorType: 'automation', note: payload.reason } });

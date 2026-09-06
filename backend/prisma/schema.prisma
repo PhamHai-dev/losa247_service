@@ -337,6 +337,7 @@ model ChatSession {
   customerPhone         String?              @map("customer_phone") @db.VarChar(32)
   customerId            String?              @map("customer_id") @db.VarChar(24)
   visitorId             String?              @map("visitor_id") @db.VarChar(64)
+  sessionTokenHash      String?              @map("session_token_hash") @db.Char(64)
   channel               String               @default("web") @db.VarChar(24)
   mode                  ChatMode             @default(bot)
   automationStatus      ChatAutomationStatus @default(idle) @map("automation_status")
