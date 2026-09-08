@@ -6033,10 +6033,6 @@
     will-change: transform
 }
 
-.csp-customers__marquee:hover .csp-customers__track,
-.csp-customers__marquee:focus-within .csp-customers__track {
-    animation-play-state: paused
-}
 
 .csp-customers__group {
     display: flex;

@@ -284,36 +284,7 @@ export function BlogPage() {
           </div>
         </div>
 
-        <div className="features-bottom">
-          <div className="feature-item">
-            <div className="feature-icon"><CheckCircleOutlined /></div>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Quality content' : 'Nội dung chất lượng'}</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Curated insights updated regularly' : 'Kiến thức được chọn lọc và cập nhật thường xuyên'}</p>
-            </div>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon"><TrophyOutlined /></div>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'From experts' : 'Từ chuyên gia'}</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Insights from an experienced team of specialists' : 'Đội ngũ chuyên gia giàu kinh nghiệm trong lĩnh vực'}</p>
-            </div>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon"><ToolOutlined /></div>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Practical applications' : 'Ứng dụng thực tế'}</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Easy-to-apply knowledge that delivers real results' : 'Kiến thức dễ áp dụng, mang lại hiệu quả thực tế'}</p>
-            </div>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon"><TeamOutlined /></div>
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: 15, color: 'var(--navy)' }}>{locale === 'en' ? 'Supportive community' : 'Cộng đồng hỗ trợ'}</h4>
-              <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>{locale === 'en' ? 'Join the community to learn and share experience' : 'Tham gia cộng đồng để học hỏi và chia sẻ kinh nghiệm'}</p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </main>
   )

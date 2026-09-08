@@ -193,13 +193,6 @@ export function AdminBlogEditor() {
     const isVi = locale === 'vi'
     const prefix = isVi ? 'https://losa247.vn/blog/' : 'https://losa247.vn/en/blog/'
     return <>
-      {!isVi && <Alert
-        type="info" showIcon
-        message="Gemini chỉ tạo preview — nội dung chưa được lưu"
-        description="Hãy kiểm tra tiêu đề, slug, SEO và nội dung trước khi bấm Lưu bài."
-        action={<Button id="generate-english-preview" type="primary" icon={<RobotOutlined />} loading={translating} onClick={generateEnglishPreview}>Dịch bằng Gemini</Button>}
-        style={{ marginBottom: 20 }}
-      />}
       <Form.Item name={['translations', locale, 'title']} label={isVi ? 'Tiêu đề bài viết' : 'Article title'} rules={isVi ? [{ required: true, message: 'Nhập tiêu đề' }] : []}>
         <Input size="large" placeholder={isVi ? 'Nhập tiêu đề bài viết...' : 'Enter the English article title...'} showCount maxLength={500} />
       </Form.Item>
@@ -269,14 +262,21 @@ export function AdminBlogEditor() {
       <Row className="blog-editor-columns" gutter={24}>
         <Col className="blog-editor-column blog-editor-column--content" xs={24} lg={16}>
           <Card>
-            <nav className="blog-language-tabs" aria-label="Ngôn ngữ bài viết">
-              <button id="blog-language-tab-vi" type="button" className={activeLocale === 'vi' ? 'active' : ''} onClick={() => setActiveLocale('vi')}>
-                <span>Tiếng Việt</span>
-              </button>
-              <button id="blog-language-tab-en" type="button" className={activeLocale === 'en' ? 'active' : ''} onClick={() => setActiveLocale('en')}>
-                <span>English</span>{existingTranslations.en && <small>Đã có</small>}
-              </button>
-            </nav>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 22 }}>
+              <nav className="blog-language-tabs" aria-label="Ngôn ngữ bài viết" style={{ marginBottom: 0 }}>
+                <button id="blog-language-tab-vi" type="button" className={activeLocale === 'vi' ? 'active' : ''} onClick={() => setActiveLocale('vi')}>
+                  <span>Tiếng Việt</span>
+                </button>
+                <button id="blog-language-tab-en" type="button" className={activeLocale === 'en' ? 'active' : ''} onClick={() => setActiveLocale('en')}>
+                  <span>English</span>{existingTranslations.en && <small>Đã có</small>}
+                </button>
+              </nav>
+              {activeLocale === 'en' && (
+                <Button id="generate-english-preview" type="primary" icon={<RobotOutlined />} loading={translating} onClick={generateEnglishPreview}>
+                  Dịch bằng Gemini
+                </Button>
+              )}
+            </div>
             <div className="blog-language-panel" key={activeLocale}>{translationPanel(activeLocale)}</div>
           </Card>
         </Col>

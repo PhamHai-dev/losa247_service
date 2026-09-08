@@ -46,8 +46,7 @@ export function ServicesPage() {
               <span><CheckCircle2 size={17} /> {locale === 'en' ? 'Implementation support' : 'Hỗ trợ triển khai'}</span>
             </div>
             <div className="client-hero__actions">
-              <button id="pricing-view-plans-btn" type="button" className="pricing-btn pricing-btn-primary" onClick={scrollToPlans}>{locale === 'en' ? 'View plans' : 'Xem các gói dịch vụ'} <ArrowRight size={18} /></button>
-              <button id="pricing-hero-consult-btn" type="button" className="pricing-btn pricing-btn-secondary" onClick={openLeadModal}>{locale === 'en' ? 'Get free advice' : 'Nhận tư vấn miễn phí'}</button>
+              <button id="pricing-hero-consult-btn" type="button" className="pricing-btn pricing-btn-primary" onClick={openLeadModal}>{locale === 'en' ? 'Get free advice' : 'Nhận tư vấn miễn phí'}</button>
             </div>
           </motion.div>
 
