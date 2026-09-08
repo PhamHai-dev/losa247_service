@@ -1,6 +1,7 @@
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const env = require('../../config/env');
+const { getN8nConfig } = require('../../helpers/n8n');
 const { publish } = require('../realtime/eventPublisher');
 const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
 const { sign } = require('./webhookSecurityService');
@@ -31,10 +32,18 @@ const processActions = async (tx, command, messageId) => {
 };
 
 const sendBatchToN8n = async ({ batch, context }) => {
+  const config = await getN8nConfig();
+  if (!config) throw new Error('N8N_DISABLED');
+  if (!config.webhookUrl) throw new Error('N8N_WEBHOOK_URL_INVALID');
+
   const body = JSON.stringify({ schemaVersion: '1.0', eventId: batch.eventId, eventType: 'chat.batch.ready', occurredAt: new Date().toISOString(), batch: { id: batch.id, sessionId: batch.sessionId, sessionVersion: batch.sessionVersion }, context, callbackUrl: env.N8N_CALLBACK_URL });
   const timestamp = String(Date.now());
-  const response = await fetch(env.N8N_WEBHOOK_URL, { method: 'POST', headers: { 'content-type': 'application/json', 'x-event-id': batch.eventId, 'x-timestamp': timestamp, 'x-signature': sign(body, timestamp) }, body, signal: AbortSignal.timeout(env.N8N_TIMEOUT_MS) });
-  if (!response.ok) throw new Error(`N8N_HTTP_${response.status}`);
+  const response = await fetch(config.webhookUrl, { method: 'POST', headers: { 'content-type': 'application/json', 'x-event-id': batch.eventId, 'x-timestamp': timestamp, 'x-signature': sign(body, timestamp) }, body, signal: AbortSignal.timeout(env.N8N_TIMEOUT_MS) });
+  if (!response.ok) {
+    console.error(`[CHAT N8N] Batch ${batch.id} failed with HTTP ${response.status}`);
+    throw new Error(`N8N_HTTP_${response.status}`);
+  }
+  console.info(`[CHAT N8N] Batch ${batch.id} delivered successfully`);
   return response.text();
 };
 
