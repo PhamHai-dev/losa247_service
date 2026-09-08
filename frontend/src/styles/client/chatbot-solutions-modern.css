@@ -767,14 +767,17 @@
 .csp-capability-layout {
     display: grid;
     grid-template-columns: .8fr 1.2fr;
-    gap: 18px
+    gap: 18px;
+    align-items: stretch
 }
 
 .csp-capability-scroll {
     position: relative;
     min-width: 0;
+    height: 450px;
     min-height: 450px;
-    align-self: stretch
+    align-self: stretch;
+    overflow: hidden
 }
 
 .csp-capability-scroll:before,
@@ -857,22 +860,42 @@
 .csp-capability-tabs {
     display: flex;
     flex-direction: column;
-    gap: 9px
+    gap: 9px;
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+    cursor: grab;
+    touch-action: pan-x
+}
+
+.csp-capability-tabs:active {
+    cursor: grabbing
 }
 
 .csp-capability-tabs button {
-    min-height: 92px;
+    min-height: 105px;
+    height: 105px;
     padding: 15px;
     display: flex;
     align-items: center;
     gap: 13px;
+    flex: 0 0 105px;
     border: 1px solid var(--csp-line);
     border-radius: 16px;
     text-align: left;
     background: #fff;
     color: var(--csp-text);
     cursor: pointer;
-    transition: .25s
+    scroll-snap-align: start;
+    opacity: .76;
+    transition: border-color .45s ease, background-color .45s ease, box-shadow .45s ease, color .45s ease, opacity .45s ease
+}
+
+.csp-capability-tabs button[data-distance="2"] {
+    opacity: .56
+}
+
+.csp-capability-tabs button.is-active {
+    opacity: 1
 }
 
 .csp-capability-tabs button>span {
@@ -893,11 +916,18 @@
 }
 
 .csp-capability-tabs small {
-    color: #7b899c
+    color: #7b899c;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden
 }
 
 .csp-capability-tabs strong {
-    font-size: 14px
+    font-size: 14px;
+    line-height: 1.35
 }
 
 .csp-capability-tabs button>svg {
@@ -938,45 +968,22 @@
 .csp-capability-panel {
     position: relative;
     isolation: isolate;
+    height: 450px;
     min-height: 450px;
-    padding: 34px;
-    display: grid;
-    grid-template-columns: 1fr .9fr;
-    align-items: center;
-    gap: 28px;
+    padding: 0;
+    display: block;
     border-radius: 24px;
-    color: #fff;
-    background: linear-gradient(145deg, rgba(7, 21, 45, .98), rgba(17, 52, 101, .96));
+    background: #07152d;
     overflow: hidden;
     box-shadow: 0 24px 64px rgba(7, 32, 72, .2)
 }
 
-.csp-capability-panel:before,
-.csp-capability-panel:after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    border-radius: 50%;
-    filter: blur(58px);
-    pointer-events: none
-}
-
-.csp-capability-panel:before {
-    width: 260px;
-    height: 260px;
-    right: -55px;
-    top: -70px;
-    background: rgba(0, 112, 243, .42);
-    animation: csp-capability-blur 7s ease-in-out infinite alternate
-}
-
-.csp-capability-panel:after {
-    width: 220px;
-    height: 220px;
-    left: 18%;
-    bottom: -145px;
-    background: rgba(79, 70, 229, .3);
-    animation: csp-capability-blur 8s ease-in-out 1s infinite alternate-reverse
+.csp-capability-panel>img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center
 }
 
 @keyframes csp-capability-arrow {
@@ -2000,17 +2007,26 @@
 
     .csp-capability-scroll,
     .csp-capability-panel {
+        height: auto;
         min-height: 0
     }
 
     .csp-capability-tabs {
         flex-direction: row;
         overflow-x: auto;
-        padding-bottom: 8px
+        padding-bottom: 8px;
+        scroll-snap-type: x proximity;
+        touch-action: pan-y
+    }
+
+    .csp-capability-scroll {
+        height: auto
     }
 
     .csp-capability-tabs button {
-        min-width: 280px
+        min-width: 280px;
+        height: auto;
+        flex-basis: auto
     }
 
     .csp-workflow__layout {
@@ -2143,9 +2159,10 @@
         min-width: 250px
     }
 
-    .csp-capability-panel {
-        padding: 24px;
-        grid-template-columns: 1fr
+    .csp-capability-panel>img {
+        height: auto;
+        min-height: 360px;
+        aspect-ratio: 16 / 10
     }
 
     .csp-capability-panel__copy h3 {

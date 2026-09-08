@@ -49,19 +49,29 @@ function CustomerMarquee({ en = false }) {
     </section>;
 }
 
-const caps = [{ id: 'lead', icon: BrainCircuit, kicker: 'Tiếp nhận & phân loại', title: 'Hiểu nhu cầu ngay từ tin nhắn đầu tiên', text: 'AI trò chuyện tự nhiên, hỏi đúng thông tin và nhận diện khách hàng tiềm năng để đội ngũ ưu tiên đúng cơ hội.', bullets: ['Hiểu ý định và ngữ cảnh', 'Thu thập thông tin có cấu trúc', 'Gán nhãn và chấm điểm lead', 'Đẩy dữ liệu sang đội ngũ phụ trách'] }, { id: 'vision', icon: Camera, kicker: 'AI Vision & OCR', title: 'Hiểu cả hình ảnh khách hàng gửi đến', text: 'AI phân tích ảnh ngay trong hội thoại để nhận diện sản phẩm, đọc mã và phản hồi theo đúng ngữ cảnh.', bullets: ['Nhận diện sản phẩm và mẫu mã', 'Đọc chữ, mã hoặc hóa đơn', 'Phân tích chi tiết hình ảnh', 'Kết hợp ảnh với câu hỏi của khách'] }, { id: 'quote', icon: Quote, kicker: 'Tư vấn & bán hàng', title: 'Biến hội thoại thành một quy trình bán hàng', text: 'Chatbot kết nối dữ liệu sản phẩm để tư vấn, kiểm tra tồn kho và tạo báo giá tức thì.', bullets: ['Tìm và gợi ý sản phẩm phù hợp', 'Kiểm tra giá và tồn kho', 'Tạo báo giá tự động', 'Thu thập thông tin chốt đơn'] }, { id: 'shipping', icon: Truck, kicker: 'Vận chuyển & chăm sóc', title: 'Tính phí ship và chăm sóc sau bán tự động', text: 'AI nhận địa chỉ, tra cứu phí vận chuyển và tiếp tục đồng hành sau khi khách đặt hàng.', bullets: ['Nhận và xác thực địa chỉ', 'Tính phí vận chuyển', 'Cập nhật trạng thái đơn hàng', 'Follow-up khách cũ'] }, { id: 'omnichannel', icon: Globe2, kicker: 'Đồng bộ đa kênh', title: 'Một bộ não AI trên mọi điểm chạm', text: 'Khách bắt đầu trên Website và tiếp tục ở kênh quen thuộc mà lịch sử và ngữ cảnh vẫn nhất quán.', bullets: ['Website, Messenger, Zalo và nhiều kênh', 'Dùng chung nguồn tri thức', 'Quản lý hội thoại tập trung', 'Giữ nguyên ngữ cảnh xuyên kênh'] }, { id: 'handoff', icon: UserRoundCheck, kicker: 'AI & con người phối hợp', title: 'Chuyển nhân viên đúng lúc, không hỏi lại', text: 'Khi cần chuyên môn, AI chuyển đến đúng nhân viên kèm toàn bộ bối cảnh cuộc trò chuyện.', bullets: ['Chuyển đúng nhóm phụ trách', 'Đính kèm lịch sử hội thoại', 'Nhân viên tiếp quản bất kỳ lúc nào', 'Phân quyền và lưu lịch sử xử lý'] }, { id: 'integration', icon: PlugZap, kicker: 'Kết nối hệ thống', title: 'Chatbot không đứng một mình', text: 'Losa kết nối dữ liệu và biến hội thoại thành hành động trong hệ thống doanh nghiệp đang vận hành.', bullets: ['Đồng bộ hồ sơ với CRM', 'Kết nối API và hệ thống nội bộ', 'Tra cứu tồn kho và đơn hàng', 'Đo lường trên dashboard'] }];
+const caps = [{ id: 'lead', icon: BrainCircuit, kicker: 'Tiếp nhận & phân loại', title: 'Nhận diện khách hàng tiềm năng ngay từ tin nhắn đầu tiên', text: 'AI tìm hiểu nhu cầu, thu thập thông tin và ưu tiên những khách hàng có khả năng chuyển đổi cao.', bullets: ['Hiểu ý định và ngữ cảnh', 'Thu thập thông tin có cấu trúc', 'Gán nhãn và chấm điểm lead', 'Đẩy dữ liệu sang đội ngũ phụ trách'] }, { id: 'vision', icon: Camera, kicker: 'AI Vision & OCR', title: 'Đọc hình ảnh, nhận diện sản phẩm và phản hồi tức thì', text: 'Phân tích ảnh, đọc mã và xác định sản phẩm để phản hồi đúng ngữ cảnh khách hàng đang quan tâm.', bullets: ['Nhận diện sản phẩm và mẫu mã', 'Đọc chữ, mã hoặc hóa đơn', 'Phân tích chi tiết hình ảnh', 'Kết hợp ảnh với câu hỏi của khách'] }, { id: 'shipping', icon: Truck, kicker: 'Vận chuyển & chăm sóc', title: 'Tự động xử lý giao hàng và chăm sóc sau bán', text: 'Xác thực địa chỉ, tính phí vận chuyển, cập nhật đơn hàng và tiếp tục chăm sóc sau khi mua.', bullets: ['Nhận và xác thực địa chỉ', 'Tính phí vận chuyển', 'Cập nhật trạng thái đơn hàng', 'Follow-up khách cũ'] }, { id: 'handoff', icon: UserRoundCheck, kicker: 'AI & con người phối hợp', title: 'Chuyển đúng nhân viên mà khách không phải trình bày lại', text: 'AI chuyển toàn bộ lịch sử và nhu cầu đến đúng người phụ trách khi cần hỗ trợ chuyên sâu.', bullets: ['Chuyển đúng nhóm phụ trách', 'Đính kèm lịch sử hội thoại', 'Nhân viên tiếp quản bất kỳ lúc nào', 'Phân quyền và lưu lịch sử xử lý'] }, { id: 'integration', icon: PlugZap, kicker: 'Kết nối hệ thống', title: 'Biến câu trả lời thành hành động ngay lập tức', text: 'Kết nối CRM, đơn hàng, lịch hẹn và API để AI trực tiếp hoàn thành tác vụ trong hội thoại.', bullets: ['Đồng bộ hồ sơ với CRM', 'Kết nối API và hệ thống nội bộ', 'Tra cứu tồn kho và đơn hàng', 'Đo lường trên dashboard'] }];
 const chats = { lead: [['customer', 'Shop mình nhận khoảng 2.000 tin nhắn mỗi tháng.'], ['ai', 'Shop đang bán trên kênh nào và cần AI hỗ trợ phần nào nhất?'], ['customer', 'Website và Messenger, mình muốn lọc khách có nhu cầu thật.'], ['ai', 'Mình đã ghi nhận và gán nhãn lead tiềm năng để đội ngũ tư vấn tiếp.']], quote: [['customer', 'Cho mình báo giá 20 máy lọc không khí mẫu A2 nhé.'], ['ai', 'Bạn cần giao một địa chỉ hay chia thành nhiều điểm giao?'], ['customer', 'Giao một địa chỉ tại Quận 7 trong tuần này.'], ['ai', 'Mình đã kiểm tra tồn kho và tạo báo giá theo yêu cầu.']], shipping: [['customer', 'Đơn A2 giao đến Quận 7 thì phí ship bao nhiêu?'], ['ai', 'Bạn gửi giúp mình phường và thời gian muốn nhận hàng nhé.'], ['customer', 'Phường Tân Phong, nhận trong 1–2 ngày.'], ['ai', 'Phí dự kiến 32.000đ. Mình đã lưu địa chỉ và thời gian giao.']], omnichannel: [['customer', 'Mình vừa hỏi mẫu A2 trên Website, giờ tư vấn tiếp ở đây nhé.'], ['ai', 'Mình đã tìm thấy cuộc trò chuyện trước của bạn trên Website.'], ['customer', 'Mình muốn xem thêm giá màng lọc thay thế.'], ['ai', 'Mình tiếp tục đúng ngữ cảnh và gửi thông tin ngay tại Messenger.']], handoff: [['customer', 'Bên mình cần tích hợp ERP nội bộ qua API riêng.'], ['ai', 'Yêu cầu này cần chuyên viên kỹ thuật. Mình xin phép chuyển đúng nhóm.'], ['customer', 'Bạn gửi kèm các yêu cầu mình đã trao đổi nhé.'], ['ai', 'Đã chuyển Minh Anh cùng toàn bộ lịch sử và thông tin hệ thống.']], integration: [['customer', 'Kiểm tra giúp mình đơn DH-2048 đang giao đến đâu?'], ['ai', 'Mình đang tra cứu trạng thái từ hệ thống đơn hàng.'], ['customer', 'Nếu chưa giao, cập nhật số điện thoại nhận hàng giúp mình.'], ['ai', 'Đơn đang tại kho Quận 7 và số mới đã được đồng bộ.']] };
 const actions = { lead: ['Tiềm năng cao', 'Đã gán nhãn Lead nóng', Tag], quote: ['Báo giá #BG-2048', 'Tổng cộng 38.400.000đ', Quote], shipping: ['Giao hàng nhanh', 'Phí vận chuyển: 32.000đ', Truck], omnichannel: ['Đã đồng bộ hội thoại', 'Website → Messenger', Globe2], handoff: ['Minh Anh đã tiếp quản', 'Kèm 12 tin nhắn lịch sử', UserRoundCheck], integration: ['Đơn hàng #DH-2048', 'CRM và vận chuyển đã cập nhật', PlugZap] };
 const growthCapabilities = [
-    { id: 'always-on', icon: Clock3, kicker: 'Phản hồi 24/7', title: 'Không để khách hàng phải chờ đợi', text: 'Losa tiếp nhận, phản hồi và tìm hiểu nhu cầu ngay cả khi đội ngũ đang bận hoặc ngoài giờ làm việc.', bullets: ['Tiếp nhận yêu cầu ngay lập tức', 'Không bỏ sót hội thoại ngoài giờ', 'Chuẩn bị đầy đủ ngữ cảnh cho đội ngũ'] },
-    { id: 'right-time', icon: Send, kicker: 'Chăm sóc chủ động', title: 'Xuất hiện đúng lúc khách hàng cần', text: 'Tiếp cận nhóm khách đang quan tâm bằng nội dung phù hợp vào thời điểm doanh nghiệp thiết lập.', bullets: ['Nhận diện đúng nhóm khách phù hợp', 'Kích hoạt nội dung vào đúng thời điểm', 'Chuẩn bị chính sách theo số lượng'] },
-    { id: 'retention', icon: BrainCircuit, kicker: 'Tăng trưởng bền vững', title: 'Cho khách hàng một lý do để quay lại', text: 'Chăm sóc dựa trên dữ liệu và lịch sử tương tác hiện có, thay vì gửi những thông điệp đại trà.', bullets: ['Đối chiếu lịch sử quan tâm', 'Chọn nội dung phù hợp với từng khách', 'Tạo cơ hội chăm sóc và báo giá lại'] }
+    { id: 'always-on', icon: Clock3, kicker: 'Phản hồi 24/7', title: 'Phản hồi khách hàng 24/7, kể cả ngoài giờ', text: 'Tiếp nhận và tìm hiểu nhu cầu ngay cả khi đội ngũ đang bận hoặc đã hết giờ làm việc.', bullets: ['Tiếp nhận yêu cầu ngay lập tức', 'Không bỏ sót hội thoại ngoài giờ', 'Chuẩn bị đầy đủ ngữ cảnh cho đội ngũ'] },
+    { id: 'right-time', icon: Send, kicker: 'Chăm sóc chủ động', title: 'Chủ động chăm sóc đúng người, đúng thời điểm', text: 'Tự động gửi nội dung phù hợp dựa trên nhu cầu, hành vi và thời điểm doanh nghiệp thiết lập.', bullets: ['Nhận diện đúng nhóm khách phù hợp', 'Kích hoạt nội dung vào đúng thời điểm', 'Chuẩn bị chính sách theo số lượng'] },
+    { id: 'retention', icon: BrainCircuit, kicker: 'Tăng trưởng bền vững', title: 'Cá nhân hóa chăm sóc để khách hàng quay lại', text: 'Tận dụng lịch sử tương tác để follow-up, gợi ý và tạo cơ hội mua lại phù hợp với từng khách hàng.', bullets: ['Đối chiếu lịch sử quan tâm', 'Chọn nội dung phù hợp với từng khách', 'Tạo cơ hội chăm sóc và báo giá lại'] }
 ];
 const englishGrowthCapabilities = [
     { id: 'always-on', icon: Clock3, kicker: '24/7 RESPONSE', title: 'Never keep a customer waiting', text: 'Losa welcomes, responds to and understands customer needs even when your team is busy or offline.', bullets: ['Receive requests immediately', 'Never miss after-hours conversations', 'Prepare complete context for the team'] },
     { id: 'right-time', icon: Send, kicker: 'PROACTIVE CARE', title: 'Be there when customers need you', text: 'Reach interested customers with relevant content at the time your business chooses.', bullets: ['Identify the relevant customer group', 'Activate content at the right time', 'Prepare volume-based policies'] },
     { id: 'retention', icon: BrainCircuit, kicker: 'SUSTAINABLE GROWTH', title: 'Give customers a reason to return', text: 'Nurture customers with available data and interaction history instead of generic messages.', bullets: ['Review interest history', 'Choose relevant content for each customer', 'Create follow-up and quotation opportunities'] }
 ];
+const capabilityMedia = {
+    lead: { image: '/images/solutions/image-function/lead.png', alt: 'AI Losa nhận diện nhu cầu và phân loại khách hàng tiềm năng' },
+    vision: { image: '/images/solutions/image-function/vision.png', alt: 'AI Losa phân tích hình ảnh và nhận diện nội dung bằng OCR' },
+    shipping: { image: '/images/solutions/image-function/shipping.png', alt: 'AI Losa hỗ trợ tính phí vận chuyển và chăm sóc sau bán' },
+    handoff: { image: '/images/solutions/image-function/handoff.png', alt: 'AI Losa chuyển hội thoại cho nhân viên cùng đầy đủ ngữ cảnh' },
+    integration: { image: '/images/solutions/image-function/integration.png', alt: 'AI Losa kết nối với CRM, API và hệ thống doanh nghiệp' },
+    'always-on': { image: '/images/solutions/image-function/always-on.png', alt: 'AI Losa phản hồi khách hàng liên tục 24 giờ mỗi ngày' },
+    'right-time': { image: '/images/solutions/image-function/right-time.png', alt: 'AI Losa chủ động chăm sóc khách hàng vào đúng thời điểm' },
+    retention: { image: '/images/solutions/image-function/retention.png', alt: 'AI Losa chăm sóc khách hàng dựa trên lịch sử tương tác' }
+};
 const industries = [
     { id: 'retail', icon: Store, name: 'Bán lẻ & E-commerce', title: 'AI bán hàng từ tư vấn đến xác nhận đơn', text: 'Tìm đúng sản phẩm, kiểm tra tồn kho và tạo cơ hội bán hàng trong cùng một cuộc trò chuyện.', request: 'Mình cần 20 máy lọc không khí cho văn phòng, giao trong tuần này.', profile: 'Đơn hàng doanh nghiệp', score: '92% phù hợp', signals: [['SẢN PHẨM', 'Máy lọc A2 Pro'], ['SỐ LƯỢNG', '20 sản phẩm'], ['THỜI GIAN', 'Trong tuần'], ['KHU VỰC', 'Quận 7']], chat: [['customer', 'Bên mình cần 20 máy lọc cho văn phòng 60m².'], ['ai', 'Mình đã tìm thấy mẫu A2 Pro phù hợp. Bạn cần giao khi nào?'], ['customer', 'Trong tuần này, giao đến Quận 7 nhé.'], ['ai', 'Đã kiểm tra đủ tồn kho và chuẩn bị báo giá doanh nghiệp.']], steps: [[BrainCircuit, 'Hiểu nhu cầu', 'Xác định sản phẩm và số lượng'], [ShoppingBag, 'Kiểm tra dữ liệu', '20 sản phẩm đang sẵn sàng'], [Quote, 'Tạo hành động', 'Báo giá đã được khởi tạo']], result: 'Cơ hội bán hàng sẵn sàng xử lý', resultText: 'Đội sales nhận đủ nhu cầu, tồn kho và thời gian giao.', checklist: ['Sản phẩm và số lượng đã xác nhận', 'Tồn kho đã được kiểm tra', 'Báo giá sẵn sàng gửi'] },
     { id: 'education', icon: GraduationCap, name: 'Giáo dục', title: 'Tư vấn lộ trình đúng mục tiêu từng học viên', text: 'AI tìm hiểu mục tiêu, lịch học và trình độ để chuyển một hồ sơ chất lượng cho tư vấn viên.', request: 'Em muốn học IELTS để đạt 6.5, chỉ rảnh buổi tối.', profile: 'Hồ sơ học viên', score: 'Lead chất lượng', signals: [['MỤC TIÊU', 'IELTS 6.5'], ['TRÌNH ĐỘ', 'Đầu vào 4.5'], ['LỊCH HỌC', 'Buổi tối'], ['KHAI GIẢNG', 'Tháng tới']], chat: [['customer', 'Em cần IELTS 6.5 và chỉ học được buổi tối.'], ['ai', 'Bạn đã có điểm đầu vào và muốn bắt đầu vào thời gian nào?'], ['customer', 'Em đang khoảng 4.5, muốn học từ tháng tới.'], ['ai', 'Mình đã chọn lộ trình phù hợp và giữ lịch tư vấn tối mai.']], steps: [[Filter, 'Sàng lọc mục tiêu', 'Mục tiêu 6.5, đầu vào 4.5'], [Clock3, 'Đối chiếu lịch học', 'Có lớp tối phù hợp'], [UserRoundCheck, 'Đặt lịch tư vấn', 'Đã giữ lịch tối mai']], result: 'Học viên đã sẵn sàng tư vấn', resultText: 'Tư vấn viên nhận hồ sơ cùng mục tiêu và lịch học phù hợp.', checklist: ['Mục tiêu học tập đã rõ', 'Lớp phù hợp đã được chọn', 'Lịch tư vấn đã được giữ'] },
@@ -113,31 +123,76 @@ function WorkflowDemo() { const [visible, setVisible] = useState(1), [paused, se
 
 
 function CapabilityTabs({ items, activeId, onSelect }) {
-    const tabsRef = useRef(null);
-    const [scrollHint, setScrollHint] = useState({ up: false, down: true });
+    const carouselRef = useRef(null);
+    const draggedRef = useRef(false);
+    const isCarouselInView = useInView(carouselRef, { amount: .35 });
+    const [isInteractionPaused, setInteractionPaused] = useState(false);
+    const pauseTimerRef = useRef(null);
+    const activeIndex = Math.max(0, items.findIndex(item => item.id === activeId));
+    const visibleItems = [-1, 0, 1, 2].map(offset => ({
+        item: items[(activeIndex + offset + items.length) % items.length],
+        offset
+    }));
 
-    const updateHints = () => {
-        const element = tabsRef.current;
-        if (!element) return;
-        setScrollHint({
-            up: element.scrollTop > 8,
-            down: element.scrollTop + element.clientHeight < element.scrollHeight - 8
-        });
+    const selectAt = index => {
+        const item = items[(index + items.length) % items.length];
+        if (item) onSelect(item.id);
     };
 
-    useEffect(() => {
-        updateHints();
-        window.addEventListener('resize', updateHints);
-        return () => window.removeEventListener('resize', updateHints);
-    }, []);
+    const pauseAfterInteraction = () => {
+        setInteractionPaused(true);
+        window.clearTimeout(pauseTimerRef.current);
+        pauseTimerRef.current = window.setTimeout(() => setInteractionPaused(false), 20000);
+    };
 
-    const nudge = direction => tabsRef.current?.scrollBy({ top: direction * 150, behavior: 'smooth' });
-    return <div className={`csp-capability-scroll${scrollHint.up ? ' can-scroll-up' : ''}${scrollHint.down ? ' can-scroll-down' : ''}`}>
-        <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--up" aria-label="Cuộn lên để xem chức năng phía trên" onClick={() => nudge(-1)}><ChevronDown /></button>
-        <div className="csp-capability-tabs" role="tablist" ref={tabsRef} onScroll={updateHints}>
-            {items.map(item => { const Icon = item.icon; return <button id={`capability-tab-${item.id}`} role="tab" aria-selected={activeId === item.id} key={item.id} className={activeId === item.id ? 'is-active' : ''} onClick={() => onSelect(item.id)}><span><Icon /></span><div><small>{item.kicker}</small><strong>{item.title}</strong></div><ArrowRight /></button> })}
-        </div>
-        <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--down" aria-label="Cuộn xuống để xem thêm chức năng" onClick={() => nudge(1)}><ChevronDown /></button>
+    useEffect(() => () => window.clearTimeout(pauseTimerRef.current), []);
+
+    useEffect(() => {
+        if (!isCarouselInView || isInteractionPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+        const timer = window.setInterval(() => {
+            if (!document.hidden) selectAt(activeIndex + 1);
+        }, 3500);
+        return () => window.clearInterval(timer);
+    }, [activeIndex, items, isCarouselInView, isInteractionPaused]);
+
+    const nudge = direction => {
+        pauseAfterInteraction();
+        selectAt(activeIndex + direction);
+    };
+
+    const handleDragEnd = (_, info) => {
+        pauseAfterInteraction();
+        const mobile = window.matchMedia('(max-width: 980px)').matches;
+        const distance = mobile ? info.offset.x : info.offset.y;
+        draggedRef.current = Math.abs(distance) >= 32;
+        if (!draggedRef.current) return;
+        selectAt(activeIndex + (distance < 0 ? 1 : -1));
+        window.setTimeout(() => { draggedRef.current = false; }, 80);
+    };
+
+    return <div ref={carouselRef} className="csp-capability-scroll can-scroll-up can-scroll-down">
+        <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--up" aria-label="Xem chức năng trước" onClick={() => nudge(-1)}><ChevronDown /></button>
+        <motion.div
+            key={activeId}
+            className="csp-capability-tabs"
+            role="tablist"
+            initial={{ y: 12, opacity: .72 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: .7, ease: [0.22, 1, 0.36, 1] }}
+            drag={window.matchMedia('(max-width: 980px)').matches ? 'x' : 'y'}
+            dragConstraints={{ top: -72, right: 72, bottom: 72, left: -72 }}
+            dragElastic={.16}
+            dragMomentum={false}
+            whileDrag={{ cursor: 'grabbing', scale: .992 }}
+            onDragStart={pauseAfterInteraction}
+            onDragEnd={handleDragEnd}
+        >
+            {visibleItems.map(({ item, offset }) => {
+                const Icon = item.icon;
+                return <button draggable="false" id={`capability-tab-${item.id}`} role="tab" aria-selected={offset === 0} aria-controls="capability-media-panel" tabIndex={offset === 0 ? 0 : -1} key={`${item.id}-${offset}`} data-distance={Math.abs(offset)} className={offset === 0 ? 'is-active' : ''} onClick={() => { if (draggedRef.current) return; pauseAfterInteraction(); onSelect(item.id); }}><span><Icon /></span><div><strong>{item.title}</strong><small>{item.text}</small></div><ArrowRight /></button>;
+            })}
+        </motion.div>
+        <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--down" aria-label="Xem chức năng tiếp theo" onClick={() => nudge(1)}><ChevronDown /></button>
     </div>;
 }
 
@@ -1288,7 +1343,7 @@ function AnimatedNumber({ value }) {
 export default function ChatbotSolutionsPage() {
     const { locale } = useI18n();
     const en = locale === 'en';
-    const [cap, setCap] = useState('quote'), [industry, setIndustry] = useState('retail'), [rolloutActive, setRolloutActive] = useState(0), [faqOpen, setFaq] = useState(null);
+    const [cap, setCap] = useState('lead'), [industry, setIndustry] = useState('retail'), [rolloutActive, setRolloutActive] = useState(0), [faqOpen, setFaq] = useState(null);
     const q = useApiQuery(() => publicFaqsService.getList({ pageType: 'solutions', serviceDetail: 'chatbot' }, locale), [locale]);
     const fallback = en ? [
         { _id: 'accuracy', question: 'What happens when the AI Chatbot cannot answer accurately?', answer: 'Losa limits approved data sources, applies confidence thresholds and transfers the conversation to an employee when information is insufficient.' },
@@ -1301,16 +1356,16 @@ export default function ChatbotSolutionsPage() {
     ];
     const faqs = q.data?.items?.length ? q.data.items : fallback;
     const localizedCaps = en ? [
-        { ...caps[0], kicker: 'Intake & qualification', title: 'Understand needs from the very first message', text: 'AI communicates naturally, asks relevant questions and identifies prospects so your team can prioritize the right opportunities.', bullets: ['Understand intent and context', 'Collect structured information', 'Tag and score leads', 'Route data to the responsible team'] },
-        { ...caps[1], kicker: 'AI Vision & OCR', title: 'Understand customer-submitted images', text: 'AI analyzes images within conversations to identify products, read codes and respond in the right context.', bullets: ['Identify products and models', 'Read text, codes or invoices', 'Analyze image details', 'Combine images with customer questions'] },
-        { ...caps[2], kicker: 'Consulting & sales', title: 'Turn conversations into a sales process', text: 'The chatbot connects to product data to advise customers, check inventory and instantly create quotations.', bullets: ['Find and recommend suitable products', 'Check prices and inventory', 'Create quotations automatically', 'Collect order-closing information'] },
-        { ...caps[3], kicker: 'Shipping & customer care', title: 'Automate shipping fees and post-sale care', text: 'AI captures addresses, checks delivery fees and continues supporting customers after purchase.', bullets: ['Capture and validate addresses', 'Calculate shipping fees', 'Update order status', 'Follow up with existing customers'] },
-        { ...caps[4], kicker: 'Omnichannel synchronization', title: 'One AI brain across every touchpoint', text: 'Customers can begin on your website and continue on a familiar channel while history and context remain consistent.', bullets: ['Website, Messenger, Zalo and more', 'Shared knowledge source', 'Centralized conversation management', 'Preserved cross-channel context'] },
-        { ...caps[5], kicker: 'AI and human collaboration', title: 'Transfer to the right employee without repeating questions', text: 'When expertise is needed, AI transfers the conversation to the right employee with the full context attached.', bullets: ['Route to the responsible team', 'Attach conversation history', 'Allow employee takeover at any time', 'Apply permissions and retain handling history'] },
-        { ...caps[6], kicker: 'System integration', title: 'A chatbot that does not work alone', text: 'Losa connects data and turns conversations into actions in the systems your business already operates.', bullets: ['Synchronize profiles with CRM', 'Connect APIs and internal systems', 'Look up inventory and orders', 'Measure results on dashboards'] },
+        { ...caps[0], kicker: 'Intake & qualification', title: 'Identify high-potential customers from the first message', text: 'AI discovers needs, collects key details and prioritizes customers with the highest likelihood to convert.', bullets: ['Understand intent and context', 'Collect structured information', 'Tag and score leads', 'Route data to the responsible team'] },
+        { ...caps[1], kicker: 'AI Vision & OCR', title: 'Read images, identify products and respond instantly', text: 'Analyze images, read codes and identify products to answer in the exact context customers care about.', bullets: ['Identify products and models', 'Read text, codes or invoices', 'Analyze image details', 'Combine images with customer questions'] },
+        { ...caps[2], kicker: 'Shipping & customer care', title: 'Automate shipping and post-purchase care', text: 'Validate addresses, calculate delivery fees, update orders and continue supporting customers after purchase.', bullets: ['Capture and validate addresses', 'Calculate shipping fees', 'Update order status', 'Follow up with existing customers'] },
+        { ...caps[3], kicker: 'AI and human collaboration', title: 'Reach the right employee without repeating the story', text: 'AI transfers the full history and customer needs to the right employee whenever specialist support is required.', bullets: ['Route to the responsible team', 'Attach conversation history', 'Allow employee takeover at any time', 'Apply permissions and retain handling history'] },
+        { ...caps[4], kicker: 'System integration', title: 'Turn every answer into immediate action', text: 'Connect CRM, orders, appointments and APIs so AI can complete tasks directly inside the conversation.', bullets: ['Synchronize profiles with CRM', 'Connect APIs and internal systems', 'Look up inventory and orders', 'Measure results on dashboards'] },
     ] : caps;
-    const allCapabilities = [...localizedCaps, ...(en ? englishGrowthCapabilities : growthCapabilities)];
-    const active = allCapabilities.find(x => x.id === cap);
+    const allCapabilitiesUnordered = [...localizedCaps, ...(en ? englishGrowthCapabilities : growthCapabilities)];
+    const capabilityOrder = ['always-on', 'lead', 'vision', 'integration', 'shipping', 'handoff', 'right-time', 'retention'];
+    const allCapabilities = capabilityOrder.map(id => allCapabilitiesUnordered.find(item => item.id === id)).filter(Boolean);
+    const active = allCapabilities.find(x => x.id === cap) || allCapabilities[0];
     const localizedIndustries = en ? industries.map(item => ({ ...item, name: ({ retail: 'Retail & E-commerce', education: 'Education', health: 'Healthcare & Clinics', b2b: 'B2B Services' })[item.id] })) : industries;
     const localizedRollout = en ? [
         { ...rollout[0], title: 'Discovery', text: 'Define the challenge, channels and goals.' },
@@ -1349,7 +1404,7 @@ export default function ChatbotSolutionsPage() {
                 </div>
             </div>
         </section>
-        <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow={en ? 'LOSA AI CHATBOT CAPABILITIES' : 'NĂNG LỰC CHATBOT AI LOSA'} title={en ? 'What can Losa AI Chatbot do for your business?' : 'Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?'} text={en ? 'One AI assistant supporting the journey from first message to consulting, shipping and post-sale care.' : 'Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán.'} /><div className="csp-capability-layout"><CapabilityTabs items={allCapabilities} activeId={cap} onSelect={setCap} /><div className="csp-capability-panel" role="tabpanel"><div className="csp-capability-panel__copy"><div className="csp-eyebrow">{active.kicker}</div><h3>{active.title}</h3><p>{active.text}</p><ul>{active.bullets.map(x => <li key={x}><CheckCircle2 />{x}</li>)}</ul></div><Conversation mode={active.id} compact /></div></div></div></section>
+        <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow={en ? 'LOSA AI CHATBOT CAPABILITIES' : 'NĂNG LỰC CHATBOT AI LOSA'} title={en ? 'What can Losa AI Chatbot do for your business?' : 'Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?'} text={en ? 'One AI assistant supporting the journey from first message to consulting, shipping and post-sale care.' : 'Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán.'} /><div className="csp-capability-layout"><CapabilityTabs items={allCapabilities} activeId={cap} onSelect={setCap} /><div id="capability-media-panel" className="csp-capability-panel" role="tabpanel" aria-labelledby={`capability-tab-${active.id}`}><motion.img key={active.id} src={capabilityMedia[active.id].image} alt={en ? `${active.title} — Losa AI capability illustration` : capabilityMedia[active.id].alt} initial={{ opacity: 0, scale: 1.015 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .65, ease: [0.22, 1, 0.36, 1] }} /></div></div></div></section>
         <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow={en ? 'AI DESIGNED FOR YOUR INDUSTRY' : 'AI THIẾT KẾ THEO NGÀNH'} title={en ? 'Every business operates differently' : 'Mỗi doanh nghiệp có một cách vận hành khác nhau'} text={en ? 'Losa is designed around the unique processes, data and tasks of each industry.' : 'Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành.'} /><div className="csp-usecase-tabs" role="tablist" aria-label={en ? 'Choose an AI industry use case' : 'Chọn ngành ứng dụng AI'} onKeyDown={event => { const index = localizedIndustries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = localizedIndustries[(index + direction + localizedIndustries.length) % localizedIndustries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{localizedIndustries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
             <IndustryWorkflowStudio industryId={industry} en={en} />
         </div></section>
