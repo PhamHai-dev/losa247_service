@@ -156,7 +156,7 @@ function BusinessValueStory({ en = false }) {
         <div className="csp-shell">
             <header className="csp-business-story__heading">
                 <div className="csp-eyebrow">{en ? 'LOSA SUPPORTS BUSINESS GROWTH' : 'LOSA ĐỒNG HÀNH CÙNG DOANH NGHIỆP'}</div>
-                <h2>{en ? <>Turn every conversation into a <span>growth opportunity</span></> : <>Từ mỗi cuộc trò chuyện đến một <span>cơ hội tăng trưởng</span></>}</h2>
+                <h2>{en ? <>Turn every conversation into a <span>growth opportunity</span></> : <>Từ mỗi cuộc trò chuyện<br />đến một <span>cơ hội tăng trưởng</span></>}</h2>
                 <p>{en ? 'Losa remembers what customers care about, captures every new need and helps your business continue the conversation at the right time.' : 'Losa ghi nhớ điều khách hàng quan tâm, tiếp nhận mọi nhu cầu mới và giúp doanh nghiệp tiếp tục cuộc trò chuyện vào đúng thời điểm.'}</p>
             </header>
 
@@ -1400,7 +1400,7 @@ export default function ChatbotSolutionsPage() {
             <div className="csp-shell">
                 <header className="csp-impact__heading">
                     <div className="csp-eyebrow">{en ? 'OPERATIONAL IMPACT' : 'HIỆU QUẢ VẬN HÀNH'}</div>
-                    <h2>{en ? <>How AI Chatbot helps businesses <span>operate more efficiently</span></> : <>Chatbot AI giúp doanh nghiệp <span>vận hành hiệu quả hơn</span> như thế nào?</>}</h2>
+                    <h2>{en ? <>How AI Chatbot helps businesses <span>operate more efficiently</span></> : <>Chatbot AI giúp doanh nghiệp<br /><span>vận hành hiệu quả hơn</span> như thế nào?</>}</h2>
                     <p>{en ? 'Automate repetitive work to reduce workload, optimize costs and respond to customers faster.' : 'Tự động hóa phần việc lặp lại để đội ngũ giảm tải, tối ưu chi phí và phản hồi khách hàng nhanh hơn.'}</p>
                 </header>
                 <div className="csp-impact__grid">
