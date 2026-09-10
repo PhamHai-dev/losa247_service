@@ -4,7 +4,8 @@ import {
   HomeOutlined, ThunderboltOutlined,
   FileTextOutlined, QuestionCircleOutlined, ShopOutlined,
   MessageOutlined, TeamOutlined, HistoryOutlined, SettingOutlined,
-  BellOutlined, DoubleLeftOutlined, RightOutlined, CloseOutlined
+  BellOutlined, DoubleLeftOutlined, RightOutlined,
+  MenuOutlined, DownOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../stores/authStore'
 import { useNotificationStore } from '../stores/notificationStore'
@@ -182,14 +183,6 @@ export function AdminLayout() {
           >
             <DoubleLeftOutlined />
           </button>
-          <button
-            type="button"
-            className="mobile-close-btn"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-label="Đóng sidebar"
-          >
-            <CloseOutlined />
-          </button>
         </div>
         <nav className="admin-menu" aria-label="Điều hướng quản trị">
           {menuGroups.map((group) => (
@@ -223,7 +216,8 @@ export function AdminLayout() {
             </button>
           )}
           <button type="button" className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)} aria-label="Mở menu quản trị">
-            <span /><span /><span />
+            <MenuOutlined />
+            <span className="mobile-menu-label">Menu</span>
           </button>
           <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
             <Popover
@@ -245,11 +239,14 @@ export function AdminLayout() {
               trigger={['click']}
               placement="bottomRight"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <Avatar size="small" style={{ backgroundColor: '#6366f1' }}>{user?.name?.[0]?.toUpperCase() || 'A'}</Avatar>
-                <span style={{ fontSize: 14, color: '#475569', fontWeight: 500 }}>{user?.name || 'Super Admin'}</span>
-                <span style={{ fontSize: 10, color: '#64748b', marginLeft: 4 }}>▼</span>
-              </div>
+              <button type="button" className="admin-account-trigger" aria-label="Mở menu tài khoản">
+                <Avatar className="admin-account-avatar" size={34}>{user?.name?.[0]?.toUpperCase() || 'A'}</Avatar>
+                <span className="admin-account-copy">
+                  <strong>{user?.name || 'Super Admin'}</strong>
+                  <small>Quản trị viên</small>
+                </span>
+                <DownOutlined className="admin-account-arrow" />
+              </button>
             </Dropdown>
           </div>
         </div>

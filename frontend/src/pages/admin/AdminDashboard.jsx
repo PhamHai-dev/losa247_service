@@ -71,11 +71,11 @@ export function AdminDashboard() {
         extra={<Button icon={<ReloadOutlined />} onClick={handleRefresh}>Làm mới</Button>}
       />
       <Spin spinning={kpisQ.loading}>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }} /></Card></Col>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Lead hoàn thành" value={kpi.completedLeads ?? 0} prefix="✅" valueStyle={{ color: '#16A34A' }} /></Card></Col>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Bài viết xuất bản" value={kpi.totalBlogs ?? 0} prefix="📝" /></Card></Col>
-          <Col xs={24} sm={12} lg={6}><Card><Statistic title="Chờ xử lý (Lead/Chat)" value={kpi.pendingTasks ?? 0} prefix="💬" valueStyle={{ color: '#EF4444' }} /></Card></Col>
+        <Row gutter={[12, 12]}>
+          <Col xs={12} sm={12} lg={6}><Card><Statistic title="Lead mới tháng này" value={kpi.newLeads ?? 0} prefix="⚡" valueStyle={{ color: '#0F766E' }} /></Card></Col>
+          <Col xs={12} sm={12} lg={6}><Card><Statistic title="Lead hoàn thành" value={kpi.completedLeads ?? 0} prefix="✅" valueStyle={{ color: '#16A34A' }} /></Card></Col>
+          <Col xs={12} sm={12} lg={6}><Card><Statistic title="Bài viết xuất bản" value={kpi.totalBlogs ?? 0} prefix="📝" /></Card></Col>
+          <Col xs={12} sm={12} lg={6}><Card><Statistic title="Chờ xử lý (Lead/Chat)" value={kpi.pendingTasks ?? 0} prefix="💬" valueStyle={{ color: '#EF4444' }} /></Card></Col>
         </Row>
       </Spin>
 
@@ -148,17 +148,19 @@ export function AdminDashboard() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={12}>
-          <Card title="Yêu cầu tư vấn mới nhất (Leads)">
+          <Card className="dashboard-recent-leads-card" title="Yêu cầu tư vấn mới nhất (Leads)">
             <QueryState loading={recentLeadsQ.loading} error={recentLeadsQ.error} empty={!recentLeads.length}>
               <Table
+                className="dashboard-recent-leads-table"
                 dataSource={recentLeads}
                 rowKey="_id"
                 pagination={false}
                 size="small"
+                scroll={{ x: 620 }}
                 columns={[
-                  { title: 'Khách hàng', dataIndex: 'name', key: 'name', render: (text, record) => <><Text strong>{text}</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>{record.phone}</Text></> },
-                  { title: 'Trạng thái', dataIndex: 'status', key: 'status', render: (val) => <StatusTag map={LEAD_STATUS} value={val} /> },
-                  { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(val)}</Text> },
+                  { title: 'Khách hàng', dataIndex: 'name', key: 'name', width: 230, render: (text, record) => <><Text strong>{text}</Text><br /><Text type="secondary" style={{ fontSize: 12 }}>{record.phone}</Text></> },
+                  { title: 'Trạng thái', dataIndex: 'status', key: 'status', width: 150, render: (val) => <StatusTag map={LEAD_STATUS} value={val} /> },
+                  { title: 'Thời gian', dataIndex: 'createdAt', key: 'createdAt', width: 240, render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(val)}</Text> },
                 ]}
               />
             </QueryState>

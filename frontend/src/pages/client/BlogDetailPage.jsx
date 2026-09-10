@@ -31,6 +31,31 @@ import { PageSeo } from '../../components/seo/PageSeo'
 
 // ---- Components -------------------------------------------------------------
 
+function TocPanel({ toc, activeId, showToc, setShowToc, contentRef, t, locale, mobile = false }) {
+  const goToHeading = (event, item) => {
+    event.preventDefault()
+    const headings = Array.from(contentRef.current?.querySelectorAll('h1, h2, h3, h4, h5, h6') || [])
+    const element = contentRef.current?.querySelector(`[id="${item.id}"]`) || headings[item.index]
+    if (!element) return
+
+    const headerHeight = document.querySelector('.client-header')?.getBoundingClientRect().height || 78
+    window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - headerHeight - 12, behavior: 'smooth' })
+    if (mobile) window.setTimeout(() => setShowToc(false), 120)
+  }
+
+  return (
+    <section id={mobile ? 'blog-mobile-toc' : 'blog-desktop-toc'} className={`toc-widget${mobile ? ' toc-widget--mobile' : ''}${showToc ? ' is-open' : ''}`} aria-label={t('blog.toc')} onClick={mobile ? event => event.stopPropagation() : undefined}>
+      <div className="toc-widget__header">
+        <span className="toc-widget__title"><MenuOutlined /> {t('blog.toc')}</span>
+        <button type="button" className="toc-widget__trigger" aria-label={showToc ? (locale === 'en' ? 'Hide table of contents' : 'Ẩn mục lục') : (locale === 'en' ? 'Show table of contents' : 'Hiện mục lục')} aria-expanded={showToc} aria-controls={mobile ? 'blog-mobile-toc-list' : 'blog-desktop-toc-list'} onClick={() => setShowToc(!showToc)}><ChevronDown /></button>
+      </div>
+      <div id={mobile ? 'blog-mobile-toc-list' : 'blog-desktop-toc-list'} className="toc-list">
+        {toc.map(item => <a key={item.id} href={`#${item.id}`} onClick={event => goToHeading(event, item)} className={`toc-link level-${item.level} ${activeId === item.id ? 'active' : ''}`}>{item.text}</a>)}
+      </div>
+    </section>
+  )
+}
+
 export function BlogDetailPage() {
   const { locale, t, localizedPath } = useI18n()
   const { id } = useParams()
@@ -43,8 +68,15 @@ export function BlogDetailPage() {
 
   const contentRef = useRef(null)
   const [toc, setToc] = useState([])
-  const [showToc, setShowToc] = useState(true)
+  const [showToc, setShowToc] = useState(() => window.matchMedia('(min-width: 769px)').matches)
   const [activeId, setActiveId] = useState('')
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 769px)')
+    const syncTocVisibility = event => setShowToc(event.matches)
+    media.addEventListener('change', syncTocVisibility)
+    return () => media.removeEventListener('change', syncTocVisibility)
+  }, [])
 
   useEffect(() => {
     if (!id) return;
@@ -107,135 +139,34 @@ export function BlogDetailPage() {
       {blog && <PageSeo title={blog.metaTitle || blog.title} description={blog.metaDescription || blog.excerpt} image={blog.coverImageUrl} isFallback={blog.isFallback} alternates={blog.alternates} />}
       <Spin spinning={query.loading}>
         {!blog && !query.loading ? <Empty description={t('blog.notFound')} /> : blog && (
-          <div style={{
-            paddingTop: '40px',
-            width: '100%',
-            transition: 'max-width 0.5s ease-in-out'
-          }}>
-            {!showToc && hasHeadings && (
-              <div
-                style={{
-                  position: 'fixed', right: 24, top: 100, zIndex: 100,
-                  background: '#fff', padding: 12, borderRadius: 12,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid var(--line)'
-                }}
-                title={locale === 'en' ? 'Show table of contents' : 'Hiện nội dung chính'}
-              >
-                <MenuOutlined style={{ fontSize: 24, cursor: 'pointer', color: 'var(--primary)' }} onClick={() => setShowToc(true)} />
+          <div className="blog-detail" data-toc-open={showToc && hasHeadings}>
+            {!showToc && blog.content && (
+              <button type="button" className="blog-detail__toc-fab" aria-label={locale === 'en' ? 'Show table of contents' : 'Hiện mục lục'} aria-expanded="false" onClick={() => setShowToc(true)}><ChevronLeft /></button>
+            )}
+            {showToc && hasHeadings && (
+              <div className="blog-detail__toc-overlay" onClick={() => setShowToc(false)}>
+                <TocPanel toc={toc} activeId={activeId} showToc={showToc} setShowToc={setShowToc} contentRef={contentRef} t={t} locale={locale} mobile />
               </div>
             )}
 
-            <div style={{ marginBottom: 32, maxWidth: (showToc && hasHeadings) ? 'calc(100% - 340px)' : '100%' }}>
-              {blog.category && <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 14 }}>{blog.category?.name || (locale === 'en' ? 'Category' : 'Danh mục')}</span>}
-              <h1 style={{ fontSize: 'clamp(28px, 5vw, 42px)', margin: '16px 0', lineHeight: 1.3 }}>{blog.title}</h1>
-              <div className="blog-meta">
+            <header className="blog-detail__header">
+              {blog.category && <span className="blog-detail__category">{blog.category?.name || (locale === 'en' ? 'Category' : 'Danh mục')}</span>}
+              <h1>{blog.title}</h1>
+              <div className="blog-meta blog-detail__meta">
                 <span><CalendarOutlined /> {formatDate(blog.publishedAt)}</span>
                 <span><EyeOutlined /> {blog.views || 0} {t('blog.views')}</span>
               </div>
-            </div>
+            </header>
 
-            <div style={{ display: 'flex', gap: 80, alignItems: 'flex-start' }}>
-              <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
-                {blog.coverImageUrl && (
-                  <img src={blog.coverImageUrl} alt={blog.title} style={{ width: '100%', borderRadius: 24, marginBottom: 40 }} />
-                )}
+            <div className="blog-detail__layout">
+              <article className="blog-detail__article">
+                {blog.coverImageUrl && <img src={blog.coverImageUrl} alt={blog.title} className="blog-detail__cover" />}
                 <div className="blog-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: blog.content }} />
 
-                {blog.tags && blog.tags.length > 0 && (
-                  <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid var(--line)' }}>
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      {blog.tags.map(t => t && t._id ? (
-                        <Tag key={t._id} color="geekblue" style={{ padding: '6px 16px', fontSize: 14, borderRadius: 100, border: '1px solid #adc6ff', background: '#f0f5ff', fontWeight: 500 }}>
-                          {t.name}
-                        </Tag>
-                      ) : null)}
-                    </div>
-                  </div>
-                )}
-
-                {relatedBlogs.length > 0 && (
-                  <div style={{ marginTop: 60 }}>
-                    <h3 style={{ marginBottom: 24, fontSize: 24 }}>{t('blog.related')}</h3>
-                    <div className="main-blog-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
-                      {relatedBlogs.map(b => (
-                        <Link to={blogPath(b.slug)} key={b._id} className="blog-card">
-                          <img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} className="blog-card-img" />
-                          <div className="blog-card-body">
-                            {b.category && <span className="card-cat">{b.category.name}</span>}
-                            <h3>{b.title}</h3>
-                            <div className="blog-meta">
-                              <span>{formatDate(b.publishedAt)}</span>
-                              <span>•</span>
-                              <span><EyeOutlined /> {b.views || 0}</span>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{
-                position: 'sticky', top: 100,
-                width: showToc && hasHeadings ? 300 : 0,
-                opacity: showToc && hasHeadings ? 1 : 0,
-                overflow: 'hidden',
-                flexShrink: 0,
-                transition: 'all 0.5s ease-in-out'
-              }}>
-                {hasHeadings && (
-                  <div className="toc-widget" style={{
-                    background: '#f8fafc',
-                    padding: 24,
-                    borderRadius: 16,
-                    border: '1px solid var(--line)',
-                    width: 300
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                      <h3 style={{ margin: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <MenuOutlined /> {t('blog.toc')}
-                      </h3>
-                      <span
-                        style={{ color: 'var(--primary)', cursor: 'pointer', fontSize: 14 }}
-                        onClick={() => setShowToc(false)}
-                      >
-                        [{t('blog.hide')}]
-                      </span>
-                    </div>
-                    <div className="toc-list" style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
-                      {toc.map(item => (
-                        <div key={item.id} style={{ paddingLeft: (item.level - 2) * 16 }}>
-                          <a
-                            href={`#${item.id}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (!contentRef.current) return;
-                              const headings = contentRef.current.querySelectorAll('h2, h3, h4');
-                              const el = headings[item.index];
-                              if (el) {
-                                const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                                window.scrollTo({ top: y, behavior: 'smooth' });
-                              }
-                            }}
-                            className={`toc-link level-${item.level} ${activeId === item.id ? 'active' : ''}`}
-                            style={{
-                              color: activeId === item.id ? '#16a34a' : (item.level === 2 ? '#0f172a' : '#475569'),
-                              fontWeight: activeId === item.id ? 700 : (item.level === 2 ? 600 : 400),
-                              textDecoration: 'none',
-                              fontSize: 14,
-                              display: 'block',
-                              lineHeight: 1.4
-                            }}
-                          >
-                            {item.text}
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+                {blog.tags?.length > 0 && <div className="blog-detail__tags">{blog.tags.map(tag => tag?._id ? <Tag key={tag._id} color="geekblue">{tag.name}</Tag> : null)}</div>}
+                {relatedBlogs.length > 0 && <div className="blog-detail__related"><h3>{t('blog.related')}</h3><div className="main-blog-grid">{relatedBlogs.map(b => <Link to={blogPath(b.slug)} key={b._id} className="blog-card"><img src={b.coverImageUrl || '/placeholder.jpg'} alt={b.title} className="blog-card-img" /><div className="blog-card-body">{b.category && <span className="card-cat">{b.category.name}</span>}<h3>{b.title}</h3><div className="blog-meta"><span>{formatDate(b.publishedAt)}</span><span>•</span><span><EyeOutlined /> {b.views || 0}</span></div></div></Link>)}</div></div>}
+              </article>
+              {hasHeadings && <aside className="blog-detail__toc-sidebar"><TocPanel toc={toc} activeId={activeId} showToc={showToc} setShowToc={setShowToc} contentRef={contentRef} t={t} locale={locale} /></aside>}
             </div>
           </div>
         )}

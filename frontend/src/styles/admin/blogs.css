@@ -504,7 +504,11 @@
         padding-inline: 12px
     }
 
-    .blogs-kpi-grid,
+    .blogs-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px
+    }
+
     .blogs-category-stats,
     .blogs-filter-grid {
         grid-template-columns: 1fr
