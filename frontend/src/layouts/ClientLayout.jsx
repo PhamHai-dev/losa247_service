@@ -5,7 +5,7 @@ import { MessageCircle, Volume2, MoreVertical, X, Check, CheckCheck, Smile, Imag
 import { Drawer, Form, message } from 'antd'
 import { useAuthStore } from '../stores/authStore'
 import { useUIStore } from '../stores/uiStore'
-import { clientChatService } from '../features/chat/chatService'
+import { clientChatService, API_BASE_URL } from '../features/chat/chatService'
 import { useChatRealtime } from '../features/chat/useChatRealtime'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { settingsService } from '../features/settings/settingsService'
@@ -202,7 +202,7 @@ function ChatWidget({ user }) {
                   <div className="bubble me">
                     {m.content && <div>{m.content}</div>}
                     {m.attachments?.map((attachment, i) => (
-                      <img key={i} src={typeof attachment === 'string' ? attachment : attachment.url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
+                      <img key={attachment?.id || i} src={typeof attachment === 'string' ? attachment : (attachment.url || `${API_BASE_URL}/chat/attachments/${attachment.id}/content?token=${encodeURIComponent(sessionToken || '')}`)} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
                     ))}
                   </div>
                 </div>
@@ -212,7 +212,7 @@ function ChatWidget({ user }) {
                   <div className="bubble">
                     {m.content && <div>{m.content}</div>}
                     {m.attachments?.map((attachment, i) => (
-                      <img key={i} src={typeof attachment === 'string' ? attachment : attachment.url} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
+                      <img key={attachment?.id || i} src={typeof attachment === 'string' ? attachment : (attachment.url || `${API_BASE_URL}/chat/attachments/${attachment.id}/content?token=${encodeURIComponent(sessionToken || '')}`)} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
                     ))}
                     <div className="chat-time">{locale === 'en' ? 'Just now' : 'Vừa xong'}</div>
                   </div>
@@ -325,7 +325,7 @@ export function ClientLayout() {
 
   const siteInfo = siteQuery.data || {}
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1787021089/losa247/u1i4tjn1qcfkkg2q2mpv.png'
+  const logoUrl = siteInfo.logoUrl || `${API_BASE_URL.replace(/\/api\/v1\/?$/, '')}/uploads/images/logo-image/default-logo.png`
   const slogan = siteInfo.slogan || 'Tự động hóa chăm sóc 24/7'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
@@ -650,9 +650,6 @@ export function ClientLayout() {
         width={250}
       >
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          <div className="language-switcher" aria-label={t('navigation.language')} style={{ display: 'flex', gap: 8, padding: '0 0 16px' }}>
-            {['vi', 'en'].map((code) => <button id={`mobile-language-${code}`} key={code} type="button" onClick={() => { switchLocale(code); setMobileMenuOpen(false) }} aria-pressed={locale === code} className="btn" style={{ flex: 1, border: '1px solid #cbd5e1', background: locale === code ? '#0f766e' : '#fff', color: locale === code ? '#fff' : '#334155' }}>{code.toUpperCase()}</button>)}
-          </div>
           <NavLink to={localizedPath('/')} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t('navigation.home')}</NavLink>
 
           <div className="mobile-nav-submenu">
@@ -681,6 +678,9 @@ export function ClientLayout() {
             )}
           </div>
           <NavLink to={localizedPath('/blog')} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t('navigation.knowledge')}</NavLink>
+          <div className="language-switcher" aria-label={t('navigation.language')} style={{ display: 'flex', gap: 8, padding: '16px 0 0' }}>
+            {['vi', 'en'].map((code) => <button id={`mobile-language-${code}`} key={code} type="button" onClick={() => { switchLocale(code); setMobileMenuOpen(false) }} aria-pressed={locale === code} className="btn" style={{ flex: 1, border: '1px solid #cbd5e1', background: locale === code ? '#0f766e' : '#fff', color: locale === code ? '#fff' : '#334155' }}>{code.toUpperCase()}</button>)}
+          </div>
         </div>
 
         <div style={{ padding: '24px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>

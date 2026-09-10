@@ -18,7 +18,7 @@ import { ClientFaqSection } from '../../components/client/ClientFaqSection'
 import { useI18n } from '../../hooks/useI18n'
 import { PageSeo } from '../../components/seo/PageSeo'
 
-const BLOG_FALLBACK = 'https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png'
+const BLOG_FALLBACK = `${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '')}/uploads/images/blog-image/blog-fallback.png`
 
 const fadeUp = {
   hidden: { opacity: 0, y: 26 },
@@ -87,8 +87,8 @@ export function HomePage() {
 
           <motion.div className="client-hero__visual home-hero-visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
             <div className="home-hero-glow" />
-            <img className="home-hero-main-image" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1786006189/Main_image_nttqte.png" alt={en ? 'Losa digital transformation solution ecosystem' : 'Hệ sinh thái giải pháp chuyển đổi số Losa'} />
-            <img className="home-hero-robot" src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784878046/logo_bot_home_gmhrdk.png" alt={en ? 'Losa AI assistant' : 'Trợ lý AI Losa'} />
+            <img className="home-hero-main-image" src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '')}/uploads/images/logo-image/home-hero-main.png`} alt={en ? 'Losa digital transformation solution ecosystem' : 'Hệ sinh thái giải pháp chuyển đổi số Losa'} />
+            <img className="home-hero-robot" src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '')}/uploads/images/logo-image/home-hero-bot.png`} alt={en ? 'Losa AI assistant' : 'Trợ lý AI Losa'} />
             <span className="home-hero-channel channel-messenger"><FaFacebookMessenger /></span>
             <span className="home-hero-channel channel-zalo"><SiZalo /></span>
             <span className="home-hero-channel channel-telegram"><FaTelegramPlane /></span>

@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -37,6 +38,10 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true, limit: '256kb' }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use('/uploads', express.static(path.join(env.STORAGE_ROOT, 'public'), {
+  maxAge: env.NODE_ENV === 'production' ? '30d' : 0,
+  immutable: env.NODE_ENV === 'production',
+}));
 
 // 4. Kết nối MySQL qua Prisma và khởi tạo Redis cache
 connectDB();
@@ -57,6 +62,7 @@ const adminPricingRoutes = require('./routes/admin/pricing.routes');
 const adminChatRoutes = require('./routes/admin/chat.routes');
 const adminSettingsRoutes = require('./routes/admin/settings.routes');
 const adminApiConfigsRoutes = require('./routes/admin/apiConfigs.routes');
+const adminUploadsRoutes = require('./routes/admin/uploads.routes');
 const adminUsersRoutes = require('./routes/admin/users.routes');
 const adminRoleRoutes = require('./routes/admin/role.routes');
 const adminLogRoutes = require('./routes/admin/log.routes');
@@ -81,6 +87,7 @@ app.use('/api/v1/admin/pricing', auditLogMiddleware, adminPricingRoutes);
 app.use('/api/v1/admin/chat', auditLogMiddleware, adminChatRoutes);
 app.use('/api/v1/admin/settings', auditLogMiddleware, adminSettingsRoutes);
 app.use('/api/v1/admin/api-configs', auditLogMiddleware, adminApiConfigsRoutes);
+app.use('/api/v1/admin/uploads', auditLogMiddleware, adminUploadsRoutes);
 app.use('/api/v1/admin/users', auditLogMiddleware, adminUsersRoutes);
 app.use('/api/v1/admin/roles', auditLogMiddleware, adminRoleRoutes);
 app.use('/api/v1/admin/notifications', auditLogMiddleware, adminNotificationsRoutes);

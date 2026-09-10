@@ -1900,6 +1900,12 @@ a.footer-contact-item:hover strong {
     width: 100%;
     border-radius: 12px;
   }
+
+  .client-hero__proof {
+    width: 100%;
+    justify-content: center;
+    margin-inline: auto;
+  }
 }
 
 .category-pills {

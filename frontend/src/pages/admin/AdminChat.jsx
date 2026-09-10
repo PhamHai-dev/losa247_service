@@ -28,10 +28,26 @@ import { pricingService } from '../../features/services/pricingService'
 import { chatService } from '../../features/chat/chatService'
 import { logsService } from '../../features/logs/logsService'
 import { usersService, rolesService } from '../../features/users/usersService'
-import { settingsService, apiConfigsService } from '../../features/settings/settingsService'
+import { apiConfigsService } from '../../features/settings/settingsService'
 import { useChatRealtime } from '../../features/chat/useChatRealtime'
 import { useAuthStore } from '../../stores/authStore'
 import dayjs from 'dayjs'
+
+const AdminChatImage = ({ attachment, alt }) => {
+  const [src, setSrc] = useState('')
+  useEffect(() => {
+    if (typeof attachment === 'string') { setSrc(attachment); return undefined }
+    let active = true
+    let objectUrl = ''
+    chatService.getAttachmentContent(attachment.id).then((blob) => {
+      if (!active) return
+      objectUrl = URL.createObjectURL(blob)
+      setSrc(objectUrl)
+    }).catch(() => setSrc(''))
+    return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [attachment])
+  return src ? <img src={src} alt={alt} /> : null
+}
 
 const { Title, Text } = Typography
 
@@ -138,9 +154,9 @@ export function AdminChat() {
     if (!file) return
     setUploading(true)
     try {
-      const data = await settingsService.uploadAsset(file)
-      if (data?.url) {
-        setAttachments(prev => [...prev, data.url])
+      const data = await chatService.uploadAttachment(activeId, file)
+      if (data?.id) {
+        setAttachments(prev => [...prev, data])
       }
     } catch (err) {
       console.error('Lỗi tải file:', err)
@@ -155,7 +171,7 @@ export function AdminChat() {
     if (!canReply) return message.error('Bạn không có quyền phản hồi hội thoại')
     if (!text.trim() && !attachments.length) return
     try {
-      const saved = await chatService.sendMessage(activeId, { content: text, attachments })
+      const saved = await chatService.sendMessage(activeId, { content: text, attachmentIds: attachments.map((item) => item.id) })
       appendMessage(saved)
       setText('')
       setAttachments([])
@@ -260,8 +276,8 @@ export function AdminChat() {
                         {sender !== 'customer' && <span className="admin-chat-message__sender">{senderLabel}</span>}
                         <div className="admin-chat-message__bubble">
                           {chatMessage.content && <div>{chatMessage.content}</div>}
-                          {chatMessage.attachments?.map((url, index) => (
-                            <img key={index} src={url} alt="Tệp đính kèm trong hội thoại" />
+                          {chatMessage.attachments?.map((attachment, index) => (
+                            <AdminChatImage key={attachment?.id || index} attachment={attachment} alt="Tệp đính kèm trong hội thoại" />
                           ))}
                         </div>
                         {sender === 'bot' && canReply && (
@@ -287,9 +303,9 @@ export function AdminChat() {
               )}
               {attachments.length > 0 && (
                 <div className="admin-chat-attachments">
-                  {attachments.map((url, index) => (
-                    <div className="admin-chat-attachment" key={url}>
-                      <img src={url} alt={`Tệp xem trước ${index + 1}`} />
+                  {attachments.map((attachment, index) => (
+                    <div className="admin-chat-attachment" key={attachment.id}>
+                      <AdminChatImage attachment={attachment} alt={`Tệp xem trước ${index + 1}`} />
                       <Button id={`admin-chat-remove-attachment-${index}`} danger shape="circle" icon={<CloseOutlined />} size="small" onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} />
                     </div>
                   ))}

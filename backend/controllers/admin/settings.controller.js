@@ -1,6 +1,5 @@
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
-const uploadHelper = require('../../helpers/upload');
 const { leadFormConfigSchema, englishSchema, normalizeLeadFormConfig, resolveLeadFormConfig } = require('../../validators/leadForm.validator');
 const { translateLeadFormPreview } = require('../../services/geminiService');
 
@@ -84,10 +83,4 @@ exports.updateSiteInfo = async (req, res, next) => {
   } catch (err) { return next(err); }
 };
 
-exports.uploadAsset = async (req, res, next) => {
-  try {
-    if (!req.file) return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng upload file' } });
-    const secureUrl = await uploadHelper.uploadToCloudinary(req.file);
-    return res.json({ success: true, data: { url: secureUrl } });
-  } catch (err) { return next(err); }
-};
+

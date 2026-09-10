@@ -85,11 +85,18 @@ const industryMedia = {
     b2b: { image: '/images/industries/b2b-workshop.webp', scene: 'Buổi tư vấn giải pháp B2B', person: 'Quang Minh', initials: 'QM', role: 'Đại diện doanh nghiệp', position: 'center 50%', tone: 'b2b' }
 };
 const rollout = [
-    { step: '01', title: 'Khảo sát', text: 'Xác định bài toán, kênh và mục tiêu.', image: '/images/solutions/solution_18_section3_khaosat.png', icon: Search },
-    { step: '02', title: 'Chuẩn hóa dữ liệu', text: 'Tổ chức tri thức và quy tắc trả lời.', image: '/images/solutions/solution_19_section3_chuanhoa.png', icon: Database },
-    { step: '03', title: 'Thiết kế workflow', text: 'Kết nối tác vụ và hệ thống cần thiết.', image: '/images/solutions/solution_20_section3_thietke.png', icon: Settings },
-    { step: '04', title: 'Kiểm thử', text: 'Đánh giá câu trả lời và tình huống bàn giao.', image: '/images/solutions/solution_21_section3_kiemthu.png', icon: ClipboardCheck },
-    { step: '05', title: 'Vận hành', text: 'Theo dõi, đo lường và tối ưu liên tục.', image: '/images/solutions/solution_22_section3_vanhanh.png', icon: Activity }
+    { step: '01', title: 'Khảo sát', text: 'Làm rõ bài toán, hành vi khách hàng và mục tiêu ưu tiên trước khi bắt đầu triển khai.', duration: '1–2 ngày', icon: Search, tone: '#14b8d4', work: ['Phỏng vấn đội ngũ phụ trách', 'Phân tích kênh và hành trình khách hàng', 'Xác định mục tiêu và phạm vi ưu tiên'] },
+    { step: '02', title: 'Chuẩn hóa dữ liệu', text: 'Biến dữ liệu rời rạc thành nguồn tri thức rõ ràng để AI phản hồi nhất quán.', duration: '2–4 ngày', icon: Database, tone: '#168cf0', work: ['Tập hợp tài liệu và dữ liệu nguồn', 'Chuẩn hóa nội dung và quy tắc trả lời', 'Thiết lập phạm vi tri thức được phép dùng'] },
+    { step: '03', title: 'Thiết kế workflow', text: 'Thiết kế luồng nghiệp vụ để chatbot không chỉ trả lời mà còn hoàn thành tác vụ.', duration: '3–5 ngày', icon: Settings, tone: '#4f63e8', work: ['Phân tích yêu cầu theo từng tình huống', 'Thiết kế luồng nghiệp vụ và bàn giao', 'Xác định hệ thống, API cần kết nối'] },
+    { step: '04', title: 'Kiểm thử', text: 'Đánh giá chatbot bằng tình huống thực tế trước khi đưa vào phục vụ khách hàng.', duration: '2–3 ngày', icon: ClipboardCheck, tone: '#6d50dc', work: ['Kiểm thử bộ câu hỏi thực tế', 'Đánh giá độ chính xác và ngữ cảnh', 'Tinh chỉnh các tình huống chuyển nhân viên'] },
+    { step: '05', title: 'Vận hành', text: 'Theo dõi hiệu quả, cập nhật tri thức và tối ưu chatbot liên tục theo dữ liệu thật.', duration: 'Liên tục', icon: Activity, tone: '#334b72', work: ['Theo dõi hội thoại và chỉ số vận hành', 'Cập nhật dữ liệu theo thay đổi kinh doanh', 'Tối ưu phản hồi và workflow định kỳ'] }
+];
+const rolloutEn = [
+    { ...rollout[0], title: 'Discovery', text: 'Clarify the challenge, customer behavior and priority goals before implementation.', duration: '1–2 days', work: ['Interview the responsible teams', 'Analyze channels and customer journeys', 'Define goals and priority scope'] },
+    { ...rollout[1], title: 'Data preparation', text: 'Turn fragmented data into a clear knowledge source for consistent AI responses.', duration: '2–4 days', work: ['Collect source documents and data', 'Standardize content and response rules', 'Define approved knowledge boundaries'] },
+    { ...rollout[2], title: 'Workflow design', text: 'Design business flows so the chatbot can complete tasks, not merely answer questions.', duration: '3–5 days', work: ['Analyze requirements by scenario', 'Design business and handoff flows', 'Identify systems and APIs to connect'] },
+    { ...rollout[3], title: 'Testing', text: 'Evaluate the chatbot with real scenarios before it starts serving customers.', duration: '2–3 days', work: ['Test real question sets', 'Assess accuracy and context', 'Refine human-handoff scenarios'] },
+    { ...rollout[4], title: 'Operations', text: 'Monitor performance, update knowledge and continuously optimize with real data.', duration: 'Ongoing', work: ['Monitor conversations and operating metrics', 'Update data as the business changes', 'Optimize responses and workflows'] }
 ];
 function Heading({ eyebrow, title, text, light = false }) { return <header className={`csp-heading${light ? ' csp-heading--light' : ''}`}><div className="csp-eyebrow">{eyebrow}</div><h2>{title}</h2>{text && <p>{text}</p>}</header> }
 function ChatHeader() { return <div className="csp-chat__top"><div className="csp-chat__avatar"><Bot /></div><div><strong>Losa AI Assistant</strong><span><i /> Đang hoạt động</span></div><span className="csp-chat__channel">AI</span></div> }
@@ -125,9 +132,11 @@ function WorkflowDemo() { const [visible, setVisible] = useState(1), [paused, se
 function CapabilityTabs({ items, activeId, onSelect }) {
     const carouselRef = useRef(null);
     const draggedRef = useRef(false);
+    const pointerStartRef = useRef(null);
     const isCarouselInView = useInView(carouselRef, { amount: .35 });
-    const [isInteractionPaused, setInteractionPaused] = useState(false);
-    const pauseTimerRef = useRef(null);
+    const [isCardAreaHovered, setCardAreaHovered] = useState(false);
+    const [isDragging, setDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState(0);
     const activeIndex = Math.max(0, items.findIndex(item => item.id === activeId));
     const visibleItems = [-1, 0, 1, 2].map(offset => ({
         item: items[(activeIndex + offset + items.length) % items.length],
@@ -139,57 +148,100 @@ function CapabilityTabs({ items, activeId, onSelect }) {
         if (item) onSelect(item.id);
     };
 
-    const pauseAfterInteraction = () => {
-        setInteractionPaused(true);
-        window.clearTimeout(pauseTimerRef.current);
-        pauseTimerRef.current = window.setTimeout(() => setInteractionPaused(false), 20000);
-    };
-
-    useEffect(() => () => window.clearTimeout(pauseTimerRef.current), []);
-
     useEffect(() => {
-        if (!isCarouselInView || isInteractionPaused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+        if (!isCarouselInView || isCardAreaHovered || isDragging || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
         const timer = window.setInterval(() => {
             if (!document.hidden) selectAt(activeIndex + 1);
         }, 3500);
         return () => window.clearInterval(timer);
-    }, [activeIndex, items, isCarouselInView, isInteractionPaused]);
+    }, [activeIndex, items, isCarouselInView, isCardAreaHovered, isDragging]);
 
     const nudge = direction => {
-        pauseAfterInteraction();
         selectAt(activeIndex + direction);
     };
 
-    const handleDragEnd = (_, info) => {
-        pauseAfterInteraction();
+    const handlePointerDown = event => {
+        if (event.button !== undefined && event.button !== 0) return;
+        pointerStartRef.current = { x: event.clientX, y: event.clientY, id: event.pointerId };
+        draggedRef.current = false;
+        setDragOffset(0);
+        setDragging(true);
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+    };
+
+    const handlePointerMove = event => {
+        const start = pointerStartRef.current;
+        if (!start || start.id !== event.pointerId) return;
         const mobile = window.matchMedia('(max-width: 980px)').matches;
-        const distance = mobile ? info.offset.x : info.offset.y;
-        draggedRef.current = Math.abs(distance) >= 32;
-        if (!draggedRef.current) return;
-        selectAt(activeIndex + (distance < 0 ? 1 : -1));
+        const distance = mobile ? event.clientX - start.x : event.clientY - start.y;
+        if (Math.abs(distance) >= 4) draggedRef.current = true;
+        setDragOffset(distance);
+        event.preventDefault();
+    };
+
+    const finishPointerDrag = event => {
+        const start = pointerStartRef.current;
+        if (!start || start.id !== event.pointerId) return;
+        const mobile = window.matchMedia('(max-width: 980px)').matches;
+        const distance = mobile ? event.clientX - start.x : event.clientY - start.y;
+        pointerStartRef.current = null;
+        setDragging(false);
+        setDragOffset(0);
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        if (Math.abs(distance) >= 32) selectAt(activeIndex + (distance < 0 ? 1 : -1));
         window.setTimeout(() => { draggedRef.current = false; }, 80);
     };
+
+    const cancelPointerDrag = event => {
+        if (pointerStartRef.current?.id !== event.pointerId) return;
+        pointerStartRef.current = null;
+        setDragging(false);
+        setDragOffset(0);
+        window.setTimeout(() => { draggedRef.current = false; }, 80);
+    };
+
+    const wheelLockRef = useRef(false);
+    const handleWheel = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (wheelLockRef.current || Math.abs(event.deltaY) < 4) return;
+        wheelLockRef.current = true;
+        selectAt(activeIndex + (event.deltaY > 0 ? 1 : -1));
+        window.setTimeout(() => { wheelLockRef.current = false; }, 450);
+    };
+
+    const mobileDrag = window.matchMedia('(max-width: 980px)').matches;
 
     return <div ref={carouselRef} className="csp-capability-scroll can-scroll-up can-scroll-down">
         <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--up" aria-label="Xem chức năng trước" onClick={() => nudge(-1)}><ChevronDown /></button>
         <motion.div
             key={activeId}
-            className="csp-capability-tabs"
+            className={`csp-capability-tabs${isDragging ? ' is-dragging' : ''}`}
             role="tablist"
-            initial={{ y: 12, opacity: .72 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: .7, ease: [0.22, 1, 0.36, 1] }}
-            drag={window.matchMedia('(max-width: 980px)').matches ? 'x' : 'y'}
-            dragConstraints={{ top: -72, right: 72, bottom: 72, left: -72 }}
-            dragElastic={.16}
-            dragMomentum={false}
-            whileDrag={{ cursor: 'grabbing', scale: .992 }}
-            onDragStart={pauseAfterInteraction}
-            onDragEnd={handleDragEnd}
+            initial={{ opacity: .72 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: isDragging ? 0 : .35, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+                cursor: isDragging ? 'grabbing' : 'grab',
+                transform: mobileDrag ? `translate3d(${dragOffset}px, 0, 0)` : `translate3d(0, ${dragOffset}px, 0)`,
+                transition: isDragging ? 'none' : 'transform .28s cubic-bezier(.22, 1, .36, 1)'
+            }}
+            onMouseEnter={() => setCardAreaHovered(true)}
+            onMouseLeave={() => setCardAreaHovered(false)}
+            onFocusCapture={() => setCardAreaHovered(true)}
+            onBlurCapture={event => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setCardAreaHovered(false);
+            }}
+            onWheel={handleWheel}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={finishPointerDrag}
+            onPointerCancel={cancelPointerDrag}
         >
             {visibleItems.map(({ item, offset }) => {
                 const Icon = item.icon;
-                return <button draggable="false" id={`capability-tab-${item.id}`} role="tab" aria-selected={offset === 0} aria-controls="capability-media-panel" tabIndex={offset === 0 ? 0 : -1} key={`${item.id}-${offset}`} data-distance={Math.abs(offset)} className={offset === 0 ? 'is-active' : ''} onClick={() => { if (draggedRef.current) return; pauseAfterInteraction(); onSelect(item.id); }}><span><Icon /></span><div><strong>{item.title}</strong><small>{item.text}</small></div><ArrowRight /></button>;
+                return <button draggable="false" id={`capability-tab-${item.id}`} role="tab" aria-selected={offset === 0} aria-controls="capability-media-panel" tabIndex={offset === 0 ? 0 : -1} key={`${item.id}-${offset}`} data-offset={offset} data-distance={Math.abs(offset)} className={offset === 0 ? 'is-active' : ''} onClick={() => { if (draggedRef.current) return; onSelect(item.id); }}><span><Icon /></span><div><strong>{item.title}</strong><small>{item.text}</small></div><ArrowRight /></button>;
             })}
         </motion.div>
         <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--down" aria-label="Xem chức năng tiếp theo" onClick={() => nudge(1)}><ChevronDown /></button>
@@ -1367,13 +1419,9 @@ export default function ChatbotSolutionsPage() {
     const allCapabilities = capabilityOrder.map(id => allCapabilitiesUnordered.find(item => item.id === id)).filter(Boolean);
     const active = allCapabilities.find(x => x.id === cap) || allCapabilities[0];
     const localizedIndustries = en ? industries.map(item => ({ ...item, name: ({ retail: 'Retail & E-commerce', education: 'Education', health: 'Healthcare & Clinics', b2b: 'B2B Services' })[item.id] })) : industries;
-    const localizedRollout = en ? [
-        { ...rollout[0], title: 'Discovery', text: 'Define the challenge, channels and goals.' },
-        { ...rollout[1], title: 'Data preparation', text: 'Organize knowledge and response rules.' },
-        { ...rollout[2], title: 'Workflow design', text: 'Connect the required tasks and systems.' },
-        { ...rollout[3], title: 'Testing', text: 'Evaluate responses and handoff scenarios.' },
-        { ...rollout[4], title: 'Operations', text: 'Monitor, measure and continuously optimize.' },
-    ] : rollout;
+    const localizedRollout = en ? rolloutEn : rollout;
+    const activeRollout = localizedRollout[rolloutActive];
+    const ActiveRolloutIcon = activeRollout.icon;
     return <main className="csp-page">
         <PageSeo title={en ? 'Omnichannel AI Chatbot for Businesses' : 'Chatbot AI đa kênh cho doanh nghiệp'} description={en ? 'Losa AI Chatbot automates consulting, quotations, shipping and omnichannel customer care.' : 'Chatbot AI Losa tự động tư vấn, báo giá, vận chuyển và chăm sóc khách hàng đa kênh.'} isFallback={q.data?.isFallback} />
         <section className="client-hero" id="chatbot-hero"><div className="csp-shell client-hero__grid"><motion.div className="client-hero__content" initial="hidden" animate="visible" variants={heroStagger}><motion.div className="client-hero__badge" variants={heroFadeUp}><Sparkles /> {en ? 'Omnichannel AI Chatbot for businesses' : 'Chatbot AI đa kênh cho doanh nghiệp'}</motion.div><motion.h1 className="client-hero__title" variants={heroFadeUp}>{en ? <>Turn every conversation into a <span>growth opportunity</span></> : <>Mỗi cuộc trò chuyện là một <span>cơ hội tăng trưởng</span></>}</motion.h1><motion.p className="client-hero__lead" variants={heroFadeUp}>{en ? 'Losa AI Chatbot understands customer needs, recommends products, creates quotations, calculates shipping and supports customers 24/7 across every channel you use.' : 'Chatbot AI Losa hiểu nhu cầu, tư vấn sản phẩm, tạo báo giá, tính phí vận chuyển và chăm sóc khách hàng 24/7 — trên mọi kênh bạn đang kinh doanh.'}</motion.p><motion.div className="client-hero__proof" variants={heroFadeUp}><span><Check /> {en ? '24/7 responses' : 'Phản hồi 24/7'}</span><span><Check /> {en ? 'Human handoff when needed' : 'Chuyển người thật khi cần'}</span><span><Check /> {en ? 'Centralized data' : 'Dữ liệu tập trung'}</span></motion.div><motion.div className="client-hero__actions" variants={heroFadeUp}><button id="chatbot-view-demo" className="csp-btn csp-btn--primary" onClick={() => document.getElementById('capabilities')?.scrollIntoView({ behavior: 'smooth' })}>{en ? 'Explore AI capabilities' : 'Khám phá năng lực AI'} <ArrowRight /></button></motion.div></motion.div><motion.div className="client-hero__visual" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8 }}><HeroVisual en={en} /></motion.div></div></section>
@@ -1404,11 +1452,11 @@ export default function ChatbotSolutionsPage() {
                 </div>
             </div>
         </section>
-        <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow={en ? 'LOSA AI CHATBOT CAPABILITIES' : 'NĂNG LỰC CHATBOT AI LOSA'} title={en ? 'What can Losa AI Chatbot do for your business?' : 'Chatbot AI Losa có thể làm gì cho doanh nghiệp bạn?'} text={en ? 'One AI assistant supporting the journey from first message to consulting, shipping and post-sale care.' : 'Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán.'} /><div className="csp-capability-layout"><CapabilityTabs items={allCapabilities} activeId={cap} onSelect={setCap} /><div id="capability-media-panel" className="csp-capability-panel" role="tabpanel" aria-labelledby={`capability-tab-${active.id}`}><motion.img key={active.id} src={capabilityMedia[active.id].image} alt={en ? `${active.title} — Losa AI capability illustration` : capabilityMedia[active.id].alt} initial={{ opacity: 0, scale: 1.015 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .65, ease: [0.22, 1, 0.36, 1] }} /></div></div></div></section>
-        <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow={en ? 'AI DESIGNED FOR YOUR INDUSTRY' : 'AI THIẾT KẾ THEO NGÀNH'} title={en ? 'Every business operates differently' : 'Mỗi doanh nghiệp có một cách vận hành khác nhau'} text={en ? 'Losa is designed around the unique processes, data and tasks of each industry.' : 'Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành.'} /><div className="csp-usecase-tabs" role="tablist" aria-label={en ? 'Choose an AI industry use case' : 'Chọn ngành ứng dụng AI'} onKeyDown={event => { const index = localizedIndustries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = localizedIndustries[(index + direction + localizedIndustries.length) % localizedIndustries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{localizedIndustries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
+        <section className="csp-section csp-capabilities" id="capabilities"><div className="csp-shell"><Heading eyebrow={en ? 'LOSA AI CHATBOT CAPABILITIES' : 'NĂNG LỰC CHATBOT AI LOSA'} title={en ? <>What can Losa AI Chatbot do for <span>your business?</span></> : <>Chatbot AI Losa có thể làm gì cho <span>doanh nghiệp bạn?</span></>} text={en ? 'One AI assistant supporting the journey from first message to consulting, shipping and post-sale care.' : 'Một trợ lý AI xuyên suốt từ tin nhắn đầu tiên đến tư vấn, giao hàng và chăm sóc sau bán.'} /><div className="csp-capability-layout"><CapabilityTabs items={allCapabilities} activeId={cap} onSelect={setCap} /><div id="capability-media-panel" className="csp-capability-panel" role="tabpanel" aria-labelledby={`capability-tab-${active.id}`}>{allCapabilities.map(item => { const media = capabilityMedia[item.id]; const isActive = item.id === active.id; return <motion.img key={item.id} src={media.image} alt={isActive ? (en ? `${item.title} — Losa AI capability illustration` : media.alt) : ''} aria-hidden={!isActive} decoding="async" initial={false} animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 1.025 }} transition={{ opacity: { duration: .48, ease: 'easeOut' }, scale: { duration: .75, ease: [0.22, 1, 0.36, 1] } }} /> })}</div></div></div></section>
+        <section className="csp-section csp-usecases"><div className="csp-shell"><Heading eyebrow={en ? 'AI DESIGNED FOR YOUR INDUSTRY' : 'AI THIẾT KẾ THEO NGÀNH'} title={en ? <>Every business <span>operates differently</span></> : <>Mỗi doanh nghiệp<br /><span>có một cách vận hành khác nhau</span></>} text={en ? 'Losa is designed around the unique processes, data and tasks of each industry.' : 'Losa được thiết kế theo đúng quy trình, dữ liệu và tác vụ đặc thù của từng ngành.'} /><div className="csp-usecase-tabs" role="tablist" aria-label={en ? 'Choose an AI industry use case' : 'Chọn ngành ứng dụng AI'} onKeyDown={event => { const index = localizedIndustries.findIndex(x => x.id === industry); const direction = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0; if (!direction) return; event.preventDefault(); const next = localizedIndustries[(index + direction + localizedIndustries.length) % localizedIndustries.length]; setIndustry(next.id); requestAnimationFrame(() => document.getElementById(`industry-tab-${next.id}`)?.focus()); }}>{localizedIndustries.map(x => { const Icon = x.icon; return <button type="button" id={`industry-tab-${x.id}`} key={x.id} className={industry === x.id ? 'is-active' : ''} onClick={() => setIndustry(x.id)} role="tab" tabIndex={industry === x.id ? 0 : -1} aria-selected={industry === x.id} aria-controls={`industry-panel-${x.id}`}><Icon />{x.name}</button> })}</div>
             <IndustryWorkflowStudio industryId={industry} en={en} />
         </div></section>
-        <section className="csp-section csp-rollout"><div className="csp-shell"><Heading eyebrow={en ? 'A STRUCTURED IMPLEMENTATION' : 'TRIỂN KHAI CÓ LỘ TRÌNH'} title={en ? 'From a real business challenge to a production-ready chatbot' : 'Từ bài toán thực tế đến chatbot sẵn sàng vận hành'} /><div className="csp-rollout__track">{localizedRollout.map((item, index) => { const Icon = item.icon, active = rolloutActive === index; return <article key={item.step} className={active ? 'is-active' : ''} style={{ '--rollout-image': `url(${item.image})` }} onMouseEnter={() => setRolloutActive(index)}><button type="button" aria-expanded={active} aria-label={`${en ? 'Step' : 'Bước'} ${item.step}: ${item.title}`} onClick={() => setRolloutActive(index)} onFocus={() => setRolloutActive(index)}><span className="csp-rollout__icon"><Icon /></span><span className="csp-rollout__content"><small>{en ? 'STEP' : 'BƯỚC'} {item.step}</small><strong>{item.title}</strong><em>{item.text}</em></span></button></article> })}</div></div></section>
+        <section className="csp-section csp-rollout-section"><div className="csp-shell"><Heading eyebrow={en ? 'A STRUCTURED IMPLEMENTATION' : 'TRIỂN KHAI CÓ LỘ TRÌNH'} title={en ? <>From a real business challenge to a <span>production-ready chatbot</span></> : <>Từ bài toán thực tế đến chatbot<br /><span>sẵn sàng vận hành</span></>} text={en ? 'Explore each phase of a clear, measurable implementation journey.' : 'Khám phá từng giai đoạn trong hành trình triển khai rõ ràng và có thể đo lường.'} /><div className="csp-rollout-nav-wrap"><div className="csp-rollout-nav" role="tablist" aria-label={en ? 'Chatbot implementation journey' : 'Lộ trình triển khai chatbot'} onKeyDown={event => { let next = rolloutActive; if (event.key === 'ArrowRight') next = (rolloutActive + 1) % localizedRollout.length; else if (event.key === 'ArrowLeft') next = (rolloutActive - 1 + localizedRollout.length) % localizedRollout.length; else if (event.key === 'Home') next = 0; else if (event.key === 'End') next = localizedRollout.length - 1; else return; event.preventDefault(); setRolloutActive(next); requestAnimationFrame(() => document.getElementById(`rollout-step-${next}`)?.focus()); }}><span className="csp-rollout-rail" aria-hidden="true"><i style={{ width: `${rolloutActive / (localizedRollout.length - 1) * 100}%` }} /></span>{localizedRollout.map((item, index) => { const Icon = item.icon, activeStep = index === rolloutActive, complete = index < rolloutActive; return <button id={`rollout-step-${index}`} key={item.step} type="button" role="tab" className={`${activeStep ? 'is-active' : ''}${complete ? ' is-complete' : ''}`} aria-selected={activeStep} aria-controls="rollout-detail" tabIndex={activeStep ? 0 : -1} onMouseEnter={() => setRolloutActive(index)} onFocus={() => setRolloutActive(index)} onClick={() => setRolloutActive(index)} style={{ '--step-tone': item.tone }}><span className="csp-rollout-node"><Icon /></span><span className="csp-rollout-label"><small>{en ? 'STEP' : 'BƯỚC'} {item.step}</small><b>{item.title}</b></span></button> })}</div></div><div id="rollout-detail" className="csp-rollout-detail" role="tabpanel" aria-labelledby={`rollout-step-${rolloutActive}`} style={{ '--step-tone': activeRollout.tone }}><div className="csp-rollout-detail__content" key={`${locale}-${activeRollout.step}`}><div className="csp-rollout-detail__intro"><span className="csp-rollout-detail__icon"><ActiveRolloutIcon /></span><div className="csp-rollout-detail__step">{en ? 'STEP' : 'BƯỚC'} {activeRollout.step} / 05</div><h3>{activeRollout.title}</h3><p>{activeRollout.text}</p><span className="csp-rollout-duration"><Clock3 />{en ? 'Estimated time' : 'Thời gian dự kiến'} <b>{activeRollout.duration}</b></span></div><div className="csp-rollout-detail__groups"><section><header><Sparkles /><span><small>LOSA</small><h4>{en ? 'What we do' : 'Losa thực hiện'}</h4></span></header><ul>{activeRollout.work.map(item => <li key={item}><Check />{item}</li>)}</ul></section></div></div></div></div></section>
         <CustomerMarquee en={en} />
         <ClientFaqSection faqs={faqs} />
     </main>

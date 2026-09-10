@@ -13,6 +13,14 @@ export const chatService = {
   release: (id) => axiosClient.post(`/admin/chat/sessions/${id}/release`).then((res) => res?.data),
   createStreamTicket: () => axiosClient.post('/admin/chat/stream-ticket').then((res) => res?.data?.ticket),
   setFeedback: (id, feedback) => axiosClient.patch(`/admin/chat/messages/${id}/feedback`, { feedback }).then((res) => res?.data),
+  uploadAttachment: (sessionId, file) => {
+    const form = new FormData()
+    form.append('file', file)
+    return axiosClient.post(`/admin/chat/sessions/${sessionId}/attachments`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((res) => res?.data)
+  },
+  getAttachmentContent: (attachmentId) => axiosClient.get(`/admin/chat/attachments/${attachmentId}/content`, { responseType: 'blob' }),
 }
 
 // CLIENT
@@ -21,5 +29,7 @@ export const clientChatService = {
   getMessages: (sessionId, token, after) => axiosClient.get(`/chat/${sessionId}/messages`, { params: after ? { after } : undefined, headers: tokenHeaders(token) }).then((res) => res?.data || []),
   sendMessage: (sessionId, token, payload) => axiosClient.post(`/chat/sessions/${sessionId}/messages`, payload, { headers: tokenHeaders(token) }).then((res) => res?.data),
   requestHuman: (sessionId, token) => axiosClient.post(`/chat/sessions/${sessionId}/request-human`, {}, { headers: tokenHeaders(token) }).then((res) => res?.data),
-  uploadAttachment: (formData, token) => axiosClient.post('/chat/upload-attachment', formData, { headers: { 'Content-Type': 'multipart/form-data', ...tokenHeaders(token) } }).then((res) => res?.data),
+  uploadAttachment: (formData, token) => axiosClient.post('/chat/upload-attachment', formData, {
+    headers: { ...tokenHeaders(token), 'Content-Type': 'multipart/form-data' },
+  }).then((res) => res?.data),
 }

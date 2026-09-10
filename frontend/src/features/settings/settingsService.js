@@ -1,5 +1,13 @@
 import axiosClient from '../../services/axiosClient'
 
+const uploadAsset = (url, file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return axiosClient.post(url, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((res) => res?.data)
+}
+
 export const settingsService = {
   getAppearance: () => axiosClient.get('/admin/settings/appearance').then((res) => res?.data),
   getPublicAppearance: (locale = 'vi') => axiosClient.get('/settings/appearance', { params: { locale } }).then((res) => res?.data),
@@ -11,14 +19,9 @@ export const settingsService = {
   getPublicLeadForm: (locale = 'vi') => axiosClient.get('/settings/lead-form', { params: { locale } }).then((res) => res?.data),
   updateLeadForm: (payload) => axiosClient.put('/admin/settings/lead-form', payload).then((res) => res?.data),
   translateLeadFormPreview: (payload) => axiosClient.post('/admin/settings/lead-form/translate-preview', payload, { timeout: 90000 }).then((res) => res?.data),
-  // Upload asset dạng multipart: nhận File, trả url.
-  uploadAsset: (file) => {
-    const form = new FormData()
-    form.append('file', file)
-    return axiosClient
-      .post('/admin/settings/upload-asset', form, { headers: { 'Content-Type': 'multipart/form-data' } })
-      .then((res) => res?.data)
-  },
+  uploadLogo: (file) => uploadAsset('/admin/uploads/logo-image', file),
+  uploadFavicon: (file) => uploadAsset('/admin/uploads/favicon-image', file),
+  uploadBlogImage: (file) => uploadAsset('/admin/uploads/blog-image', file),
 }
 
 export const apiConfigsService = {

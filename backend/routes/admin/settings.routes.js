@@ -3,7 +3,6 @@ const router = express.Router();
 const settingsController = require('../../controllers/admin/settings.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
-const upload = require('../../config/multer');
 const cache = require('../../services/cacheService');
 const { geminiPreviewLimiter } = require('../../middlewares/rateLimit.middleware');
 
@@ -16,6 +15,5 @@ router.put('/site-info', requirePermission('settings.update'), cache.invalidateA
 router.get('/lead-form', requirePermission('settings.view'), settingsController.getLeadForm);
 router.post('/lead-form/translate-preview', requirePermission('settings.update'), geminiPreviewLimiter, settingsController.translateLeadFormPreview);
 router.put('/lead-form', requirePermission('settings.update'), cache.invalidateAfterSuccess(() => ({ patterns: [cache.patterns.leadForms()] })), settingsController.updateLeadForm);
-router.post('/upload-asset', requirePermission('settings.update'), upload.single('file'), settingsController.uploadAsset);
 
 module.exports = router;

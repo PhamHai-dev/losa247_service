@@ -1,3 +1,4 @@
+const path = require('path');
 require('dotenv').config();
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -28,9 +29,8 @@ const env = {
   N8N_CALLBACK_URL: process.env.N8N_CALLBACK_URL || `http://localhost:${process.env.PORT || 5000}/api/v1/webhooks/n8n/chat-reply`,
   N8N_TIMEOUT_MS: parseInteger(process.env.N8N_TIMEOUT_MS, 30000),
   N8N_REPLAY_WINDOW_MS: parseInteger(process.env.N8N_REPLAY_WINDOW_MS, 5 * 60 * 1000),
-  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  PUBLIC_BASE_URL: (process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`).replace(/\/$/, ''),
+  STORAGE_ROOT: process.env.STORAGE_ROOT || path.join(__dirname, '..'),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
   GEMINI_TIMEOUT_MS: parseInteger(process.env.GEMINI_TIMEOUT_MS, 60000),

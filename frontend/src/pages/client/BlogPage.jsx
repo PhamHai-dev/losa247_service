@@ -106,7 +106,7 @@ export function BlogPage() {
             </motion.div>
             <motion.div className="client-hero__visual blog-hero-illustration" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
               <div className="blog-hero-glow" />
-              <img src="https://res.cloudinary.com/e1d8bnbg/image/upload/v1784799281/logo_blog_qd9i4n.png" alt={locale === 'en' ? 'Losa AI Marketing and AI Sales knowledge hub' : 'Kho kiến thức AI Marketing và AI Sales từ Losa'} />
+              <img src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '')}/uploads/images/blog-image/blog-fallback.png`} alt={locale === 'en' ? 'Losa AI Marketing and AI Sales knowledge hub' : 'Kho kiến thức AI Marketing và AI Sales từ Losa'} />
             </motion.div>
           </div>
         </div>

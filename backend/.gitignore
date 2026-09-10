@@ -34,3 +34,14 @@ Thumbs.db
 
 ### === Local database backups === ###
 backups/
+
+### === Persistent uploaded media === ###
+public/images/*/*
+private/chat-images/*
+!public/images/*/.gitkeep
+!private/chat-images/.gitkeep
+# Ảnh fallback của giao diện được version-control để có sẵn sau deploy.
+!public/images/blog-image/blog-fallback.png
+!public/images/logo-image/home-hero-main.png
+!public/images/logo-image/home-hero-bot.png
+!public/images/logo-image/default-logo.png

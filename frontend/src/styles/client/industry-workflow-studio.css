@@ -113,7 +113,7 @@
 }
 
 .iws-chat {
-    height: 700px;
+    height: 472px;
     display: flex;
     flex-direction: column
 }
@@ -333,7 +333,7 @@
 }
 
 .iws-workflow {
-    min-height: 700px
+    min-height: 472px
 }
 
 .iws-workflow>header {
@@ -391,15 +391,15 @@
 }
 
 .iws-canvas>.z1 {
-    left: 3%
+    left: 4%
 }
 
 .iws-canvas>.z2 {
-    left: 39%
+    left: 35%
 }
 
 .iws-canvas>.z3 {
-    left: 76%
+    left: 84%
 }
 
 .iws-flow-node {
@@ -468,8 +468,9 @@
 }
 
 .iws-flow-node.trigger {
-    left: 1.5%;
-    top: 188px
+    left: 2%;
+    top: 188px;
+    width: 16%
 }
 
 .iws-flow-node.reason {
@@ -479,16 +480,16 @@
 }
 
 .iws-flow-node.core {
-    left: 72.5%;
+    left: 61%;
     top: 188px;
-    width: 12.5%;
+    width: 16%;
     min-width: 0
 }
 
 .iws-flow-node.reply {
-    right: 0.9%;
+    right: 2%;
     top: 188px;
-    width: 13%;
+    width: 16%;
     min-width: 0
 }
 
@@ -522,9 +523,9 @@
 .iws-app-frame {
     position: absolute;
     z-index: 2;
-    left: 39%;
+    left: 22%;
     top: 58px;
-    width: 33%;
+    width: 35%;
     height: 314px;
     padding: 40px 12px 12px;
     border: 1px solid #d9e4ef;
@@ -778,11 +779,11 @@
     }
 
     .iws-chat {
-        height: 560px
+        height: 472px
     }
 
     .iws-workflow {
-        min-height: 700px
+        min-height: 472px
     }
 }
 

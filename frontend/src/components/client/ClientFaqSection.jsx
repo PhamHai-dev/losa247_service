@@ -4,10 +4,10 @@ import { MessageCircleMore, ArrowRight, ChevronUp, ChevronDown } from 'lucide-re
 import { useUIStore } from '../../stores/uiStore';
 import { useI18n } from '../../hooks/useI18n';
 
-export function ClientFaqSection({ 
-  faqs = [], 
+export function ClientFaqSection({
+  faqs = [],
   eyebrowText,
-  eyebrowIcon: EyebrowIcon = MessageCircleMore, 
+  eyebrowIcon: EyebrowIcon = MessageCircleMore,
   title,
   introText,
   className = ''
@@ -31,41 +31,41 @@ export function ClientFaqSection({
           )}
           <h2 id="home-faq-title">{title || copy.title}</h2>
           {(introText || copy.intro) && <p>{introText || copy.intro}</p>}
-          
+
 
           <button type="button" onClick={openLeadModal} className="home-faq-cta">
             {copy.cta} <ArrowRight size={17} />
           </button>
         </div>
-        
+
         <div className="home-faq-accordion-wrap">
-          <Collapse 
-            className="home-faq-collapse" 
-            accordion 
-            ghost 
-            expandIconPosition="end" 
+          <Collapse
+            className="home-faq-collapse"
+            accordion
+            ghost
+            expandIconPosition="end"
             expandIcon={({ isActive }) => (
               <span className={`home-faq-toggle ${isActive ? 'active' : ''}`}>
                 {isActive ? <ChevronUp size={18} strokeWidth={2.25} /> : <ChevronDown size={18} strokeWidth={2.25} />}
               </span>
-            )} 
-            items={faqs?.length ? faqs.map((faq, index) => ({ 
-              key: faq._id, 
+            )}
+            items={faqs?.length ? faqs.map((faq, index) => ({
+              key: faq._id,
               label: (
                 <span className="home-faq-question">
                   <span>{String(index + 1).padStart(2, '0')}</span>{faq.question}
                 </span>
-              ), 
-              children: <p className="home-faq-answer">{faq.answer}</p> 
-            })) : [{ 
-              key: 'empty', 
+              ),
+              children: <p className="home-faq-answer">{faq.answer}</p>
+            })) : [{
+              key: 'empty',
               label: (
                 <span className="home-faq-question">
                   <span>01</span>{copy.empty}
                 </span>
-              ), 
-              children: <p className="home-faq-answer">{copy.emptyAnswer}</p> 
-            }]} 
+              ),
+              children: <p className="home-faq-answer">{copy.emptyAnswer}</p>
+            }]}
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ const chatController = require('../../controllers/client/chat.controller');
 const upload = require('../../config/multer');
 
 router.post('/session', chatController.startSession);
+router.get('/attachments/:attachmentId/content', chatController.getAttachmentContent);
 router.get('/:sessionId/messages', chatController.getSessionMessages);
 router.post('/sessions/:sessionId/messages', chatController.sendMessage);
 router.post('/sessions/:sessionId/request-human', chatController.requestHuman);

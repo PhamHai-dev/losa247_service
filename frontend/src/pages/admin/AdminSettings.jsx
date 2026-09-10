@@ -121,11 +121,12 @@ export function AdminSettings() {
     accept: 'image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon',
     customRequest: async ({ file, onSuccess, onError }) => {
       try {
-        const result = await settingsService.uploadAsset(file)
+        const uploadMethod = field === 'faviconUrl' ? settingsService.uploadFavicon : settingsService.uploadLogo
+        const result = await uploadMethod(file)
         form.setFieldValue(field, result?.url || result)
         message.success('Đã tải ảnh lên')
         onSuccess?.(result)
-      } catch (error) { message.error('Tải ảnh thất bại'); onError?.(error) }
+      } catch (error) { message.error(error?.error?.message || 'Tải ảnh thất bại'); onError?.(error) }
     },
   })
 

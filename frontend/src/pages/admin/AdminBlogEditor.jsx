@@ -240,7 +240,7 @@ export function AdminBlogEditor() {
             const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'
             input.addEventListener('change', async (event) => {
               const file = event.target.files[0]; if (!file) return
-              try { const res = await settingsService.uploadAsset(file); if (!res?.url) throw new Error(); cb(res.url, { title: file.name }); message.success('Tải ảnh thành công') }
+              try { const res = await settingsService.uploadBlogImage(file); if (!res?.url) throw new Error(); cb(res.url, { title: file.name }); message.success('Tải ảnh thành công') }
               catch { message.error('Lỗi khi tải ảnh lên') }
             }); input.click()
           },
@@ -289,7 +289,7 @@ export function AdminBlogEditor() {
             <Form.Item name="coverImageUrl" hidden><Input /></Form.Item>
             <Form.Item label="Ảnh đại diện">
               <Upload.Dragger accept="image/png,image/jpeg,image/webp" maxCount={1} showUploadList={false} customRequest={async ({ file, onSuccess, onError }) => {
-                try { const res = await settingsService.uploadAsset(file); if (!res?.url) throw new Error(); form.setFieldValue('coverImageUrl', res.url); onSuccess('ok') }
+                try { const res = await settingsService.uploadBlogImage(file); if (!res?.url) throw new Error(); form.setFieldValue('coverImageUrl', res.url); onSuccess('ok') }
                 catch (error) { onError(error); message.error('Lỗi khi tải ảnh lên') }
               }}>
                 {coverImageUrl ? <img src={coverImageUrl} alt="Ảnh đại diện" style={{ width: '100%', maxHeight: 180, objectFit: 'contain' }} /> : <><p className="ant-upload-drag-icon"><UploadOutlined /></p><p>Kéo thả hoặc chọn ảnh</p></>}

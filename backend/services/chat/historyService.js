@@ -1,9 +1,9 @@
 const { prisma } = require('../../config/prisma');
-const { createAuthenticatedUrl } = require('../../helpers/upload');
+const { automationAttachmentUrl, chatContentUrl } = require('../../helpers/upload');
 
 const mapAttachment = (attachment) => ({
   id: attachment.id,
-  url: createAuthenticatedUrl(attachment),
+  url: attachment.storagePath ? automationAttachmentUrl(attachment.id) : null,
   mimeType: attachment.mimeType,
   width: attachment.width,
   height: attachment.height,
@@ -34,7 +34,7 @@ const getMessagesCursor = async (sessionId, { cursor, limit = 30 } = {}) => {
   const rows = await prisma.chatMessage.findMany({ where: { sessionId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: take + 1, ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}), include: { attachmentRows: true } });
   const hasMore = rows.length > take;
   const data = hasMore ? rows.slice(0, take) : rows;
-  return { data: data.reverse().map((message) => ({ ...message, attachmentRows: undefined, attachments: (message.attachmentRows || []).map((item) => createAuthenticatedUrl(item)) })), nextCursor: hasMore ? data[data.length - 1].id : null, hasMore };
+  return { data: data.reverse().map((message) => ({ ...message, attachmentRows: undefined, attachments: (message.attachmentRows || []).map((item) => item.storagePath ? chatContentUrl(item.id) : null).filter(Boolean) })), nextCursor: hasMore ? data[data.length - 1].id : null, hasMore };
 };
 
 module.exports = { buildAIContext, getMessagesCursor };

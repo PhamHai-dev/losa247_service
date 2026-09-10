@@ -21,7 +21,8 @@ const createCustomerMessage = async ({ sessionId, clientMessageId, content = '',
     await tx.automationOutbox.create({ data: { id: createEntityId(), eventId, eventType: 'chat.message.received', aggregateType: 'ChatMessage', aggregateId: message.id, sessionId, payload: { sessionId, messageId: message.id } } });
     const now = new Date();
     await tx.chatSession.update({ where: { id: sessionId }, data: { lastMessageAt: now, lastCustomerMessageAt: now, ...(session.mode === 'bot' ? { automationStatus: 'debouncing' } : {}) } });
-    return { message, duplicate: false, eventId };
+    const completeMessage = await tx.chatMessage.findUnique({ where: { id: message.id }, include: { attachmentRows: true } });
+    return { message: completeMessage, duplicate: false, eventId };
   });
 };
 

@@ -3,13 +3,16 @@ const router = express.Router();
 const chatController = require('../../controllers/admin/chat.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 const { requirePermission } = require('../../middlewares/rbac.middleware');
+const upload = require('../../config/multer');
 
 // EventSource không hỗ trợ custom Authorization header; endpoint này tự xác thực bằng stream ticket ngắn hạn.
 router.get('/events', chatController.streamEvents);
 router.use(authMiddleware('admin'));
 
 router.get('/sessions', requirePermission('chat.view'), chatController.getSessions);
+router.get('/attachments/:attachmentId/content', requirePermission('chat.view'), chatController.getAttachmentContent);
 router.get('/sessions/:id/messages', requirePermission('chat.view'), chatController.getSessionMessages);
+router.post('/sessions/:id/attachments', requirePermission('chat.reply'), upload.single('file'), chatController.uploadAttachment);
 router.post('/sessions/:id/messages', requirePermission('chat.reply'), chatController.sendMessage);
 router.post('/sessions/:id/takeover', requirePermission('chat.assign'), chatController.takeoverSession);
 router.post('/sessions/:id/release', requirePermission('chat.assign'), chatController.releaseSession);

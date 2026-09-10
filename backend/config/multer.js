@@ -1,20 +1,19 @@
 const multer = require('multer');
 
-// 1. Cấu hình multer để lưu file vào memory (sau đó upload lên cloudinary)
+// Giữ file trong RAM để kiểm tra và xác thực quyền trước khi ghi xuống storage.
 const storage = multer.memoryStorage();
-
-// 2. Giới hạn tài nguyên và chỉ cho phép định dạng cần thiết.
 const allowedTypes = new Set([
   'image/jpeg', 'image/png', 'image/webp', 'image/gif',
-  'application/pdf', 'text/plain',
+  'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon',
 ]);
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024, files: 1 },
   fileFilter: (_req, file, callback) => {
-    if (!allowedTypes.has(file.mimetype)) return callback(new Error('Định dạng file không được hỗ trợ'));
+    if (!allowedTypes.has(file.mimetype)) return callback(Object.assign(new Error('Định dạng ảnh không được hỗ trợ'), { statusCode: 400, code: 'UNSUPPORTED_FILE_TYPE' }));
     return callback(null, true);
   },
 });
 
 module.exports = upload;
+

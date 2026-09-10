@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const fs = require('fs');
 const { prisma } = require('../../config/prisma');
 const { createEntityId } = require('../../repositories/core/entityId');
 const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
@@ -23,6 +24,15 @@ const getAuthorizedSession = async (req, sessionId) => {
   return null;
 };
 const deny = (res) => res.status(403).json({ success: false, error: { code: 'SESSION_FORBIDDEN', message: 'Không có quyền truy cập phiên chat' } });
+const mapClientMessage = (message, token) => ({
+  ...toLegacyEntity(message),
+  attachmentRows: undefined,
+  attachments: (message.attachmentRows || []).filter((item) => item.scanStatus === 'clean').map((item) => ({
+    id: item.id,
+    url: item.storagePath ? uploadHelper.chatContentUrl(item.id, token) : null,
+    mimeType: item.mimeType,
+  })).filter((item) => item.url),
+});
 
 exports.startSession = async (req, res, next) => {
   try {
@@ -46,8 +56,8 @@ exports.getSessionMessages = async (req, res, next) => {
   try {
     if (!await getAuthorizedSession(req, req.params.sessionId)) return deny(res);
     const after = req.query.after ? new Date(req.query.after) : null;
-    const rows = await prisma.chatMessage.findMany({ where: { sessionId: req.params.sessionId, ...(after && !Number.isNaN(after.valueOf()) ? { createdAt: { gt: after } } : {}) }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: 200 });
-    return res.json({ success: true, data: rows.map(toLegacyEntity) });
+    const rows = await prisma.chatMessage.findMany({ where: { sessionId: req.params.sessionId, ...(after && !Number.isNaN(after.valueOf()) ? { createdAt: { gt: after } } : {}) }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: 200, include: { attachmentRows: true } });
+    return res.json({ success: true, data: rows.map((row) => mapClientMessage(row, sessionToken(req))) });
   } catch (err) { return next(err); }
 };
 
@@ -56,7 +66,7 @@ exports.sendMessage = async (req, res, next) => {
     const session = await getAuthorizedSession(req, req.params.sessionId);
     if (!session) return deny(res);
     const result = await createCustomerMessage({ sessionId: session.id, clientMessageId: req.body.clientMessageId || crypto.randomUUID(), content: String(req.body.content || '').trim(), attachmentIds: Array.isArray(req.body.attachmentIds) ? req.body.attachmentIds : [] });
-    const message = toLegacyEntity(result.message);
+    const message = mapClientMessage(result.message, sessionToken(req));
     if (!result.duplicate) await publish({ type: 'message.created', sessionId: session.id, data: message });
     return res.status(result.duplicate ? 200 : 201).json({ success: true, duplicate: result.duplicate, data: message });
   } catch (err) { return next(err); }
@@ -80,15 +90,34 @@ exports.streamEvents = async (req, res, next) => {
   } catch (err) { return next(err); }
 };
 
+exports.getAttachmentContent = async (req, res, next) => {
+  try {
+    const attachment = await prisma.chatAttachment.findUnique({ where: { id: req.params.attachmentId } });
+    if (!attachment || !attachment.storagePath) return res.status(404).json({ success: false, error: { code: 'ATTACHMENT_NOT_FOUND', message: 'Không tìm thấy ảnh' } });
+    const session = await getAuthorizedSession(req, attachment.sessionId);
+    const signedAutomationRequest = uploadHelper.hasValidAutomationSignature(attachment.id, req.query.expires, req.query.signature);
+    if (!session && !signedAutomationRequest) return deny(res);
+    const absolutePath = uploadHelper.safeResolve(uploadHelper.PRIVATE_ROOT, attachment.storagePath);
+    if (!fs.existsSync(absolutePath)) return res.status(404).json({ success: false, error: { code: 'ATTACHMENT_FILE_NOT_FOUND', message: 'File ảnh không còn tồn tại' } });
+    res.type(attachment.mimeType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    return res.sendFile(absolutePath);
+  } catch (err) { return next(err); }
+};
+
 exports.uploadAttachment = async (req, res, next) => {
+  let stored;
   try {
     if (!req.file) return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng chọn file' } });
     const session = await getAuthorizedSession(req, req.body.sessionId);
     if (!session) return deny(res);
     const id = createEntityId();
-    const result = await uploadHelper.uploadChatAttachment(req.file, { sessionId: session.id, attachmentId: id });
-    const row = await prisma.chatAttachment.create({ data: { id, sessionId: session.id, publicId: result.public_id, resourceType: result.resource_type || 'image', deliveryType: result.type || 'authenticated', format: result.format || null, originalName: req.file.originalname, mimeType: req.file.mimetype, size: BigInt(req.file.size), sha256: crypto.createHash('sha256').update(req.file.buffer).digest('hex'), width: result.width || null, height: result.height || null } });
-    return res.status(201).json({ success: true, data: { id: row.id, url: uploadHelper.createAuthenticatedUrl(row), mimeType: row.mimeType } });
-  } catch (err) { return next(err); }
+    stored = await uploadHelper.saveChatAttachment(req.file, { sessionId: session.id, attachmentId: id });
+    const row = await prisma.chatAttachment.create({ data: { id, sessionId: session.id, provider: 'local', publicId: null, storagePath: stored.relativePath, resourceType: 'image', deliveryType: 'private', format: stored.format, originalName: req.file.originalname, mimeType: req.file.mimetype, size: BigInt(req.file.size), sha256: crypto.createHash('sha256').update(req.file.buffer).digest('hex'), scanStatus: 'clean' } });
+    return res.status(201).json({ success: true, data: { id: row.id, url: uploadHelper.chatContentUrl(row.id, sessionToken(req)), mimeType: row.mimeType } });
+  } catch (err) {
+    if (stored?.relativePath) await uploadHelper.deleteChatAttachment(stored.relativePath).catch(() => {});
+    return next(err);
+  }
 };
 

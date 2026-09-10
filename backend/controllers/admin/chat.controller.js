@@ -7,6 +7,13 @@ const { takeover, release } = require('../../services/chat/handoffService');
 const { publish } = require('../../services/realtime/eventPublisher');
 const { subscribe } = require('../../services/realtime/sseHub');
 const { createStreamTicket, verifyStreamTicket } = require('../../services/realtime/streamTicketService');
+const uploadHelper = require('../../helpers/upload');
+
+const mapAdminMessage = (message) => ({
+  ...toLegacyEntity(message),
+  attachmentRows: undefined,
+  attachments: (message.attachmentRows || []).map((item) => ({ id: item.id, mimeType: item.mimeType })),
+});
 
 const mapSession = ({ customer, assignedAdmin, assignedAdminId, ...session }) => ({
   ...toLegacyEntity(session),
@@ -64,16 +71,28 @@ exports.getSessionMessages = async (req, res, next) => {
   try {
     const messages = await prisma.chatMessage.findMany({
       where: { sessionId: req.params.id },
+      include: { attachmentRows: true },
       orderBy: { createdAt: 'asc' },
     });
 
     return res.json({
       success: true,
-      data: messages.map(toLegacyEntity),
+      data: messages.map(mapAdminMessage),
     });
   } catch (err) {
     return next(err);
   }
+};
+
+exports.getAttachmentContent = async (req, res, next) => {
+  try {
+    const attachment = await prisma.chatAttachment.findUnique({ where: { id: req.params.attachmentId } });
+    if (!attachment || !attachment.storagePath) return res.status(404).json({ success: false, error: { code: 'ATTACHMENT_NOT_FOUND', message: 'Không tìm thấy ảnh' } });
+    const absolutePath = uploadHelper.safeResolve(uploadHelper.PRIVATE_ROOT, attachment.storagePath);
+    res.type(attachment.mimeType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    return res.sendFile(absolutePath);
+  } catch (err) { return next(err); }
 };
 
 exports.takeoverSession = async (req, res, next) => {
@@ -145,17 +164,39 @@ exports.updateMessageFeedback = async (req, res, next) => {
   }
 };
 
+exports.uploadAttachment = async (req, res, next) => {
+  let stored;
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: { code: 'NO_FILE', message: 'Vui lòng chọn ảnh' } });
+    const session = await prisma.chatSession.findUnique({ where: { id: req.params.id } });
+    if (!session) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Không tìm thấy phiên' } });
+    const id = createEntityId();
+    stored = await uploadHelper.saveChatAttachment(req.file, { sessionId: session.id, attachmentId: id });
+    const row = await prisma.chatAttachment.create({ data: { id, sessionId: session.id, provider: 'local', storagePath: stored.relativePath, resourceType: 'image', deliveryType: 'private', format: stored.format, originalName: req.file.originalname, mimeType: req.file.mimetype, size: BigInt(req.file.size), sha256: require('crypto').createHash('sha256').update(req.file.buffer).digest('hex'), scanStatus: 'clean' } });
+    return res.status(201).json({ success: true, data: { id: row.id, mimeType: row.mimeType } });
+  } catch (err) {
+    if (stored?.relativePath) await uploadHelper.deleteChatAttachment(stored.relativePath).catch(() => {});
+    return next(err);
+  }
+};
+
 exports.sendMessage = async (req, res, next) => {
   try {
     const session = await prisma.chatSession.findFirst({ where: { id: req.params.id, mode: 'human', OR: [{ assignedAdminId: req.user._id }, { assignedAdminId: null }] } });
     if (!session) return res.status(409).json({ success: false, error: { code: 'HUMAN_MODE_REQUIRED', message: 'Admin chưa tiếp quản phiên' } });
+    const attachmentIds = Array.isArray(req.body.attachmentIds) ? req.body.attachmentIds : [];
     const message = await prisma.$transaction(async (tx) => {
+      if (attachmentIds.length) {
+        const count = await tx.chatAttachment.count({ where: { id: { in: attachmentIds }, sessionId: session.id, messageId: null } });
+        if (count !== attachmentIds.length) throw Object.assign(new Error('Attachment không hợp lệ'), { statusCode: 400, code: 'INVALID_ATTACHMENT' });
+      }
       if (!session.assignedAdminId) await tx.chatSession.update({ where: { id: session.id }, data: { assignedAdminId: req.user._id } });
-      const created = await tx.chatMessage.create({ data: { id: createEntityId(), sessionId: session.id, sender: 'admin', content: String(req.body.content || '').trim(), attachments: Array.isArray(req.body.attachments) ? req.body.attachments : [], status: 'sent' } });
+      const created = await tx.chatMessage.create({ data: { id: createEntityId(), sessionId: session.id, sender: 'admin', content: String(req.body.content || '').trim(), attachments: [], messageType: attachmentIds.length ? (req.body.content ? 'mixed' : 'image') : 'text', status: 'sent' } });
+      if (attachmentIds.length) await tx.chatAttachment.updateMany({ where: { id: { in: attachmentIds } }, data: { messageId: created.id } });
       await tx.chatSession.update({ where: { id: session.id }, data: { lastMessageAt: new Date(), lastReplyAt: new Date() } });
-      return created;
+      return tx.chatMessage.findUnique({ where: { id: created.id }, include: { attachmentRows: true } });
     });
-    const data = toLegacyEntity(message);
+    const data = mapAdminMessage(message);
     await publish({ type: 'message.created', sessionId: session.id, data });
     return res.status(201).json({ success: true, data });
   } catch (err) { return next(err); }
