@@ -28,6 +28,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cookieParser());
+
+// GitHub deploy webhook must receive the raw body before express.json parses it.
+app.use('/internal', require('./routes/internal/deploy.routes'));
+
 app.use(
   express.json({
     limit: '1mb',
