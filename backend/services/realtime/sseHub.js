@@ -40,6 +40,7 @@ const subscribe = ({ req, res, scope, principalId, principalIds }) => {
 };
 
 const deliver = (event) => {
+  if (!event) return;
   const targets = event.type === 'notification.created'
     ? [keyFor('notification', event.data?.recipientId || 'all')]
     : [keyFor('session', event.sessionId), keyFor('admin', 'all')];

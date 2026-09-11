@@ -27,6 +27,7 @@ const getClient = () => {
       connectTimeout: 3000,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
+      enableOfflineQueue: false,
     }
     : {
       host: env.REDIS_HOST,
@@ -38,6 +39,7 @@ const getClient = () => {
       connectTimeout: 3000,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
+      enableOfflineQueue: false,
     };
 
   client = new Redis(options);
@@ -57,8 +59,13 @@ const getReadyClient = async () => {
   if (redisClient.status === 'ready') return redisClient;
   try {
     if (redisClient.status === 'wait' || redisClient.status === 'end') {
-      await redisClient.connect();
+      await Promise.race([
+        redisClient.connect(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 3000))
+      ]);
     }
+    // If it's connecting, but not ready yet, and we don't want to hang the caller
+    if (redisClient.status !== 'ready') return null;
     return redisClient;
   } catch (error) {
     logError(error);

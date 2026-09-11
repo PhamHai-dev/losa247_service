@@ -17,7 +17,10 @@ const init = async () => {
     subscriber.on('error', (error) => console.error('[Realtime] Redis subscriber error:', error.message));
     await subscriber.connect();
     await subscriber.subscribe(CHANNEL, (raw) => {
-      try { deliver(JSON.parse(raw)); } catch (error) { console.error('[Realtime] Invalid event:', error.message); }
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed) deliver(parsed);
+      } catch (error) { console.error('[Realtime] Invalid event:', error.message); }
     });
     return subscriber;
   })().finally(() => { initializing = null; });
