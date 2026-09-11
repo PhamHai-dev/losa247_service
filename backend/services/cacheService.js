@@ -58,7 +58,7 @@ const set = async (key, data, ttl) => {
   try {
     const client = await getReadyClient();
     if (!client) return false;
-    await client.set(key, JSON.stringify(data), { EX: ttl });
+    await client.set(key, JSON.stringify(data), 'EX', ttl);
     return true;
   } catch (error) {
     console.error(`[Cache] SET failed: ${error.message}`);
@@ -124,11 +124,27 @@ const middleware = (keyBuilder, ttl) => async (req, res, next) => {
 };
 
 const invalidateAfterSuccess = (targetsBuilder) => (req, res, next) => {
-  res.once('finish', () => {
-    if (res.statusCode < 200 || res.statusCode >= 300) return;
+  const originalJson = res.json.bind(res);
+  let invalidated = false;
+
+  const invalidate = async () => {
+    if (invalidated) return;
+    invalidated = true;
     const targets = targetsBuilder(req) || {};
-    for (const key of targets.keys || []) void del(key);
-    for (const pattern of targets.patterns || []) void delPattern(pattern);
+    await Promise.all([
+      ...(targets.keys || []).map((key) => del(key)),
+      ...(targets.patterns || []).map((pattern) => delPattern(pattern)),
+    ]);
+  };
+
+  res.json = async (body) => {
+    if (res.statusCode >= 200 && res.statusCode < 300) await invalidate();
+    return originalJson(body);
+  };
+
+  // Fallback cho handler không trả JSON; không chạy lặp nếu res.json đã invalidate.
+  res.once('finish', () => {
+    if (res.statusCode >= 200 && res.statusCode < 300) void invalidate();
   });
   next();
 };

@@ -1,8 +1,7 @@
-const { createClient } = require('redis');
+const Redis = require('ioredis');
 const env = require('./env');
 
 let client;
-let connectPromise;
 let lastErrorMessage;
 
 const isEnabled = () => Boolean(env.REDIS_SOCKET_PATH || env.REDIS_HOST);
@@ -19,53 +18,52 @@ const getClient = () => {
   if (!isEnabled()) return null;
   if (client) return client;
 
-  const socket = env.REDIS_SOCKET_PATH
+  const options = env.REDIS_SOCKET_PATH
     ? {
-        path: env.REDIS_SOCKET_PATH,
-        connectTimeout: 3000,
-        reconnectStrategy: (retries) => (retries >= 3 ? false : Math.min(retries * 200, 1000)),
-      }
+      path: env.REDIS_SOCKET_PATH,
+      username: env.REDIS_USERNAME || undefined,
+      password: env.REDIS_PASSWORD || undefined,
+      db: env.REDIS_DB,
+      connectTimeout: 3000,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+    }
     : {
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT,
-        tls: env.REDIS_TLS,
-        servername: env.REDIS_TLS ? env.REDIS_HOST : undefined,
-        connectTimeout: 3000,
-        reconnectStrategy: (retries) => (retries >= 3 ? false : Math.min(retries * 200, 1000)),
-      };
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
+      tls: env.REDIS_TLS ? { servername: env.REDIS_HOST } : undefined,
+      username: env.REDIS_USERNAME || undefined,
+      password: env.REDIS_PASSWORD || undefined,
+      db: env.REDIS_DB,
+      connectTimeout: 3000,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+    };
 
-  client = createClient({
-    username: env.REDIS_USERNAME || undefined,
-    password: env.REDIS_PASSWORD || undefined,
-    database: env.REDIS_DB,
-    socket,
-  });
-
+  client = new Redis(options);
   client.on('error', logError);
   client.on('ready', () => {
     lastErrorMessage = undefined;
     const endpoint = env.REDIS_SOCKET_PATH || `${env.REDIS_HOST}:${env.REDIS_PORT}`;
     console.log(`Redis Connected: ${endpoint} (DB ${env.REDIS_DB})`);
   });
+
   return client;
 };
 
 const getReadyClient = async () => {
   const redisClient = getClient();
   if (!redisClient) return null;
-  if (redisClient.isReady) return redisClient;
-
-  if (!connectPromise) {
-    connectPromise = redisClient.connect()
-      .then(() => redisClient)
-      .catch((error) => {
-        logError(error);
-        return null;
-      })
-      .finally(() => { connectPromise = undefined; });
+  if (redisClient.status === 'ready') return redisClient;
+  try {
+    if (redisClient.status === 'wait' || redisClient.status === 'end') {
+      await redisClient.connect();
+    }
+    return redisClient;
+  } catch (error) {
+    logError(error);
+    return null;
   }
-
-  return connectPromise;
 };
 
 module.exports = { getReadyClient, isEnabled };

@@ -1,5 +1,6 @@
 import { CountUpAnimation } from '../../components/ui/CountUpAnimation';
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useParams } from 'react-router-dom'
 import {
   CircleCheck, Crown, Gem, Check, X, TrendingUp, Star, ChevronDown, ChevronUp,
@@ -133,6 +134,12 @@ export function BlogDetailPage() {
   }, [toc]);
 
   const hasHeadings = blog?.content && blog?.showToc !== false ? /<h[1-6]/i.test(blog.content) : false;
+  const tocRestoreButton = !showToc && hasHeadings ? (
+    <button id="blog-toc-restore" type="button" className="blog-detail__toc-fab" aria-label={locale === 'en' ? 'Show table of contents' : 'Hiện mục lục'} aria-expanded="false" onClick={() => setShowToc(true)}>
+      <MenuOutlined className="blog-detail__toc-fab-desktop-icon" />
+      <ChevronLeft className="blog-detail__toc-fab-mobile-icon" />
+    </button>
+  ) : null;
 
   return (
     <main className="section" style={{ background: '#F7F9FC', minHeight: '100vh', paddingBottom: 60 }}><div className="container">
@@ -140,9 +147,6 @@ export function BlogDetailPage() {
       <Spin spinning={query.loading}>
         {!blog && !query.loading ? <Empty description={t('blog.notFound')} /> : blog && (
           <div className="blog-detail" data-toc-open={showToc && hasHeadings}>
-            {!showToc && blog.content && (
-              <button type="button" className="blog-detail__toc-fab" aria-label={locale === 'en' ? 'Show table of contents' : 'Hiện mục lục'} aria-expanded="false" onClick={() => setShowToc(true)}><ChevronLeft /></button>
-            )}
             {showToc && hasHeadings && (
               <div className="blog-detail__toc-overlay" onClick={() => setShowToc(false)}>
                 <TocPanel toc={toc} activeId={activeId} showToc={showToc} setShowToc={setShowToc} contentRef={contentRef} t={t} locale={locale} mobile />
@@ -171,6 +175,7 @@ export function BlogDetailPage() {
           </div>
         )}
       </Spin>
+      {tocRestoreButton && createPortal(tocRestoreButton, document.body)}
     </div></main>
   )
 }

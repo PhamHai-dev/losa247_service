@@ -1,0 +1,53 @@
+﻿### === Dependencies === ###
+node_modules/
+
+### === Environment / Secrets === ###
+.env
+.env.*
+!.env.example
+
+### === Build output === ###
+dist/
+build/
+.next/
+out/
+coverage/
+*.zip
+
+### === Logs === ###
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### === Cache / Runtime === ###
+.cache/
+.vite/
+.eslintcache
+*.pid
+*.pid.lock
+
+### === Local databases / Backups === ###
+*.db
+*.db-journal
+backups/
+
+### === Editor / OS === ###
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+### === Backend persistent uploaded media === ###
+backend/public/images/*/*
+backend/private/chat-images/*
+!backend/public/images/*/.gitkeep
+!backend/private/chat-images/.gitkeep
+
+# Keep fallback interface images available after deployment.
+!backend/public/images/blog-image/blog-fallback.png
+!backend/public/images/logo-image/home-hero-main.png
+!backend/public/images/logo-image/home-hero-bot.png
+!backend/public/images/logo-image/default-logo.png
