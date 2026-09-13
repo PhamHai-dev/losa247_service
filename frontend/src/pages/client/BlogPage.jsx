@@ -96,7 +96,7 @@ export function BlogPage() {
               <motion.h1 id="blog-hero-title" className="client-hero__title" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>{locale === 'en' ? <>Practical insights to <span>grow with AI</span></> : <>Kiến thức thực chiến để <span>tăng trưởng cùng AI</span></>}</motion.h1>
               <motion.p className="client-hero__lead" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>{locale === 'en' ? 'Explore trends, in-depth guides and real-world case studies in AI Marketing and AI Sales.' : 'Cập nhật xu hướng, hướng dẫn chuyên sâu và case study thực tế về AI Marketing, AI Sales giúp doanh nghiệp vận hành thông minh hơn mỗi ngày.'}</motion.p>
               <motion.div className="client-hero__proof" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
-                <span><CircleCheck size={17} /> {locale === 'en' ? 'Latest trends' : 'Xu hướng'}</span>
+                <span><CircleCheck size={17} /> {locale === 'en' ? 'Latest trends' : 'Xu hướng liên tục'}</span>
                 <span><CircleCheck size={17} /> {locale === 'en' ? 'Actionable knowledge' : 'Kiến thức ứng dụng'}</span>
                 <span><CircleCheck size={17} /> {locale === 'en' ? 'Real case studies' : 'Case study thực tế'}</span>
               </motion.div>
