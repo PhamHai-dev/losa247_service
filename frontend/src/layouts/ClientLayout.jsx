@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import EmojiPicker from 'emoji-picker-react'
-import { MessageCircle, Volume2, MoreVertical, X, Check, CheckCheck, Smile, Image as ImageIcon, Paperclip, Send, Bot, ChevronDown, BarChart2, Rocket, User, ArrowRight, Layers, MessageSquare, Magnet, Headphones, Phone, Mail, MapPin, Menu as MenuIcon, CheckCircle, Shield, Briefcase, Grid, Zap } from 'lucide-react'
+import { MessageCircle, Volume2, MoreVertical, X, Check, CheckCheck, Smile, Image as ImageIcon, Paperclip, Send, Bot, ChevronDown, BarChart2, Rocket, User, ArrowRight, Layers, MessageSquare, Magnet, Headphones, Phone, Mail, MapPin, Menu as MenuIcon, CheckCircle, Shield, Briefcase, Grid, Zap, Plus } from 'lucide-react'
 import { Drawer, Form, message } from 'antd'
 import { useAuthStore } from '../stores/authStore'
 import { useUIStore } from '../stores/uiStore'
@@ -179,8 +179,6 @@ function ChatWidget({ user }) {
               </div>
             </div>
             <div className="chat-header-actions">
-              <Volume2 size={20} color="#64748B" />
-              <MoreVertical size={20} color="#64748B" />
               <X size={20} color="#64748B" onClick={() => setOpen(false)} style={{ cursor: 'pointer' }} />
             </div>
           </div>
@@ -198,13 +196,19 @@ function ChatWidget({ user }) {
             )}
             {messages.map((m) => (
               m.sender === 'customer' ? (
-                <div key={m._id} className="chat-message-row me">
-                  <div className="bubble me">
-                    {m.content && <div>{m.content}</div>}
-                    {m.attachments?.map((attachment, i) => (
-                      <img key={attachment?.id || i} src={typeof attachment === 'string' ? attachment : (attachment.url || `${API_BASE_URL}/chat/attachments/${attachment.id}/content?token=${encodeURIComponent(sessionToken || '')}`)} alt="attachment" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, marginTop: m.content ? 8 : 0, display: 'block' }} />
-                    ))}
-                  </div>
+                <div key={m._id} className="chat-message-row me" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                  {m.content && (
+                    <div className="bubble me">
+                      <div>{m.content}</div>
+                    </div>
+                  )}
+                  {m.attachments?.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      {m.attachments.map((attachment, i) => (
+                        <img key={attachment?.id || i} src={typeof attachment === 'string' ? attachment : (attachment.url || `${API_BASE_URL}/chat/attachments/${attachment.id}/content?token=${encodeURIComponent(sessionToken || '')}`)} alt="attachment" style={{ maxWidth: 200, maxHeight: 120, objectFit: 'cover', borderRadius: 8, display: 'block', border: '1px solid #e5e7eb' }} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div key={m._id} className="chat-message-row">
@@ -230,36 +234,41 @@ function ChatWidget({ user }) {
               </div>
             )}
 
-            {attachments.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                {attachments.map((attachment, i) => (
-                  <div key={attachment.id || i} style={{ position: 'relative', flexShrink: 0 }}>
-                    <img src={attachment.url} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
-                    <button
-                      style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 20, height: 20, border: 'none', cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-                    >
-                      <X size={12} />
-                    </button>
+            <div className="chat-input-wrapper" style={{ flexDirection: 'column', alignItems: 'flex-start', borderRadius: attachments.length > 0 ? 16 : 24, padding: attachments.length > 0 ? '12px 12px 8px 16px' : '8px 8px 8px 16px' }}>
+              {attachments.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8, width: '100%', overflowX: 'auto', paddingBottom: 4 }}>
+                  <div
+                    onClick={() => imageInputRef.current?.click()}
+                    style={{ width: 60, height: 60, borderRadius: 12, backgroundColor: '#D1D5DB', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    <Plus size={24} color="#000" />
                   </div>
-                ))}
-              </div>
-            )}
-
-            {uploading && <div style={{ fontSize: 12, color: '#3B82F6', marginBottom: 8, paddingLeft: 12 }}>{t('chat.upload')}</div>}
-
-            <div className="chat-input-wrapper">
-              <input placeholder={t('chat.placeholder')} value={text} onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') send() }} />
-              <div className="chat-input-actions">
-                <Smile size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
-                <ImageIcon size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => imageInputRef.current?.click()} />
-                <Paperclip size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()} />
-                <button className="chat-send-btn" onClick={send} disabled={uploading}>
-                  <Send size={16} color="#fff" />
-                </button>
-                <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={handleFileUpload} />
-                <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} />
+                  {attachments.map((attachment, i) => (
+                    <div key={attachment.id || i} style={{ position: 'relative', flexShrink: 0 }}>
+                      <img src={attachment.url} alt="preview" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 12 }} />
+                      <button
+                        style={{ position: 'absolute', top: -2, right: -6, background: '#fff', color: '#000', borderRadius: '50%', width: 22, height: 22, border: '1px solid #E5E7EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                        onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                      >
+                        <X size={14} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {uploading && <div style={{ fontSize: 12, color: '#3B82F6', marginBottom: 8 }}>{t('chat.upload')}</div>}
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                <input placeholder={t('chat.placeholder')} value={text} onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') send() }} style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none' }} />
+                <div className="chat-input-actions">
+                  <Smile size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                  <ImageIcon size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => imageInputRef.current?.click()} />
+                  <Paperclip size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()} />
+                  <button className="chat-send-btn" onClick={send} disabled={uploading}>
+                    <Send size={16} color="#fff" />
+                  </button>
+                  <input type="file" hidden ref={imageInputRef} accept="image/*" onChange={handleFileUpload} />
+                  <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} />
+                </div>
               </div>
             </div>
           </div>

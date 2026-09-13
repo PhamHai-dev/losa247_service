@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
 import { ArrowRight, Bot, BrainCircuit, Building2, Camera, Check, CheckCircle2, ChevronDown, Clock3, CloudCog, Database, FileText, Filter, Globe2, GraduationCap, HeartPulse, Image, Layers3, MessageCircle, PlugZap, Quote, ScanLine, Send, ShieldCheck, ShoppingBag, Sparkles, Store, Tag, Truck, UserRoundCheck, Zap, Users, Calendar, Mail, HelpCircle, BookOpen, Presentation, ClipboardCheck, BarChart, Settings, PlayCircle, Stethoscope, Pill, Hospital, Syringe, Heart, Video, CalendarClock, Shield, FileHeart, FlaskConical, Activity, ClipboardPlus, MapPin, Star, Search, Map, Bed, Wallet, Ticket, ArrowLeftRight, CreditCard, Headset } from 'lucide-react';
@@ -152,7 +152,7 @@ function CapabilityTabs({ items, activeId, onSelect }) {
     useEffect(() => {
         if (!isCarouselInView || isCardAreaHovered || isDragging || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
         const timer = window.setInterval(() => {
-            if (!document.hidden && activeIndex < items.length - 1) selectAt(activeIndex + 1);
+            if (!document.hidden) selectAt((activeIndex + 1) % items.length);
         }, 3500);
         return () => window.clearInterval(timer);
     }, [activeIndex, items, isCarouselInView, isCardAreaHovered, isDragging]);
@@ -219,7 +219,6 @@ function CapabilityTabs({ items, activeId, onSelect }) {
     return <div ref={carouselRef} className={`csp-capability-scroll${canScrollUp ? ' can-scroll-up' : ''}${canScrollDown ? ' can-scroll-down' : ''}`}>
         {canScrollUp && <button type="button" className="csp-capability-scroll__arrow csp-capability-scroll__arrow--up" aria-label="Xem chức năng trước" onClick={() => nudge(-1)}><ChevronDown /></button>}
         <motion.div
-            key={activeId}
             className={`csp-capability-tabs${isDragging ? ' is-dragging' : ''}`}
             role="tablist"
             initial={{ opacity: .72 }}
@@ -1411,16 +1410,18 @@ export default function ChatbotSolutionsPage() {
         { _id: 'launch', question: 'Mất bao lâu để triển khai chatbot?', answer: 'Thời gian phụ thuộc dữ liệu và mức độ tích hợp. Đội ngũ Losa sẽ khảo sát, chuẩn hóa và kiểm thử trước khi vận hành.' }
     ];
     const faqs = q.data?.items?.length ? q.data.items : fallback;
-    const localizedCaps = en ? [
-        { ...caps[0], kicker: 'Intake & qualification', title: 'Identify high-potential customers from the first message', text: 'AI discovers needs, collects key details and prioritizes customers with the highest likelihood to convert.', bullets: ['Understand intent and context', 'Collect structured information', 'Tag and score leads', 'Route data to the responsible team'] },
-        { ...caps[1], kicker: 'AI Vision & OCR', title: 'Read images, identify products and respond instantly', text: 'Analyze images, read codes and identify products to answer in the exact context customers care about.', bullets: ['Identify products and models', 'Read text, codes or invoices', 'Analyze image details', 'Combine images with customer questions'] },
-        { ...caps[2], kicker: 'Shipping & customer care', title: 'Automate shipping and post-purchase care', text: 'Validate addresses, calculate delivery fees, update orders and continue supporting customers after purchase.', bullets: ['Capture and validate addresses', 'Calculate shipping fees', 'Update order status', 'Follow up with existing customers'] },
-        { ...caps[3], kicker: 'AI and human collaboration', title: 'Reach the right employee without repeating the story', text: 'AI transfers the full history and customer needs to the right employee whenever specialist support is required.', bullets: ['Route to the responsible team', 'Attach conversation history', 'Allow employee takeover at any time', 'Apply permissions and retain handling history'] },
-        { ...caps[4], kicker: 'System integration', title: 'Turn every answer into immediate action', text: 'Connect CRM, orders, appointments and APIs so AI can complete tasks directly inside the conversation.', bullets: ['Synchronize profiles with CRM', 'Connect APIs and internal systems', 'Look up inventory and orders', 'Measure results on dashboards'] },
-    ] : caps;
-    const allCapabilitiesUnordered = [...localizedCaps, ...(en ? englishGrowthCapabilities : growthCapabilities)];
-    const capabilityOrder = ['always-on', 'lead', 'vision', 'integration', 'shipping', 'handoff', 'right-time', 'retention'];
-    const allCapabilities = capabilityOrder.map(id => allCapabilitiesUnordered.find(item => item.id === id)).filter(Boolean);
+    const allCapabilities = useMemo(() => {
+        const localizedCaps = en ? [
+            { ...caps[0], kicker: 'Intake & qualification', title: 'Identify high-potential customers from the first message', text: 'AI discovers needs, collects key details and prioritizes customers with the highest likelihood to convert.', bullets: ['Understand intent and context', 'Collect structured information', 'Tag and score leads', 'Route data to the responsible team'] },
+            { ...caps[1], kicker: 'AI Vision & OCR', title: 'Read images, identify products and respond instantly', text: 'Analyze images, read codes and identify products to answer in the exact context customers care about.', bullets: ['Identify products and models', 'Read text, codes or invoices', 'Analyze image details', 'Combine images with customer questions'] },
+            { ...caps[2], kicker: 'Shipping & customer care', title: 'Automate shipping and post-purchase care', text: 'Validate addresses, calculate delivery fees, update orders and continue supporting customers after purchase.', bullets: ['Capture and validate addresses', 'Calculate shipping fees', 'Update order status', 'Follow up with existing customers'] },
+            { ...caps[3], kicker: 'AI and human collaboration', title: 'Reach the right employee without repeating the story', text: 'AI transfers the full history and customer needs to the right employee whenever specialist support is required.', bullets: ['Route to the responsible team', 'Attach conversation history', 'Allow employee takeover at any time', 'Apply permissions and retain handling history'] },
+            { ...caps[4], kicker: 'System integration', title: 'Turn every answer into immediate action', text: 'Connect CRM, orders, appointments and APIs so AI can complete tasks directly inside the conversation.', bullets: ['Synchronize profiles with CRM', 'Connect APIs and internal systems', 'Look up inventory and orders', 'Measure results on dashboards'] },
+        ] : caps;
+        const allCapabilitiesUnordered = [...localizedCaps, ...(en ? englishGrowthCapabilities : growthCapabilities)];
+        const capabilityOrder = ['always-on', 'lead', 'vision', 'integration', 'shipping', 'handoff', 'right-time', 'retention'];
+        return capabilityOrder.map(id => allCapabilitiesUnordered.find(item => item.id === id)).filter(Boolean);
+    }, [en]);
     const active = allCapabilities.find(x => x.id === cap) || allCapabilities[0];
     const localizedIndustries = en ? industries.map(item => ({ ...item, name: ({ retail: 'Retail & E-commerce', education: 'Education', health: 'Healthcare & Clinics', b2b: 'B2B Services' })[item.id] })) : industries;
     const localizedRollout = en ? rolloutEn : rollout;
