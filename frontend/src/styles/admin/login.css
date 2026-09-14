@@ -1,5 +1,5 @@
 html:has(.admin-login-layout) {
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
 }
 
@@ -12,7 +12,7 @@ html:has(.admin-login-layout) {
   align-items: center;
   background-color: #f8fafc;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-family: inherit;
 }
 

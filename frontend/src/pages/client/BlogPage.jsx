@@ -229,7 +229,7 @@ export function BlogPage() {
           </div>
 
           <div className="blog-sidebar">
-            <div className="sidebar-widget">
+            <div className="sidebar-widget blog-categories-widget">
               <h3>{locale === 'en' ? 'Categories' : 'Danh mục'}</h3>
               <div>
                 <div className={`cat-list-item ${!activeCategory ? 'active' : ''}`} onClick={() => { setActiveCategory(null); setPage(1); }}>

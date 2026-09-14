@@ -63,7 +63,7 @@ export function LoginPage() {
     <AuthLayout
       localized
       title={t('auth.loginTitle')}
-      subtitle={en ? 'Real-time dashboard for orders and AI services' : 'Dashboard realtime, theo dõi đơn hàng và dịch vụ AI'}
+      subtitle={en ? 'Manage your account and access LOSA247 AI services' : 'Quản lý tài khoản và sử dụng các dịch vụ AI từ LOSA247'}
     >
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 
@@ -201,7 +201,7 @@ export function RegisterPage() {
     <AuthLayout
       localized
       title={t('auth.registerTitle')}
-      subtitle={en ? 'Track your orders and AI Sales Agent services' : 'Theo dõi giỏ hàng, đơn hàng và các dịch vụ AI Sales Agent'}
+      subtitle={en ? 'Create an account to explore LOSA247 AI services' : 'Tạo tài khoản để khám phá các dịch vụ AI từ LOSA247'}
     >
       {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
 

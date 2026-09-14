@@ -2060,14 +2060,31 @@
 }
 
 @media (max-width: 720px) {
-    .csp-rollout-nav-wrap { margin-top: 30px; margin-right: -4vw; padding-right: 4vw }
-    .csp-rollout-nav { min-width: 620px; padding: 0 }
-    .csp-rollout-nav button { width: 54px; min-width: 54px; flex-basis: 54px }
-    .csp-rollout-rail { left: 27px; right: 27px; top: 27px }
-    .csp-rollout-node { width: 54px; height: 54px; flex-basis: 54px }
-    .csp-rollout-label { width: 70px }
+    .csp-rollout-nav-wrap {
+        width: 100%;
+        margin: 30px 0 0;
+        padding: 10px 0 0;
+        overflow: visible
+    }
+    .csp-rollout-nav {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        padding: 0
+    }
+    .csp-rollout-nav button {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        flex-basis: auto
+    }
+    .csp-rollout-rail { left: calc(10% - 22px); right: calc(10% - 22px); top: 22px }
+    .csp-rollout-node { width: 44px; height: 44px; flex-basis: 44px }
+    .csp-rollout-node svg { width: 18px; height: 18px }
+    .csp-rollout-label { width: 100%; margin-top: 10px }
     .csp-rollout-label b { display: none }
-    .csp-rollout-label small { margin: 0; font-size: 9px }
+    .csp-rollout-label small { margin: 0; font-size: 8px; letter-spacing: .06em }
     .csp-rollout-detail { margin-top: 22px; border-radius: 18px }
     .csp-rollout-detail__content { min-height: 0; grid-template-columns: 1fr }
     .csp-rollout-detail__intro { padding: 23px 21px; border-right: 0; border-bottom: 1px solid #e3ecf6 }

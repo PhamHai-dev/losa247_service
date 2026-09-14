@@ -334,7 +334,7 @@ export function ClientLayout() {
 
   const siteInfo = siteQuery.data || {}
   const siteName = siteInfo.name || 'LOSA247'
-  const logoUrl = siteInfo.logoUrl || `${API_BASE_URL.replace(/\/api\/v1\/?$/, '')}/uploads/images/logo-image/default-logo.png`
+  const logoUrl = siteInfo.logoUrl || '/images/layouts/logo.png'
   const slogan = siteInfo.slogan || 'Tự động hóa chăm sóc 24/7'
   const hotline = siteInfo.hotline || '0901 247 247'
   const email = siteInfo.email || 'hotline@losa247.vn'
@@ -405,7 +405,15 @@ export function ClientLayout() {
       <header className="client-header">
         <nav className="client-nav container">
           <Link className="logo" to={localizedPath('/')} style={{ display: 'flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
-            <img src={logoUrl} alt="Logo" style={{ height: 80, objectFit: 'contain' }} />
+            <img
+              src={logoUrl}
+              alt={`${siteName} logo`}
+              width="128"
+              height="80"
+              fetchPriority="high"
+              decoding="async"
+              style={{ width: 128, height: 80, objectFit: 'contain' }}
+            />
           </Link>
           <div className="menu">
             <NavLink to={localizedPath('/')} end>{t('navigation.home')}</NavLink>
@@ -416,7 +424,7 @@ export function ClientLayout() {
               </a>
               <div className="dropdown-menu" style={{ display: forceCloseDropdown ? 'none' : '' }} onClick={() => setForceCloseDropdown(true)}>
                 <NavLink to={localizedPath('/giai-phap/chatbot')} className="dropdown-item">
-                  <div className="dropdown-icon" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}><Bot size={20} /></div>
+                  <div className="dropdown-icon" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}><Bot size={20} /></div>
                   <div className="dropdown-text">
                     <h4>Chatbot AI</h4>
                     <p>Tự động hóa hội thoại, chăm sóc khách hàng 24/7</p>
@@ -432,7 +440,7 @@ export function ClientLayout() {
                 </NavLink>
                 <div className="dropdown-divider"></div>
                 <NavLink to="/giai-phap/marketing" className="dropdown-item">
-                  <div className="dropdown-icon" style={{ backgroundColor: '#f0fdf4', color: '#22c55e' }}><Send size={20} /></div>
+                  <div className="dropdown-icon" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}><Send size={20} /></div>
                   <div className="dropdown-text">
                     <h4>Marketing Automation</h4>
                     <p>Tối ưu chiến dịch, nuôi dưỡng khách hàng tự động</p>
@@ -447,7 +455,7 @@ export function ClientLayout() {
               </a>
               <div className="dropdown-menu" style={{ display: forceCloseDropdown ? 'none' : '' }} onClick={() => setForceCloseDropdown(true)}>
                 <NavLink to={localizedPath('/bang-gia')} end className="dropdown-item">
-                  <div className="dropdown-icon" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}><Bot size={20} /></div>
+                  <div className="dropdown-icon" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}><Bot size={20} /></div>
                   <div className="dropdown-text">
                     <h4>{locale === 'en' ? 'Chatbot Pricing' : 'Bảng giá Chatbot'}</h4>
                     <p>{locale === 'en' ? '24/7 automation solution plans' : 'Các gói giải pháp tự động hóa 24/7'}</p>
@@ -463,7 +471,7 @@ export function ClientLayout() {
                 </NavLink>
                 <div className="dropdown-divider"></div>
                 <NavLink to={localizedPath('/bang-gia/marketing')} className="dropdown-item">
-                  <div className="dropdown-icon" style={{ backgroundColor: '#f0fdf4', color: '#22c55e' }}><Send size={20} /></div>
+                  <div className="dropdown-icon" style={{ backgroundColor: '#eff6ff', color: '#3b82f6' }}><Send size={20} /></div>
                   <div className="dropdown-text">
                     <h4>{locale === 'en' ? 'Marketing Pricing' : 'Bảng giá Marketing'}</h4>
                     <p>{locale === 'en' ? 'Automated marketing campaign plans' : 'Các gói chiến dịch tiếp thị tự động'}</p>
@@ -569,7 +577,7 @@ export function ClientLayout() {
             <div className="footer-main-grid">
               <section className="footer-brand-card" aria-label="Giới thiệu Losa247">
                 <Link to={localizedPath('/')} className="footer-brand-link">
-                  <img src={logoUrl} alt="Logo Losa247" />
+                  <img src={logoUrl} alt={`${siteName} logo`} width="144" height="54" loading="lazy" decoding="async" />
                 </Link>
                 <p className="footer-desc">{t('footer.description')}</p>
                 <div className="footer-brand-pills">
