@@ -1,26 +1,20 @@
 const { PrismaClient } = require('@prisma/client');
-const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 const env = require('./env');
 
 const globalForPrisma = globalThis;
 
-const parseDbUrl = (url) => {
-  const parsed = new URL(url);
-  return {
+const createPrismaClient = () => {
+  const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
+  const parsed = new URL(env.DATABASE_URL);
+  const adapter = new PrismaMariaDb({
     host: parsed.hostname,
-    port: parsed.port ? Number.parseInt(parsed.port, 10) : 3306,
+    port: parsed.port ? parseInt(parsed.port, 10) : 3306,
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
     database: parsed.pathname.slice(1),
     connectionLimit: env.DATABASE_POOL_SIZE,
-    acquireTimeout: env.DATABASE_ACQUIRE_TIMEOUT,
-    idleTimeout: env.DATABASE_IDLE_TIMEOUT,
-    minimumIdle: env.DATABASE_MIN_IDLE,
-  };
-};
+  });
 
-const createPrismaClient = () => {
-  const adapter = new PrismaMariaDb(parseDbUrl(env.DATABASE_URL));
   return new PrismaClient({
     adapter,
     log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
@@ -38,7 +32,7 @@ const connectPrisma = async () => {
     throw new Error('Thiếu biến môi trường bắt buộc: DATABASE_URL');
   }
   await prisma.$connect();
-  console.log(`MySQL Connected via Prisma MariaDB adapter (pool: ${env.DATABASE_POOL_SIZE})`);
+  console.log('MySQL Connected via Prisma (driver adapter)');
   return prisma;
 };
 
@@ -50,4 +44,4 @@ module.exports = {
   prisma,
   connectPrisma,
   disconnectPrisma,
-};
+};
