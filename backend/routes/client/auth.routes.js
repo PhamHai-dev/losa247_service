@@ -7,6 +7,7 @@ const { loginLimiter, refreshLimiter, resetLimiter } = require('../../middleware
 router.post('/register', loginLimiter, authController.register);
 router.post('/login', loginLimiter, authController.login);
 router.get('/me', authMiddleware('client'), authController.getMe);
+router.patch('/me', authMiddleware('client'), authController.updateMe);
 router.post('/refresh', refreshLimiter, authController.refresh);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', resetLimiter, authController.forgotPassword);

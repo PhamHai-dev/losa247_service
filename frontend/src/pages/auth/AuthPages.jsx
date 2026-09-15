@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert, App, Button, Form, Input, Result, Checkbox } from 'antd'
 import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertificateOutlined, LoginOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../stores/authStore'
@@ -45,15 +45,19 @@ function AuthLayout({ title, subtitle, children, variant = '', localized = false
 export function LoginPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   const { loginClient, loading, error } = useAuthStore()
   const { locale, t, localizedPath } = useI18n()
   const en = locale === 'en'
+  const returnTo = typeof location.state?.returnTo === 'string' && location.state.returnTo.startsWith('/')
+    ? location.state.returnTo
+    : localizedPath('/')
 
   const handleSubmit = async ({ acceptedTerms, ...credentials }) => {
     try {
       await loginClient(credentials)
       message.success(en ? 'Signed in successfully' : 'Đăng nhập khách hàng thành công')
-      navigate(localizedPath('/tai-khoan'))
+      navigate(returnTo, { replace: true })
     } catch (loginError) {
       message.error(loginError?.error?.message || (en ? 'Sign in failed' : 'Đăng nhập thất bại'))
     }
@@ -100,7 +104,7 @@ export function LoginPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 13 }}>
-            {en ? 'No account yet?' : 'Chưa có tài khoản?'} <Link to={localizedPath('/dang-ky')} style={{ color: '#0d9488', fontWeight: 500 }}>{en ? 'Register' : 'Đăng ký'}</Link>
+            {en ? 'No account yet?' : 'Chưa có tài khoản?'} <Link to={localizedPath('/dang-ky')} state={{ returnTo }} style={{ color: '#0d9488', fontWeight: 500 }}>{en ? 'Register' : 'Đăng ký'}</Link>
           </div>
           <Link to={localizedPath('/quen-mat-khau')} style={{ color: '#0d9488', fontSize: 13, fontWeight: 500 }}>{t('auth.forgot')}</Link>
         </div>
@@ -183,15 +187,19 @@ export function AdminLoginPage() {
 export function RegisterPage() {
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   const { registerClient, loading, error } = useAuthStore()
   const { locale, t, localizedPath } = useI18n()
   const en = locale === 'en'
+  const returnTo = typeof location.state?.returnTo === 'string' && location.state.returnTo.startsWith('/')
+    ? location.state.returnTo
+    : localizedPath('/')
 
   const handleSubmit = async (values) => {
     try {
       await registerClient(values)
       message.success(en ? 'Registration successful. Please sign in.' : 'Đăng ký thành công, vui lòng đăng nhập')
-      navigate(localizedPath('/dang-nhap'))
+      navigate(localizedPath('/dang-nhap'), { replace: true, state: { returnTo } })
     } catch (registerError) {
       message.error(registerError?.error?.message || (en ? 'Registration failed' : 'Đăng ký thất bại'))
     }
@@ -228,7 +236,7 @@ export function RegisterPage() {
       </Form>
 
       <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13 }}>
-        {en ? 'Already have an account?' : 'Đã có tài khoản?'} <Link to={localizedPath('/dang-nhap')} style={{ color: '#0d9488', fontWeight: 500 }}>{t('auth.login')}</Link>
+        {en ? 'Already have an account?' : 'Đã có tài khoản?'} <Link to={localizedPath('/dang-nhap')} state={{ returnTo }} style={{ color: '#0d9488', fontWeight: 500 }}>{t('auth.login')}</Link>
       </div>
     </AuthLayout>
   )

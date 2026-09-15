@@ -39,6 +39,7 @@ function UnitedStatesFlag({ className = '' }) {
 // Widget chat nổi dùng chung toàn site (tạo session client + socket realtime).
 function ChatWidget({ user }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { locale, t, localizedPath } = useI18n()
   const [open, setOpen] = useState(false)
   const [sessionId, setSessionId] = useState(null)
@@ -111,7 +112,7 @@ function ChatWidget({ user }) {
   const toggle = async () => {
     if (!user) {
       message.info(t('chat.loginRequired'))
-      navigate(localizedPath('/dang-nhap'))
+      navigate(localizedPath('/dang-nhap'), { state: { returnTo: `${location.pathname}${location.search}${location.hash}` } })
       return
     }
     const next = !open
@@ -326,6 +327,7 @@ export function ClientLayout() {
 
   const isSolutionsActive = location.pathname.startsWith('/giai-phap') || location.pathname.startsWith('/en/solutions')
   const isPricingActive = location.pathname.startsWith('/bang-gia') || location.pathname.startsWith('/en/pricing')
+  const authNavigationState = { returnTo: `${location.pathname}${location.search}${location.hash}` }
 
   const handleLogout = async () => {
     await logout()
@@ -510,7 +512,7 @@ export function ClientLayout() {
                 <a onClick={handleLogout} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>{t('common.logout')}</a>
               </>
             ) : (
-              <NavLink to={localizedPath('/dang-nhap')} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#374151' }}>
+              <NavLink to={localizedPath('/dang-nhap')} state={authNavigationState} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#374151' }}>
                 <User size={18} /> {t('navigation.login')}
               </NavLink>
             )}
@@ -707,7 +709,7 @@ export function ClientLayout() {
               <button className="btn" style={{ background: '#f1f5f9', color: '#475569', width: '100%', border: 'none' }} onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>{t('common.logout')}</button>
             </>
           ) : (
-            <NavLink to={localizedPath('/dang-nhap')} className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> {t('navigation.login')}</NavLink>
+            <NavLink to={localizedPath('/dang-nhap')} state={authNavigationState} className="btn btn-outline" style={{ display: 'flex', justifyContent: 'center', width: '100%', gap: '8px' }} onClick={() => setMobileMenuOpen(false)}><User size={18} /> {t('navigation.login')}</NavLink>
           )}
           <button className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }} onClick={() => { openLeadModal(); setMobileMenuOpen(false); }}><Rocket size={16} /> {t('navigation.trial')}</button>
         </div>

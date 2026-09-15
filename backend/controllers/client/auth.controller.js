@@ -4,6 +4,7 @@ const { userRepository, sessionRepository } = require('../../repositories/core/i
 const {
   loginSchema,
   registerSchema,
+  updateProfileSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
 } = require('../../validators/client/auth.validator');
@@ -86,6 +87,25 @@ exports.login = async (req, res, next) => {
   }
 };
 exports.getMe = (req, res) => res.json({ success: true, data: token.serializeUser(req.user) });
+exports.updateMe = async (req, res, next) => {
+  try {
+    const profile = updateProfileSchema.parse(req.body);
+    const user = await userRepository.updateProfile(req.user.id || req.user._id, profile);
+    return res.json({
+      success: true,
+      data: token.serializeUser(user),
+      message: 'Cập nhật thông tin thành công',
+    });
+  } catch (e) {
+    if (e.name === 'ZodError') {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: e.errors[0].message },
+      });
+    }
+    return next(e);
+  }
+};
 exports.refresh = async (req, res, next) => {
   try {
     const raw = token.readRefreshCookie(req, AUDIENCE);

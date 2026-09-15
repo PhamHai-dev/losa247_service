@@ -93,6 +93,14 @@ const userRepository = {
       }),
     );
   },
+  async updateProfile(id, { name, phone }) {
+    return toLegacyUser(
+      await prisma.user.update({
+        where: { id },
+        data: { name, phone: phone || null },
+      }),
+    );
+  },
   async updateAuthorization(id, roleName, status, revokeSessions) {
     return prisma.$transaction(async (tx) => {
       const user = await tx.user.update({ where: { id }, data: { roleName, status } });
