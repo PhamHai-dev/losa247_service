@@ -1896,14 +1896,9 @@ a.footer-contact-item:hover strong {
     gap: 10px;
   }
 
-  .client-hero__actions :is(.saas-btn, .pricing-btn, .csp-btn) {
-    width: 100%;
-    border-radius: 12px;
-  }
-
   .client-hero__proof {
     width: 100%;
-    justify-content: center;
+    justify-content: space-around;
     margin-inline: auto;
   }
 }
@@ -7726,5 +7721,195 @@ a.price-card:hover {
   .blog-detail__toc-fab {
     width: 32px;
     height: 48px;
+  }
+}
+
+/* ===== CLIENT RESPONSIVE RHYTHM & HERO FLOW =====
+ * Keep every hero block in normal document flow on tablet/mobile so
+ * absolutely-positioned decorations cannot overlap the CTA or next section.
+ */
+@media (max-width: 1050px) {
+  .client-hero {
+    min-height: 0;
+    padding-block: 56px;
+  }
+
+  .client-hero__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .client-hero__content {
+    display: contents;
+  }
+
+  .client-hero__content>* {
+    justify-self: center;
+  }
+
+  .client-hero__badge,
+  .client-hero__title,
+  .client-hero__lead,
+  .client-hero__proof {
+    order: 1;
+  }
+
+  .client-hero__visual,
+  .home-hero-visual,
+  .pricing-hero-visual {
+    order: 2;
+    width: min(100%, 600px);
+    margin: 0 auto;
+  }
+
+  .client-hero__visual.blog-hero-illustration {
+    min-height: 0;
+    height: fit-content;
+    aspect-ratio: auto;
+    display: block;
+    overflow: visible;
+  }
+
+  .client-hero__actions {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .client-app-wrapper {
+    --client-section-space: 56px;
+    overflow-x: clip;
+  }
+
+  .client-hero {
+    padding-block: 48px;
+  }
+
+  .client-hero__grid {
+    gap: 28px;
+  }
+
+  .client-hero__content {
+    width: 100%;
+  }
+
+  .client-hero__badge {
+    max-width: 100%;
+    margin-bottom: 16px;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .client-hero__title {
+    margin-bottom: 18px;
+    font-size: clamp(32px, 9vw, 40px);
+  }
+
+  .client-hero__lead {
+    margin-bottom: 20px;
+  }
+
+  .client-hero__proof {
+    margin-bottom: 24px;
+  }
+
+  .client-hero__visual {
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 6 / 5;
+    overflow: hidden;
+  }
+
+  .blog-hero-illustration {
+    aspect-ratio: auto;
+  }
+
+  .client-hero__visual.home-hero-visual {
+    min-height: 0;
+    height: auto;
+    margin-bottom: 0;
+    aspect-ratio: auto;
+    overflow: visible;
+  }
+
+  .home-hero-main-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .pricing-hero-visual {
+    min-height: 0;
+    margin: 0 auto;
+    aspect-ratio: 6 / 5;
+    transform: none;
+  }
+
+  .pricing-visual-orbit {
+    width: min(68vw, 300px);
+    height: min(68vw, 300px);
+  }
+
+  .pricing-bot-core {
+    width: clamp(118px, 34vw, 148px);
+    height: clamp(118px, 34vw, 148px);
+  }
+
+  .pricing-float-card {
+    min-width: min(164px, 43vw);
+    padding: 11px 12px;
+  }
+
+  .card-response {
+    top: 8%;
+    left: 1%;
+  }
+
+  .card-channels {
+    top: 32%;
+    right: 1%;
+  }
+
+  .card-secure {
+    bottom: 8%;
+    left: 5%;
+  }
+
+  .home-page .saas-section,
+  .pricing-plans-section {
+    padding-block: var(--client-section-space);
+  }
+}
+
+@media (max-width: 479px) {
+  .client-app-wrapper {
+    --client-section-space: 48px;
+  }
+
+  .client-hero {
+    padding-block: 40px;
+  }
+
+  .client-hero__grid {
+    gap: 24px;
+  }
+
+  .client-hero__visual,
+  .pricing-hero-visual {
+    aspect-ratio: 1 / 1;
+  }
+
+  .client-hero__visual.home-hero-visual {
+    aspect-ratio: auto;
+  }
+
+  .home-hero-main-image {
+    max-height: none;
+  }
+
+  .pricing-float-card {
+    min-width: 148px;
   }
 }

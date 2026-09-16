@@ -698,7 +698,7 @@ export function ClientLayout() {
           </div>
           <NavLink to={localizedPath('/blog')} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t('navigation.knowledge')}</NavLink>
           <div className="language-switcher" aria-label={t('navigation.language')} style={{ display: 'flex', gap: 8, padding: '16px 0 0' }}>
-            {['vi', 'en'].map((code) => <button id={`mobile-language-${code}`} key={code} type="button" onClick={() => { switchLocale(code); setMobileMenuOpen(false) }} aria-pressed={locale === code} className="btn" style={{ flex: 1, border: '1px solid #cbd5e1', background: locale === code ? '#0f766e' : '#fff', color: locale === code ? '#fff' : '#334155' }}>{code.toUpperCase()}</button>)}
+            {['vi', 'en'].map((code) => <button id={`mobile-language-${code}`} key={code} type="button" onClick={() => { switchLocale(code); setMobileMenuOpen(false) }} aria-pressed={locale === code} className="btn" style={{ flex: 1, border: `1px solid ${locale === code ? 'var(--blue-200)' : '#cbd5e1'}`, background: locale === code ? 'var(--blue-100)' : '#fff', color: locale === code ? 'var(--blue-700)' : '#334155' }}>{code.toUpperCase()}</button>)}
           </div>
         </div>
 

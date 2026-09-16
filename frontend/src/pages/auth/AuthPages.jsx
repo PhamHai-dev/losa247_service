@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { Alert, App, Button, Form, Input, Result, Checkbox } from 'antd'
+import { Alert, App, Button, Form, Input, Result } from 'antd'
 import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertificateOutlined, LoginOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
@@ -89,18 +89,6 @@ export function LoginPage() {
           <Input.Password size="large" prefix={<LockOutlined style={{ color: '#94a3b8' }} />} placeholder="••••••••••••••" />
         </Form.Item>
 
-        <Form.Item
-          name="acceptedTerms"
-          valuePropName="checked"
-          rules={[{
-            validator: (_, checked) => checked
-              ? Promise.resolve()
-              : Promise.reject(new Error('Vui lòng đồng ý với các điều khoản')),
-          }]}
-          style={{ marginBottom: 16 }}
-        >
-          <Checkbox id="client-login-terms-checkbox">{en ? 'I agree to the terms' : 'Tôi đồng ý với các điều khoản'}</Checkbox>
-        </Form.Item>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 13 }}>
