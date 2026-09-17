@@ -2,6 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// generator client {
+//  provider = "prisma-client-js"
+//  previewFeatures = ["driverAdapters"]
+//  engineType = "client"
+// }
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
