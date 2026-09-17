@@ -255,7 +255,7 @@ export function AdminChat() {
             </div>
             {active && canAssign && (active.mode === 'bot'
               ? <Button id="admin-chat-takeover" type="primary" onClick={takeover}>Nhảy vào hội thoại</Button>
-              : <Button id="admin-chat-release" onClick={release}>Trả về cho Bot</Button>)}
+              : <Button id="admin-chat-release" onClick={release}>Bật Bot (chu kỳ mới)</Button>)}
           </header>
 
           <div className="admin-chat-conversation__body">
@@ -313,12 +313,18 @@ export function AdminChat() {
               )}
               {uploading && <div className="admin-chat-uploading">Đang tải file lên...</div>}
               <div className="admin-chat-composer__box">
-                <Input
+                <Input.TextArea
                   id="admin-chat-message-input"
                   placeholder="Nhập phản hồi..."
                   value={text}
+                  autoSize={{ minRows: 1, maxRows: 5 }}
                   onChange={(event) => setText(event.target.value)}
-                  onPressEnter={send}
+                  onPressEnter={(event) => {
+                    if (!event.shiftKey) {
+                      event.preventDefault()
+                      send()
+                    }
+                  }}
                 />
                 <div className="admin-chat-composer__tools">
                   <Button id="admin-chat-emoji" type="text" icon={<SmileOutlined />} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />

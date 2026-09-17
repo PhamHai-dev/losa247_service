@@ -5,6 +5,7 @@ const { getN8nConfig } = require('../../helpers/n8n');
 const { publish } = require('../realtime/eventPublisher');
 const { toLegacyEntity } = require('../../repositories/core/legacyMapper');
 const { sign } = require('./webhookSecurityService');
+const { jsonCharLength } = require('./chatLimitUtils');
 
 const normalizePhone = (value) => value ? String(value).replace(/[^\d+]/g, '') : null;
 const normalizeEmail = (value) => value ? String(value).trim().toLowerCase() : null;
@@ -36,7 +37,10 @@ const sendBatchToN8n = async ({ batch, context }) => {
   if (!config) throw new Error('N8N_DISABLED');
   if (!config.webhookUrl) throw new Error('N8N_WEBHOOK_URL_INVALID');
 
-  const body = JSON.stringify({ schemaVersion: '1.0', eventId: batch.eventId, eventType: 'chat.batch.ready', occurredAt: new Date().toISOString(), batch: { id: batch.id, sessionId: batch.sessionId, sessionVersion: batch.sessionVersion }, context, callbackUrl: env.N8N_CALLBACK_URL });
+  if (jsonCharLength(context) > env.CHAT_CONTEXT_MAX_CHARS) {
+    throw Object.assign(new Error('AI context vượt hard cap'), { code: 'CHAT_CONTEXT_TOO_LARGE' });
+  }
+  const body = JSON.stringify({ schemaVersion: '1.0', eventId: batch.eventId, eventType: 'chat.batch.ready', occurredAt: new Date().toISOString(), batch: { id: batch.id, sessionId: batch.sessionId, sessionVersion: batch.sessionVersion, botCycle: batch.botCycle }, context, callbackUrl: env.N8N_CALLBACK_URL });
   const timestamp = String(Date.now());
   const response = await fetch(config.webhookUrl, { method: 'POST', headers: { 'content-type': 'application/json', 'x-event-id': batch.eventId, 'x-timestamp': timestamp, 'x-signature': sign(body, timestamp) }, body, signal: AbortSignal.timeout(env.N8N_TIMEOUT_MS) });
   if (!response.ok) {
@@ -51,13 +55,15 @@ const processChatReply = async (command) => prisma.$transaction(async (tx) => {
   const old = await tx.webhookInbox.findUnique({ where: { eventId: command.eventId } });
   if (old?.status === 'completed') return { duplicate: true, response: old.responseBody };
   if (!old) await tx.webhookInbox.create({ data: { id: createEntityId(), eventId: command.eventId, correlationId: command.correlationId, direction: 'inbound', command: command.command } });
-  const guarded = await tx.chatSession.updateMany({ where: { id: command.sessionId, mode: 'bot', version: command.expectedVersion }, data: { lastReplyAt: new Date(), lastMessageAt: new Date() } });
+  const batch = command.batchId ? await tx.chatBatch.findFirst({ where: { id: command.batchId, sessionId: command.sessionId } }) : null;
+  const expectedCycle = batch?.botCycle ?? command.botCycle;
+  const guarded = await tx.chatSession.updateMany({ where: { id: command.sessionId, mode: 'bot', version: command.expectedVersion, cycleLimitReachedAt: null, ...(Number.isInteger(expectedCycle) ? { botCycle: expectedCycle } : {}) }, data: { lastReplyAt: new Date(), lastMessageAt: new Date() } });
   if (guarded.count !== 1) {
     const current = await tx.chatSession.findUnique({ where: { id: command.sessionId } });
-    const code = current?.mode !== 'bot' ? 'BOT_DISABLED' : 'STALE_SESSION_VERSION';
+    const code = current?.mode !== 'bot' || current?.cycleLimitReachedAt ? 'BOT_DISABLED' : 'STALE_SESSION_VERSION';
     throw Object.assign(new Error(code), { code, current });
   }
-  const message = await tx.chatMessage.create({ data: { id: createEntityId(), sessionId: command.sessionId, batchId: command.batchId || null, sender: 'bot', content: command.payload.content, attachments: command.payload.attachments || [], metadata: command.payload.metadata || null, status: 'sent' } });
+  const message = await tx.chatMessage.create({ data: { id: createEntityId(), sessionId: command.sessionId, batchId: command.batchId || null, botCycle: expectedCycle || 1, sender: 'bot', content: command.payload.content, attachments: command.payload.attachments || [], metadata: command.payload.metadata || null, status: 'sent' } });
   if (command.batchId) await tx.chatBatch.update({ where: { id: command.batchId }, data: { status: 'completed', completedAt: new Date() } });
   await tx.chatSession.update({ where: { id: command.sessionId }, data: { automationStatus: 'idle' } });
   await processActions(tx, command, message.id);

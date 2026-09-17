@@ -27,7 +27,7 @@ export const chatService = {
 export const clientChatService = {
   createSession: (payload = {}) => axiosClient.post('/chat/session', payload).then((res) => res?.data),
   getMessages: (sessionId, token, after) => axiosClient.get(`/chat/${sessionId}/messages`, { params: after ? { after } : undefined, headers: tokenHeaders(token) }).then((res) => res?.data || []),
-  sendMessage: (sessionId, token, payload) => axiosClient.post(`/chat/sessions/${sessionId}/messages`, payload, { headers: tokenHeaders(token) }).then((res) => res?.data),
+  sendMessage: (sessionId, token, payload) => axiosClient.post(`/chat/sessions/${sessionId}/messages`, payload, { headers: tokenHeaders(token) }).then((res) => ({ message: res?.data, meta: res?.meta || {} })),
   requestHuman: (sessionId, token) => axiosClient.post(`/chat/sessions/${sessionId}/request-human`, {}, { headers: tokenHeaders(token) }).then((res) => res?.data),
   uploadAttachment: (formData, token) => axiosClient.post('/chat/upload-attachment', formData, {
     headers: { ...tokenHeaders(token), 'Content-Type': 'multipart/form-data' },

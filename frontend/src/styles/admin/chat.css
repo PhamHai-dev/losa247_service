@@ -297,7 +297,10 @@
   color: #273d42;
   background: var(--chat-customer);
   line-height: 1.55;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }
 .admin-chat-message:not(.admin-chat-message--customer)
   .admin-chat-message__bubble {
@@ -333,7 +336,7 @@
   padding: 4px 5px 4px 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  align-items: end;
   gap: 5px;
   border: 1px solid var(--chat-border-strong);
   border-radius: 12px;
@@ -343,9 +346,14 @@
   border-color: var(--chat-teal);
 }
 .admin-chat-composer__box > .ant-input {
+  min-width: 0;
+  max-height: 116px;
   padding: 6px 0;
   border: 0;
   background: transparent;
+  line-height: 1.55;
+  resize: none;
+  overflow-wrap: anywhere;
 }
 .admin-chat-composer__box > .ant-input:focus {
   outline: none;

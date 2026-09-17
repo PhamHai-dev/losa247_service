@@ -68,7 +68,10 @@ exports.sendMessage = async (req, res, next) => {
     const result = await createCustomerMessage({ sessionId: session.id, clientMessageId: req.body.clientMessageId || crypto.randomUUID(), content: String(req.body.content || '').trim(), attachmentIds: Array.isArray(req.body.attachmentIds) ? req.body.attachmentIds : [] });
     const message = mapClientMessage(result.message, sessionToken(req));
     if (!result.duplicate) await publish({ type: 'message.created', sessionId: session.id, data: message });
-    return res.status(result.duplicate ? 200 : 201).json({ success: true, duplicate: result.duplicate, data: message });
+    if (result.limitReached) {
+      await publish({ type: 'session.mode_changed', sessionId: session.id, data: { mode: 'human', version: result.session.version, reason: 'context_limit' } });
+    }
+    return res.status(result.duplicate ? 200 : 201).json({ success: true, duplicate: result.duplicate, data: message, meta: { mode: result.session?.mode || session.mode, limitReached: Boolean(result.limitReached) } });
   } catch (err) { return next(err); }
 };
 

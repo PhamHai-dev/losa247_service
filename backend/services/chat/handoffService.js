@@ -3,9 +3,26 @@ const { createEntityId } = require('../../repositories/core/entityId');
 const { createEventId } = require('./messageService');
 
 const transition = async ({ sessionId, expectedVersion, fromMode, toMode, adminId, reason, note }) => prisma.$transaction(async (tx) => {
+  const now = new Date();
   const updated = await tx.chatSession.updateMany({
     where: { id: sessionId, mode: fromMode, version: expectedVersion, ...(fromMode === 'human' ? { OR: [{ assignedAdminId: adminId }, { assignedAdminId: null }] } : {}) },
-    data: { mode: toMode, version: { increment: 1 }, assignedAdminId: toMode === 'human' ? adminId : null, automationStatus: 'idle', ...(toMode === 'human' ? { handoffAt: new Date() } : { botResumedAt: new Date(), summary: note || undefined }) },
+    data: {
+      mode: toMode,
+      version: { increment: 1 },
+      assignedAdminId: toMode === 'human' ? adminId : null,
+      automationStatus: 'idle',
+      ...(toMode === 'human'
+        ? { handoffAt: now }
+        : {
+            botResumedAt: now,
+            botCycleStartedAt: now,
+            botCycle: { increment: 1 },
+            cycleCustomerMessageCount: 0,
+            cycleCustomerUnits: 0,
+            cycleLimitReachedAt: null,
+            summary: null,
+          }),
+    },
   });
   if (updated.count !== 1) {
     const current = await tx.chatSession.findUnique({ where: { id: sessionId } });
@@ -13,9 +30,9 @@ const transition = async ({ sessionId, expectedVersion, fromMode, toMode, adminI
     throw Object.assign(new Error(code), { code, current });
   }
   const session = await tx.chatSession.findUnique({ where: { id: sessionId } });
-  await tx.chatHandoff.create({ data: { id: createEntityId(), sessionId, fromMode, toMode, fromVersion: expectedVersion, toVersion: session.version, reason, actorType: 'admin', actorId: adminId, note: note || null } });
+  await tx.chatHandoff.create({ data: { id: createEntityId(), sessionId, fromMode, toMode, fromVersion: expectedVersion, toVersion: session.version, reason, actorType: 'admin', actorId: adminId, note: note || null, metadata: { botCycle: session.botCycle } } });
   const eventId = createEventId();
-  await tx.automationOutbox.create({ data: { id: createEntityId(), eventId, eventType: toMode === 'bot' ? 'chat.bot.resumed' : 'chat.human.takeover', aggregateType: 'ChatSession', aggregateId: sessionId, sessionId, payload: { sessionId, version: session.version, adminId, reason } } });
+  await tx.automationOutbox.create({ data: { id: createEntityId(), eventId, eventType: toMode === 'bot' ? 'chat.bot.resumed' : 'chat.human.takeover', aggregateType: 'ChatSession', aggregateId: sessionId, sessionId, payload: { sessionId, version: session.version, botCycle: session.botCycle, adminId, reason } } });
   return session;
 });
 

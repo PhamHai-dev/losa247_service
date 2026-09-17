@@ -349,15 +349,20 @@ model ChatSession {
   automationStatus      ChatAutomationStatus @default(idle) @map("automation_status")
   version               Int                  @default(1) @db.UnsignedInt
   status                ChatStatus           @default(open)
-  assignedAdminId       String?              @map("assigned_admin_id") @db.VarChar(24)
-  summary               String?              @db.LongText
-  context               Json?
-  lastMessageAt         DateTime             @default(now()) @map("last_message_at") @db.DateTime(3)
-  lastCustomerMessageAt DateTime?            @map("last_customer_message_at") @db.DateTime(3)
-  lastReplyAt           DateTime?            @map("last_reply_at") @db.DateTime(3)
-  handoffAt             DateTime?            @map("handoff_at") @db.DateTime(3)
-  botResumedAt          DateTime?            @map("bot_resumed_at") @db.DateTime(3)
-  closedAt              DateTime?            @map("closed_at") @db.DateTime(3)
+  assignedAdminId          String?              @map("assigned_admin_id") @db.VarChar(24)
+  summary                  String?              @db.LongText
+  context                  Json?
+  botCycle                 Int                  @default(1) @map("bot_cycle") @db.UnsignedInt
+  botCycleStartedAt        DateTime              @default(now()) @map("bot_cycle_started_at") @db.DateTime(3)
+  cycleCustomerMessageCount Int                 @default(0) @map("cycle_customer_message_count") @db.UnsignedInt
+  cycleCustomerUnits       Int                  @default(0) @map("cycle_customer_units") @db.UnsignedInt
+  cycleLimitReachedAt      DateTime?             @map("cycle_limit_reached_at") @db.DateTime(3)
+  lastMessageAt           DateTime             @default(now()) @map("last_message_at") @db.DateTime(3)
+  lastCustomerMessageAt   DateTime?            @map("last_customer_message_at") @db.DateTime(3)
+  lastReplyAt             DateTime?            @map("last_reply_at") @db.DateTime(3)
+  handoffAt               DateTime?            @map("handoff_at") @db.DateTime(3)
+  botResumedAt            DateTime?            @map("bot_resumed_at") @db.DateTime(3)
+  closedAt                DateTime?            @map("closed_at") @db.DateTime(3)
   createdAt             DateTime             @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt             DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
   customer              User?                @relation("ChatCustomer", fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -381,6 +386,7 @@ model ChatMessage {
   sessionId       String           @map("session_id") @db.VarChar(24)
   clientMessageId String?          @map("client_message_id") @db.VarChar(64)
   batchId         String?          @map("batch_id") @db.VarChar(24)
+  botCycle        Int              @default(1) @map("bot_cycle") @db.UnsignedInt
   sender          ChatSender
   messageType     String           @default("text") @map("message_type") @db.VarChar(24)
   content         String           @db.LongText
@@ -406,6 +412,7 @@ model ChatBatch {
   id             String          @id @db.VarChar(24)
   sessionId      String          @map("session_id") @db.VarChar(24)
   sessionVersion Int             @map("session_version") @db.UnsignedInt
+  botCycle       Int             @default(1) @map("bot_cycle") @db.UnsignedInt
   eventId        String          @unique @map("event_id") @db.VarChar(64)
   status         ChatBatchStatus @default(pending)
   startedAt      DateTime?       @map("started_at") @db.DateTime(3)

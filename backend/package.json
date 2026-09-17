@@ -13,6 +13,7 @@
     "worker:outbox": "node jobs/outboxDispatcher.worker.js",
     "worker:chat": "node jobs/chatAutomation.worker.js",
     "worker:dlq": "node jobs/deadLetter.worker.js",
+    "chat:backfill-cycles": "node scripts/backfillChatCycleCounters.js",
     "seed:admin": "node scripts/seedAdmin.js"
   },
   "dependencies": {

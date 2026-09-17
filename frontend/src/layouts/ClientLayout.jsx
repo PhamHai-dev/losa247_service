@@ -13,6 +13,9 @@ import { leadsService } from '../features/leads/leadsService'
 import LeadFormModal, { FooterDynamicLeadFields } from '../components/common/LeadFormModal'
 import { useI18n } from '../hooks/useI18n'
 
+const CHAT_MESSAGE_MAX_CHARS = 8000
+const limitCodePoints = (value) => Array.from(value || '').slice(0, CHAT_MESSAGE_MAX_CHARS).join('')
+
 function VietnamFlag({ className = '' }) {
   return (
     <svg className={className} width="28" height="20" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -49,6 +52,7 @@ function ChatWidget({ user }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [attachments, setAttachments] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [sessionMode, setSessionMode] = useState('bot')
 
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -59,7 +63,8 @@ function ChatWidget({ user }) {
     const id = incoming?._id || incoming?.id
     return id && prev.some((item) => (item._id || item.id) === id) ? prev : [...prev, incoming]
   })
-  useChatRealtime({ sessionId, sessionToken, role: 'customer', onMessage: appendMessage })
+  const handleModeChange = (data) => setSessionMode(data?.mode || 'bot')
+  useChatRealtime({ sessionId, sessionToken, role: 'customer', onMessage: appendMessage, onModeChange: handleModeChange })
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -82,6 +87,7 @@ function ChatWidget({ user }) {
     setSessionId(null)
     setSessionToken(null)
     setMessages([])
+    setSessionMode('bot')
     setOpen(false)
   }, [user])
 
@@ -145,20 +151,21 @@ function ChatWidget({ user }) {
     const credentials = sessionId ? { id: sessionId, token: sessionToken } : await ensureSession()
     if (!credentials?.id) return
     try {
-      const saved = await clientChatService.sendMessage(credentials.id, credentials.token, {
+      const result = await clientChatService.sendMessage(credentials.id, credentials.token, {
         clientMessageId: globalThis.crypto?.randomUUID?.() || `${Date.now()}`,
         content: text,
         attachmentIds: attachments.map((item) => item.id),
       })
-      appendMessage(saved)
+      appendMessage(result.message)
+      if (result.meta?.mode) setSessionMode(result.meta.mode)
       setText('')
       setAttachments([])
       setShowEmojiPicker(false)
-    } catch { message.error('Không thể gửi tin nhắn') }
+    } catch (err) { message.error(err?.error?.message || 'Không thể gửi tin nhắn') }
   }
 
   const onEmojiClick = (emojiObject) => {
-    setText(prev => prev + emojiObject.emoji)
+    setText(prev => limitCodePoints(prev + emojiObject.emoji))
   }
 
   return (
@@ -176,7 +183,7 @@ function ChatWidget({ user }) {
               </div>
               <div className="chat-title">
                 <b>Admin <Check size={14} color="#fff" style={{ background: '#3B82F6', borderRadius: '50%', padding: 2, display: 'inline-block', verticalAlign: 'middle', marginLeft: 4 }} /></b>
-                <p className="badge active">Đang hoạt động</p>
+                <p className="badge active">{sessionMode === 'human' ? 'Đang chuyển sang tư vấn viên' : 'Đang hoạt động'}</p>
               </div>
             </div>
             <div className="chat-header-actions">
@@ -258,8 +265,8 @@ function ChatWidget({ user }) {
               )}
               {uploading && <div style={{ fontSize: 12, color: '#3B82F6', marginBottom: 8 }}>{t('chat.upload')}</div>}
               <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                <input placeholder={t('chat.placeholder')} value={text} onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') send() }} style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none' }} />
+                <textarea id="customer-chat-message-input" rows={1} placeholder={t('chat.placeholder')} value={text} onChange={(e) => setText(limitCodePoints(e.target.value))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} />
                 <div className="chat-input-actions">
                   <Smile size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
                   <ImageIcon size={20} color="#3B82F6" style={{ cursor: 'pointer' }} onClick={() => imageInputRef.current?.click()} />
