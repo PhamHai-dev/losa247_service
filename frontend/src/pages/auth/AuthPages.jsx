@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { Alert, App, Button, Form, Input, Result } from 'antd'
+import { Alert, App, Button, Checkbox, Form, Input, Result } from 'antd'
 import { LockOutlined, MailOutlined, PhoneOutlined, UserOutlined, SafetyCertificateOutlined, LoginOutlined } from '@ant-design/icons'
 import { useAuthStore } from '../../stores/authStore'
 import { clientForgotPassword, clientResetPassword } from '../../features/auth/authService'
