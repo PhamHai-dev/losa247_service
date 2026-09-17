@@ -7292,7 +7292,7 @@ a.price-card:hover {
 }
 
 .blog-detail__header {
-  max-width: 760px;
+  max-width: 100%;
   margin: 0 0 34px;
 }
 
@@ -7463,7 +7463,6 @@ a.price-card:hover {
   border-radius: 14px;
   color: #087cb7;
   background: #fff;
-  box-shadow: 0 10px 28px rgba(15, 56, 88, .18);
   font: inherit;
   cursor: pointer;
   transition: transform .2s ease, box-shadow .2s ease;

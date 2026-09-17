@@ -153,17 +153,17 @@ export function BlogDetailPage() {
               </div>
             )}
 
-            <header className="blog-detail__header">
-              {blog.category && <span className="blog-detail__category">{blog.category?.name || (locale === 'en' ? 'Category' : 'Danh mục')}</span>}
-              <h1>{blog.title}</h1>
-              <div className="blog-meta blog-detail__meta">
-                <span><CalendarOutlined /> {formatDate(blog.publishedAt)}</span>
-                <span><EyeOutlined /> {blog.views || 0} {t('blog.views')}</span>
-              </div>
-            </header>
-
             <div className="blog-detail__layout">
               <article className="blog-detail__article">
+                <header className="blog-detail__header">
+                  {blog.category && <span className="blog-detail__category">{blog.category?.name || (locale === 'en' ? 'Category' : 'Danh mục')}</span>}
+                  <h1>{blog.title}</h1>
+                  <div className="blog-meta blog-detail__meta">
+                    <span><CalendarOutlined /> {formatDate(blog.publishedAt)}</span>
+                    <span><EyeOutlined /> {blog.views || 0} {t('blog.views')}</span>
+                  </div>
+                </header>
+
                 {blog.coverImageUrl && <img src={blog.coverImageUrl} alt={blog.title} className="blog-detail__cover" />}
                 <div className="blog-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: blog.content }} />
 
